@@ -1,20 +1,20 @@
+# As long as project compiles in a under a few seconds no need to get fancy and just build everything
 
-
-## list all cfiles (.c) that our project includes
-CCFILES=main.c chunk.c memory.c
+## list all cfiles (.c) that our project includes (doing this manually for now)
+CCFILES=main.c chunk.c memory.c debug.c value.c
 
 ## name of our executable we build to run
 BINARY=binary.out
 
 
+# builds out the binary
 build:
 	gcc -o $(BINARY) $(CCFILES)
 
+# first build then run the binary
 run: build
 	./binary.out
 
-## manual command to remove all artifacts
+# to remove all artifacts/binary
 clean:
 	rm -rf $(BINARY) *.o
-
-# https://www.youtube.com/watch?v=DtGrdB8wQ_8&list=RDLV_r7i5X0rXJk&index=2
