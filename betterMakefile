@@ -1,0 +1,29 @@
+## compiler settings:
+# FLAGS=-Wall -Wextra -g -I -03
+
+## list all cfiles (.c) that our project includes
+CCFILES=main.c chunk.c memory.c
+## list all the .o object files that get created (before linking?)
+OBJECTS=main.o chunk.o memory.o
+
+## name of our executable we build to run
+BINARY=bin
+
+
+## build the binary
+all: $(BINARY)
+
+## basically a "rule" that requires all the object files need to be created before we can build the binary
+$(BINARY): $(OBJECTS)
+	gcc -o $@ $^
+
+## (%-signs are wildcards/regex.) To build out all the .o object files
+%.o:%.c
+	gcc -c -o $@ $^
+## with flags the above would be: gcc $(FLAGS) -c -o $@ $^
+
+## manual command to remove all artifacts
+clean:
+	rm -rf $(BINARY) *.o
+
+# https://www.youtube.com/watch?v=DtGrdB8wQ_8&list=RDLV_r7i5X0rXJk&index=2

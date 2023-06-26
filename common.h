@@ -1,0 +1,9 @@
+// imports NULL, size_t and C99 Boolean bool and expliciz-sized integer types like uint8_t uint32_t ...
+#ifndef clox_common_h
+#define clox_common_h
+
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+
+#endif
