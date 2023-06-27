@@ -10,29 +10,17 @@ int main(int argc, const char* argv[]) {
     // initialize our VM:
     initVM();
 
-    // init our test-dummy chunk:
-    Chunk chunk;
-    initChunk(&chunk);
+    // do the repl or open file or error msg about use.
+    if (argc == 1) {
+      repl();
+    } else if (argc == 2) {
+      runFile(argv[1]);
+    } else {
+      printf(stderr, "Usage: clox [path]\n");
+      exit(64);
+    }
 
-    // fake compiled by hand:      -( (1.2+3.4) / 5.6);
-      int constant = addConstant(&chunk, 1.2);
-    writeChunk(&chunk, OP_CONSTANT, 123);
-    writeChunk(&chunk, constant, 123);
-    constant = addConstant(&chunk, 3.4);
-    writeChunk(&chunk, OP_CONSTANT, 123);
-    writeChunk(&chunk, constant, 123);
-    writeChunk(&chunk, OP_ADD, 123);
-    constant = addConstant(&chunk, 5.6);
-    writeChunk(&chunk, OP_CONSTANT, 123);
-    writeChunk(&chunk, constant, 123);
-    writeChunk(&chunk, OP_DIVIDE, 123);
-    writeChunk(&chunk, OP_NEGATE, 123);
-    writeChunk(&chunk, OP_RETURN, 123);
-
-    //disassembleChunk(&chunk, "test chunk");
-    interpret(&chunk);
+    // free the VM
     freeVM();
-    freeChunk(&chunk);
-
     return 0;
 }
