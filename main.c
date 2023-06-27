@@ -1,10 +1,14 @@
 #include "common.h"
 #include "chunk.h"
 #include "debug.h"
+#include "vm.h"
 #include <stdio.h>
 
 int main(int argc, const char* argv[]) {
     printf("Compiler Running:\n");
+
+    // initialize our VM:
+    initVM();
 
     // init our test-dummy chunk:
     Chunk chunk;
@@ -18,6 +22,8 @@ int main(int argc, const char* argv[]) {
     // hand-compile the exit->return command:
     writeChunk(&chunk, OP_RETURN, 123);
     disassembleChunk(&chunk, "test chunk");
+    interpret(&chunk);
+    freeVM();
     freeChunk(&chunk);
 
     return 0;
