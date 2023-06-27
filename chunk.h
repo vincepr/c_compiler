@@ -12,6 +12,13 @@
 // defines all allowed/supported OpCodes:
 typedef enum {
     OP_CONSTANT,    // load/produces a static/constant value.
+    // Binary operators:
+    OP_ADD,
+    OP_SUBTRACT,
+    OP_MULTIPLY,
+    OP_DIVIDE,
+    
+    OP_NEGATE,      // unary negation. like -x with x=3 -> -3
     OP_RETURN,      // return from the current function
 } OpCode;
 

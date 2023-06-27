@@ -34,10 +34,17 @@ Value pop() {
 
 // helper function for interpret() that actually runs the current instruciton
 static InterpretResult run() {
-// READ_BYTE-macro reads the byte currently pointed at by the instruction-pointer(ip) then advances the ip.
+// macro-READ_BYTE reads the byte currently pointed at by the instruction-pointer(ip) then advances the ip.
 #define READ_BYTE() (*vm.ip++)
-// READ_CONSTANT-macro: reads the next byte from the bytecoat, treats it number as index and looks it up in our constant-pool
+// macro-READ_CONSTANT: reads the next byte from the bytecoat, treats it number as index and looks it up in our constant-pool
 #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
+// macro-Enables all Arithmetic Functions (since only difference is the sign +-/* for the most part) - is this preprocessor abuse?!?
+#define BINARY_OP(op) \
+    do{ \
+        double b = pop(); \
+        double a = pop(); \
+        push(a op b); \
+    } while (false);
 
     for(;;) {
         // support for the Debug-Flag to enable printing out diagnostics:
@@ -57,12 +64,19 @@ static InterpretResult run() {
         // first byte of each instruction is opcode so we decode/dispatch it:
         uint8_t instruciton;
         switch (instruciton = READ_BYTE()) {
-            // OP_CONSTANT - 
+            // OP_CONSTANT - fixed values,l ike x=3
             case OP_CONSTANT: {
                 Value constant = READ_CONSTANT();
                 push(constant);             // push the constant/tempory-value to the stack
                 break;
             }
+            //binary operations:
+            case OP_ADD:        BINARY_OP(+); break;
+            case OP_SUBTRACT:   BINARY_OP(-); break;
+            case OP_MULTIPLY:   BINARY_OP(*); break;
+            case OP_DIVIDE:     BINARY_OP(/); break;
+            // OP_NEGATE - arithmetic negation - unary expression, like -x with x=3 -> -3
+            case OP_NEGATE: push(-pop()); break;
             // OP_RETURN - exits the loop entirely (end of chunk reached/return from the current Lox function)
             case OP_RETURN: {
                 printValue(pop());      // "produce a value from the stack", for now we just print it out.
@@ -75,6 +89,7 @@ static InterpretResult run() {
 // we only need our macros in run() so we scope them explicity to only be available here:
 #undef READ_BYTE
 #undef READ_CONSTANT
+#undef BINARY_OP
 }
 
 // tell the vm to runn the input-chunk of instructions
