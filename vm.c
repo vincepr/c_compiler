@@ -1,7 +1,9 @@
+#include <stdio.h>
+
 #include "common.h"
+#include "compiler.h"
 #include "debug.h"
 #include "vm.h"
-#include <stdio.h>
 
 // instance of our VM:
 VM vm;
@@ -92,11 +94,10 @@ static InterpretResult run() {
 #undef BINARY_OP
 }
 
-// tell the vm to runn the input-chunk of instructions
-InterpretResult interpret(Chunk* chunk) {
-    vm.chunk = chunk;       // set as currently active chunk
-    vm.ip = vm.chunk->code; // pointer to the current idx of the instruction were working on
-    return run();           // actually runs the bytecode instructions
+// takes the repl/source-code string and interprets/runs it
+InterpretResult interpret(const char* source) {
+    compile(source);
+    return INTERPRET_OK;
 }
 
 
