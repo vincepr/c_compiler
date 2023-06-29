@@ -15,14 +15,16 @@ static void resetStack() {
 }
 
 // error Handling of Runtime Errors (like trying to - negate a bool)
+// - takes varrying number of args
+// - callers can pass a format string followed by a number of args. These args then get printed out.
 static void runtimeError(const char* format, ...) {
     va_list args;
     va_start(args, format);
-    vfprintf(stderr, format, args);
+    vfprintf(stderr, format, args); 
     va_end(args);
     fputs("\n", stderr);
 
-    size_t instruction = vm.ip - vm.chunk->code -1;
+    size_t instruction = vm.ip - vm.chunk->code -1; // interpreter +1's before interpreting. so we have to -1 to corretly locate the error
     int line = vm.chunk->lines[instruction];
     fprintf(stderr, "[line %d] in script\n", line);
     resetStack();
