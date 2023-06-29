@@ -27,6 +27,16 @@ void initScanner(const char* source) {
     scanner.line = 1;       // first line is a 1 because thats how us humans roll
 }
 
+// helper for scanToken - check for alphabethical Char (begin of identifier or Keyword)
+static bool isAlpha(char c) {
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
+}
+
+// helper for scanToken() - true if char between 0 and 9
+static bool isDigit(char c) {
+    return c >= '0' && c <= '9';
+}
+
 // helper for scanToken() - checks if were at the end of the string (we appended '\0' at the end of the string when reading it form the file)
 static bool isAtEnd() {
     return *scanner.current == '\0';
@@ -111,9 +121,90 @@ static void skipWhitespace() {
     }
 }
 
+// helper for identifierType() - tries to match for keywords after hitting the 'start'-character
+// - after previously finding the prefix, we check if the rest of the Token chars follow 
+//      - (ex after a 'c' we check if the following chars are 'lass' if so we know we hit a 'class'-Token)
+static TokenType checkKeyword(int start, int length, const char* rest, TokenType type) {
+    if (scanner.current - scanner.start == start + length && 
+            memcmp(scanner.start + start, rest, length) == 0) {
+        return type;
+    }
+    return Token_IDENTIFIER;
+}
+
+// helper for identifierToken() - this checks Type of the current Token -> could be Keyword or Literal etc...
+// - we just check by hand for all reserved keywords:
+//      ( we know only and starts with 'a' or this and true for 't' so we only check that)
+// - this mean we can build a Trie/digital-tree to check for valid character combinations
+static TokenType identifierType() {
+    switch(scanner.start[0]) {
+        case 'a': return checkKeyword(1, 2, "nd", TOKEN_AND);
+        case 'c': return checkKeyword(1, 4, "lass", TOKEN_CLASS);
+        case 'e': return checkKeyword(1, 3, "lse", TOKEN_ELSE);
+        case 'f':
+            // since f cound lead to false || for or fun -> we branch for those:
+            if (scanner.current - scanner.start > 1) {
+                switch (scanner.start[1]) {
+                    case 'a': return checkKeyword(2, 3, "lse", TOKEN_FALSE);
+                    case 'o': return checkKeyword(2, 1, "r", TOKEN_FOR);
+                    case 'u': return checkKeyword(2, 1, "n", TOKEN_FUN);
+                }
+            }
+            break;
+        case 'i': return checkKeyword(1, 1, "f", TOKEN_IF);
+        case 'n': return checkKeyword(1, 2, "il", TOKEN_NIL);
+        case 'o': return checkKeyword(1, 1, "r", TOKEN_OR);
+        case 'p': return checkKeyword(1, 4, "rint", TOKEN_PRINT);
+        case 'r': return checkKeyword(1, 5, "eturn", TOKEN_RETURN);
+        case 's': return checkKeyword(1, 4, "uper", TOKEN_SUPER);
+        case 't':
+            if (scanner.current - scanner.start > 1) {
+                switch (scanner.start[1] > 1) {
+                    case 'h': return checkKeyword(2, 2, "is", TOKEN_THIS);
+                    case 'r': return checkKeyword(2, 2, "ue", TOKEN_TRUE);
+                }
+            }
+            break;
+        case 'v': return checkKeyword(1, 2, "ar", TOKEN_VAR);
+        case 'w': return checkKeyword(1, 4, "hile", TOKEN_WHILE);
+    }
+
+
+    return Token_IDENTIFIER;
+}
+
+// helper for scanToken() - creates an Identifier Token (can be a Keyword or Literal etc...)
+static Token identifierToken() {
+    while (isAlpha(peek()) || isDigit(peek())) advance();       // after first digit we allow Alphanumerical
+    return makeToken(identifierType());                         // here let identifierType() identify the type
+}
+
+// helper for scanToken() - keeps consuming Digits (and one . if next Digit again) to get a Float-Token
+static Token numberToken() {
+    while (isDigit(peek())) advance();
+
+    if (peek() == '.' && isDigit(peekNext())) {
+        advance();                  // consume the '.'
+        while (isDigit(peek())) advance();
+    }
+    return makeToken(TOKEN_NUMBER);
+}
+
+// helper for scanToken - (after opening ") we keep reading the literal till we hit a closing one or Error
+static Token stringToken() {
+    // keep going till we find '"' to terminate the string:
+    while(peek() != '"' && !isAtEnd()) {
+        if(peek() == '\n') scanner.line++;
+        advance();
+    }
+    if (isAtEnd()) return errorToken("Unterminated string.");
+
+    advance();
+    return makeToken(TOKEN_STRING);
+}
+
 // each call to this function scans a complete token.
 // - and by doing this sets the new current to after then end of the 'consumed' token
-// - 
 Token scanToken() {
     skipWhitespace();                               // ignore leading-whitespace before we start checking for a LEXEME
     scanner.start = scaner.current;                 // we know our last call to scanToken() ended the current-pointer 'above' the end of the last
@@ -122,6 +213,10 @@ Token scanToken() {
 
     // advance a character
     char c = advance();
+
+    if (isAlpha(c)) return identifierToken();
+    if (isDigit(c)) return numberToken();  	            // instead of a switch for 0-9 digits we do this
+
     switch (c) {
         // Map single-character TokenTypes to the char we just read:
         case '(': return makeToken(TOKEN_LEFT_PAREN);
@@ -149,6 +244,9 @@ Token scanToken() {
         case '>':
             return makeToken(
                 match('=') ? TOKEN_GREATER_EQUAL : TOKEN_GREATER);
+        
+        // Literal Tokens (enclosed by "")
+        case '"': return stringToken();
     }
 
     return errorToken("Unexpected character.");     // couldnt parse Token -> do the Error-Token 

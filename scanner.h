@@ -30,9 +30,10 @@ typedef enum {
 } TokenType;
 
 // One Token/Lexeme. Like a keyword 'var' '+' or a identifier like 'nr_of_steps'...
+// - in clox token only store the lexeme (jlox did store the whole value)
 typedef struct {
     TokenType type;
-    const char* start;
+    const char* start;      // the lexeme (character sequance like "var" or "=" or "12.5")
     int length;
     int line;
 } Token;
