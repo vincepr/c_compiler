@@ -71,7 +71,7 @@ static bool match(char expected) {
 // helper for scanToken() - constructor like for Token: 
 // - creates a token from the current start-pointer to current-pointer
 static Token makeToken(TokenType type) {
-    Token type;
+    Token token;
     token.type = type;
     token.start = scanner.start;
     token.length = (int)(scanner.current - scanner.start);
@@ -129,7 +129,7 @@ static TokenType checkKeyword(int start, int length, const char* rest, TokenType
             memcmp(scanner.start + start, rest, length) == 0) {
         return type;
     }
-    return Token_IDENTIFIER;
+    return TOKEN_IDENTIFIER;
 }
 
 // helper for identifierToken() - this checks Type of the current Token -> could be Keyword or Literal etc...
@@ -159,7 +159,7 @@ static TokenType identifierType() {
         case 's': return checkKeyword(1, 4, "uper", TOKEN_SUPER);
         case 't':
             if (scanner.current - scanner.start > 1) {
-                switch (scanner.start[1] > 1) {
+                switch (scanner.start[1]) {
                     case 'h': return checkKeyword(2, 2, "is", TOKEN_THIS);
                     case 'r': return checkKeyword(2, 2, "ue", TOKEN_TRUE);
                 }
@@ -168,9 +168,7 @@ static TokenType identifierType() {
         case 'v': return checkKeyword(1, 2, "ar", TOKEN_VAR);
         case 'w': return checkKeyword(1, 4, "hile", TOKEN_WHILE);
     }
-
-
-    return Token_IDENTIFIER;
+    return TOKEN_IDENTIFIER;
 }
 
 // helper for scanToken() - creates an Identifier Token (can be a Keyword or Literal etc...)
@@ -207,7 +205,7 @@ static Token stringToken() {
 // - and by doing this sets the new current to after then end of the 'consumed' token
 Token scanToken() {
     skipWhitespace();                               // ignore leading-whitespace before we start checking for a LEXEME
-    scanner.start = scaner.current;                 // we know our last call to scanToken() ended the current-pointer 'above' the end of the last
+    scanner.start = scanner.current;                 // we know our last call to scanToken() ended the current-pointer 'above' the end of the last
 
     if (isAtEnd()) return makeToken(TOKEN_EOF);     // We must add a EOF-Token at the end. The compiler needs this or it will keep going
 

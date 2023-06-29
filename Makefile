@@ -14,6 +14,7 @@ build:
 # first build then run the binary
 run: build
 	./binary.out
+#	./binary.out test.lox
 
 # to remove all artifacts/binary
 clean:
