@@ -246,6 +246,5 @@ Token scanToken() {
         // Literal Tokens (enclosed by "")
         case '"': return stringToken();
     }
-
     return errorToken("Unexpected character.");     // couldnt parse Token -> do the Error-Token 
 }
