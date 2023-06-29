@@ -191,7 +191,7 @@ static void grouping() {
 // we map TOKEN_NUMBER -> to this function
 static void number() {
     double value = strtod(parser.previous.start, NULL);
-    emitConstant(value);
+    emitConstant(NUMBER_VAL(value));
 }
 
 // parsing function for an unary negation (-10 or !true)

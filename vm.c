@@ -1,3 +1,4 @@
+#include <stdarg.h>
 #include <stdio.h>
 
 #include "common.h"
@@ -11,6 +12,20 @@ VM vm;
 // helperFunction to setup/reset the stack
 static void resetStack() {
     vm.stackTop = vm.stack;     // we just reuse the stack. So we can just point to its start
+}
+
+// error Handling of Runtime Errors (like trying to - negate a bool)
+static void runtimeError(const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+    vfprintf(stderr, format, args);
+    va_end(args);
+    fputs("\n", stderr);
+
+    size_t instruction = vm.ip - vm.chunk->code -1;
+    int line = vm.chunk->lines[instruction];
+    fprintf(stderr, "[line %d] in script\n", line);
+    resetStack();
 }
 
 void initVM() {
@@ -31,6 +46,11 @@ void push(Value value) {
 Value pop() {
     vm.stackTop--;          // since our stackTop points to 'above' the last element
     return *vm.stackTop;    // we can decrement first then retreive the top/removed element
+}
+
+// returns Value from the stack WITHOUT poping it. (distance is an offset from the top) (0 is the top-one)
+static Value peek(int distance) {
+    return vm.stackTop[-1-distance];
 }
 
 
@@ -78,7 +98,13 @@ static InterpretResult run() {
             case OP_MULTIPLY:   BINARY_OP(*); break;
             case OP_DIVIDE:     BINARY_OP(/); break;
             // OP_NEGATE - arithmetic negation - unary expression, like -x with x=3 -> -3
-            case OP_NEGATE: push(-pop()); break;
+            case OP_NEGATE:
+                if (!IS_NUMBER(peek(0))) {
+                    runtimeError("Operand must be a number.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                push(NUMBER_VAL(-AS_NUMBER(pop())));
+                break;
             // OP_RETURN - exits the loop entirely (end of chunk reached/return from the current Lox function)
             case OP_RETURN: {
                 printValue(pop());      // "produce a value from the stack", for now we just print it out.
