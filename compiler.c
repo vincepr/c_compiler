@@ -21,7 +21,15 @@ typedef struct {
     bool panicMode;     // Flag helps avoid spewing out 100s of cascading errors, after encountering a first error.
 } Parser;
 
+// global Parser instance we can pass arround
 Parser parser;
+// global Chunk of bytecode-instructions we compile into
+Chunk* compilingChunk;
+
+// emits the chunk we compiled our bytecode-instructions to. (so basically all instructions we just 'compiled')
+static Chunk* currentChunk() {
+    return compilingChunk;
+}
 
 // This function logs Errors (so the user can see them)
 // - first we print the error ocurred and line were in
@@ -77,10 +85,33 @@ static void consume(TokenType type, const char* message) {
     errorAtCurrent(message);
 }
 
+// after parsing -> translate to a series of bytecoe instructions
+
+// helper - writes given byte and adds it to the chunk of bytecode-instructions
+static void emitByte(uint8_t byte) {
+    writeChunk(currentChunk(), byte, parser.previous.line);
+}
+
+static void emitBytes(uint8_t byte1, uint8_t byte2) {
+    emitByte(byte1);
+    emitByte(byte2);
+}
+
+// helper for endCompiler()
+static void emitReturn() {
+    emitByte(OP_RETURN); // temporaly  - write the OP_RETURN Byte to our Chunk 
+}
+
+// helper for compile() - For now we just add a Return at the end
+static void endCompiler() {
+    emitReturn();
+}
+
 // we pass in the chunk where the compiler will write the code, then try to compile the source
 // - if compilation fails we return false (compilation error) to upstread disregard the whole chunk
 bool compile(const char* source, Chunk* chunk) {
     initScanner(source);
+    compilingChunk = chunk;         // set our current chunk. Compiled bytecode instructions get added to this
     // 'initialize' our Error-FLAGS:
     parser.hadError = false;
     parser.panicMode = false;
@@ -88,5 +119,6 @@ bool compile(const char* source, Chunk* chunk) {
     advance();                  // primes the scanner
     expression();
     consume(TOKEN_EOF, "Expected end of expression.");
+    endCompiler();
     return !parser.hadError;    // we return if we encountered an compiletime-Error compiling the Chunk
 }
