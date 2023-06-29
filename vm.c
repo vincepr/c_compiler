@@ -94,10 +94,23 @@ static InterpretResult run() {
 #undef BINARY_OP
 }
 
-// takes the repl/source-code string and interprets/runs it
+// takes the source-code string (from file or repl) and interprets/runs it
 InterpretResult interpret(const char* source) {
-    compile(source);
-    return INTERPRET_OK;
+    Chunk chunk;
+    initChunk(&chunk);
+
+    // if compile functions fails (returns false) we discard the unusable chunk -> compile time error
+    if (!compile(source, &chunk)) {
+        freeChunk(&chunk);
+        return INTERPRET_COMPILE_ERROR
+    }
+    // otherwise we send the completed chunk over to the vm to be executed:
+    vm.chunk = &chunk;
+    vm.ip = vm.chunk->code;
+    InterpretResult result = run();
+    // and do some cleanup:
+    freeChunk(&chunk);
+    return result;
 }
 
 
