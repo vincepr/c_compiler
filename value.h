@@ -3,6 +3,13 @@
 
 #include "common.h"
 
+// All supported Values of our Language. Like Boolean, Null, double-Number etc...
+typedef enum {
+    VAL_BOOL,
+    VAL_NIL,
+    VAL_NUMBER,
+} ValueType;
+
 // represents one constant/static value (clox uses floats for numbers like js)
 typedef double Value;
 
