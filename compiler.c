@@ -34,7 +34,18 @@ typedef enum {
     PREC_UNARY,         // ! -
     PREC_CALL,          // . ()
     PREC_PRIMARY,
-}
+} Precedence;
+
+// used in ParseRule - simple typedef for a function type that takes no arguments and returns nothing.
+// used to map TOKEN_ADDITION -> ParseFn implemention for addition.
+typedef void (*ParseFn)();
+
+// 
+typedef struct {
+    ParseFn prefix;             // happens before: this Function implements the parsing function for the Token that maps to that ParseRule
+    ParseFn infix;              // happens after : this Function implements the parsing function for the Token that maps to that ParseRule
+    Precedence precedence;      // The enum (so actually a Number!) we use to decide what to parse first
+} ParseRule;
 
 // global Parser instance we can pass arround
 Parser parser;
@@ -137,6 +148,29 @@ static void endCompiler() {
     emitReturn();
 }
 
+// Forward declarations - these get defined later but functions define before and afterwards depend on them. (recursively)
+static void expression();
+static ParseRule* getRule(TokenType type);
+static void parsePrecedence(Precedence precedence);
+
+// parsing function for TOKEN_PLUS, TOKEN_MINUS, TOKEN_START, TOKEN_SLASH
+// - when this gets called the left side of the expression has already been parsed and is pop'd on the stack
+// - the operand-Symbol is consumed aswell.
+// so we just compile the right-side-expression and pop it on the stack, then emit the Bytecode for the Addition.
+static void binary() {
+    TokenType operatorType = parser.previous.type;
+    ParseRule* rule = getRule(operatorType);                // we need to be able to compare precedence to stop at 3 for (2*3+4) and not get the whole 2*7
+    parsePrecedence((Precedence)(rule->precedence + 1));
+
+    switch (operatorType) {
+        case TOKEN_PLUS:        emitByte(OP_ADD); break;
+        case TOKEN_MINUS:       emitByte(OP_SUBTRACT); break;
+        case TOKEN_STAR:        emitByte(OP_MULTIPLY); break;
+        case TOKEN_SLASH:       emitByte(OP_DIVIDE); break;
+        default: return;        // Unreachable
+    }
+}
+
 // parsing function for an expression type - like a recursive descent parser.
 static void grouping() {
     expression();
@@ -161,9 +195,61 @@ static void unary() {
     }
 }
 
+// This is just a lookuptable pointing Tokens to the functions that parse it.
+// - prefix
+// - infix
+// [TOKEN Name]      = {prefix-Fn, infix-Fn, Precedence Number }
+ParseRule rules[] = {
+  [TOKEN_LEFT_PAREN]    = {grouping, NULL,   PREC_NONE},
+  [TOKEN_RIGHT_PAREN]   = {NULL,     NULL,   PREC_NONE},
+  [TOKEN_LEFT_BRACE]    = {NULL,     NULL,   PREC_NONE}, 
+  [TOKEN_RIGHT_BRACE]   = {NULL,     NULL,   PREC_NONE},
+  [TOKEN_COMMA]         = {NULL,     NULL,   PREC_NONE},
+  [TOKEN_DOT]           = {NULL,     NULL,   PREC_NONE},
+  [TOKEN_MINUS]         = {unary,    binary, PREC_TERM},
+  [TOKEN_PLUS]          = {NULL,     binary, PREC_TERM},
+  [TOKEN_SEMICOLON]     = {NULL,     NULL,   PREC_NONE},
+  [TOKEN_SLASH]         = {NULL,     binary, PREC_FACTOR},
+  [TOKEN_STAR]          = {NULL,     binary, PREC_FACTOR},
+  [TOKEN_BANG]          = {NULL,     NULL,   PREC_NONE},
+  [TOKEN_BANG_EQUAL]    = {NULL,     NULL,   PREC_NONE},
+  [TOKEN_EQUAL]         = {NULL,     NULL,   PREC_NONE},
+  [TOKEN_EQUAL_EQUAL]   = {NULL,     NULL,   PREC_NONE},
+  [TOKEN_GREATER]       = {NULL,     NULL,   PREC_NONE},
+  [TOKEN_GREATER_EQUAL] = {NULL,     NULL,   PREC_NONE},
+  [TOKEN_LESS]          = {NULL,     NULL,   PREC_NONE},
+  [TOKEN_LESS_EQUAL]    = {NULL,     NULL,   PREC_NONE},
+  [TOKEN_IDENTIFIER]    = {NULL,     NULL,   PREC_NONE},
+  [TOKEN_STRING]        = {NULL,     NULL,   PREC_NONE},
+  [TOKEN_NUMBER]        = {number,   NULL,   PREC_NONE},
+  [TOKEN_AND]           = {NULL,     NULL,   PREC_NONE},
+  [TOKEN_CLASS]         = {NULL,     NULL,   PREC_NONE},
+  [TOKEN_ELSE]          = {NULL,     NULL,   PREC_NONE},
+  [TOKEN_FALSE]         = {NULL,     NULL,   PREC_NONE},
+  [TOKEN_FOR]           = {NULL,     NULL,   PREC_NONE},
+  [TOKEN_FUN]           = {NULL,     NULL,   PREC_NONE},
+  [TOKEN_IF]            = {NULL,     NULL,   PREC_NONE},
+  [TOKEN_NIL]           = {NULL,     NULL,   PREC_NONE},
+  [TOKEN_OR]            = {NULL,     NULL,   PREC_NONE},
+  [TOKEN_PRINT]         = {NULL,     NULL,   PREC_NONE},
+  [TOKEN_RETURN]        = {NULL,     NULL,   PREC_NONE},
+  [TOKEN_SUPER]         = {NULL,     NULL,   PREC_NONE},
+  [TOKEN_THIS]          = {NULL,     NULL,   PREC_NONE},
+  [TOKEN_TRUE]          = {NULL,     NULL,   PREC_NONE},
+  [TOKEN_VAR]           = {NULL,     NULL,   PREC_NONE},
+  [TOKEN_WHILE]         = {NULL,     NULL,   PREC_NONE},
+  [TOKEN_ERROR]         = {NULL,     NULL,   PREC_NONE},
+  [TOKEN_EOF]           = {NULL,     NULL,   PREC_NONE},
+};
+
 // we need explicit precedence. Otherwise  -a.b + c could be compiled to: - (a.b + c) with how it is written
 static void parsePrecedence(Precedence precedence) {
 
+}
+
+// this simply reads the corresponding ParseRule from our rules-lookuptable.
+static ParseRule* getRule(TokenType type) {
+    return &rules[type];
 }
 
 // helper for compile() 
