@@ -102,7 +102,7 @@ InterpretResult interpret(const char* source) {
     // if compile functions fails (returns false) we discard the unusable chunk -> compile time error
     if (!compile(source, &chunk)) {
         freeChunk(&chunk);
-        return INTERPRET_COMPILE_ERROR
+        return INTERPRET_COMPILE_ERROR;
     }
     // otherwise we send the completed chunk over to the vm to be executed:
     vm.chunk = &chunk;
@@ -112,5 +112,3 @@ InterpretResult interpret(const char* source) {
     freeChunk(&chunk);
     return result;
 }
-
-

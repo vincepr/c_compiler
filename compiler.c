@@ -197,7 +197,7 @@ static void number() {
 // parsing function for an unary negation (-10 or !true)
 static void unary() {
     TokenType operatorType = parser.previous.type;      // we need to differentiate between ! and -
-    parsePrecedence(PREC_UNARY)                         // compiles the operand (ex: 10)
+    parsePrecedence(PREC_UNARY);                        // compiles the operand (ex: 10)
 
     // Emit the operator instruction (depending on ! or -)
     switch (operatorType) {
@@ -258,7 +258,7 @@ static void parsePrecedence(Precedence precedence) {
     advance();                                                  // we read the next token
     ParseFn prefixRule = getRule(parser.previous.type)->prefix; // then loop up the corresponding Parse Rule
     // if there is no prefix parser then the token must be a syntax error:
-    if (prefixrule == NULL) {
+    if (prefixRule == NULL) {
         error("Expect expression.");                            
         return;
     }
