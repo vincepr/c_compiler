@@ -174,11 +174,30 @@ static void binary() {
     parsePrecedence((Precedence)(rule->precedence + 1));
 
     switch (operatorType) {
-        case TOKEN_PLUS:        emitByte(OP_ADD); break;
-        case TOKEN_MINUS:       emitByte(OP_SUBTRACT); break;
-        case TOKEN_STAR:        emitByte(OP_MULTIPLY); break;
-        case TOKEN_SLASH:       emitByte(OP_DIVIDE); break;
-        default: return;        // Unreachable
+        // equality/comparison
+        case TOKEN_BANG_EQUAL:      emitBytes(OP_EQUAL, OP_NOT); break;     //(a!=)
+        case TOKEN_EQUAL_EQUAL:     emitByte(OP_EQUAL); break;       
+        case TOKEN_GREATER:         emitByte(OP_GREATER); break;
+        case TOKEN_GREATER_EQUAL:   emitBytes(OP_LESS, OP_NOT); break;      // a>=b == !(a<b)
+        case TOKEN_LESS:            emitByte(OP_LESS); break;
+        case TOKEN_LESS_EQUAL:      emitBytes(OP_GREATER, OP_NOT); break;   // a<=b == !(a>b)
+        // arithmetic
+        case TOKEN_PLUS:            emitByte(OP_ADD); break;
+        case TOKEN_MINUS:           emitByte(OP_SUBTRACT); break;
+        case TOKEN_STAR:            emitByte(OP_MULTIPLY); break;
+        case TOKEN_SLASH:           emitByte(OP_DIVIDE); break;
+        default: return;            // Unreachable
+    }
+}
+
+// when hitting a OP_TRUE OP_FALSE OP_NIL we just push the corresponding value on the stack
+// this is done as optimisation-strategy (no casting from C-true -> struct and back) 
+static void literal() {
+    switch (parser.previous.type) {
+        case TOKEN_FALSE:       emitByte(OP_FALSE); break;
+        case TOKEN_NIL:         emitByte(OP_NIL); break;
+        case TOKEN_TRUE:        emitByte(OP_TRUE); break;
+        default: return;        // unreachable
     }
 }
 
@@ -191,7 +210,7 @@ static void grouping() {
 // we map TOKEN_NUMBER -> to this function
 static void number() {
     double value = strtod(parser.previous.start, NULL);
-    emitConstant(value);
+    emitConstant(NUMBER_VAL(value));
 }
 
 // parsing function for an unary negation (-10 or !true)
@@ -201,7 +220,8 @@ static void unary() {
 
     // Emit the operator instruction (depending on ! or -)
     switch (operatorType) {
-        case TOKEN_MINUS: emitByte(OP_NEGATE); break;
+        case TOKEN_BANG:        emitByte(OP_NOT); break;
+        case TOKEN_MINUS:       emitByte(OP_NEGATE); break;
         default: return;                                // Unreachable
     }
 }
@@ -211,46 +231,46 @@ static void unary() {
 // - infix expressions are on the right side (get evaluated 2nd) then poped on the stack
 // [TOKEN Name]      = {prefix-Fn, infix-Fn, Precedence Number }
 ParseRule rules[] = {
-  [TOKEN_LEFT_PAREN]    = {grouping, NULL,   PREC_NONE},
-  [TOKEN_RIGHT_PAREN]   = {NULL,     NULL,   PREC_NONE},
-  [TOKEN_LEFT_BRACE]    = {NULL,     NULL,   PREC_NONE}, 
-  [TOKEN_RIGHT_BRACE]   = {NULL,     NULL,   PREC_NONE},
-  [TOKEN_COMMA]         = {NULL,     NULL,   PREC_NONE},
-  [TOKEN_DOT]           = {NULL,     NULL,   PREC_NONE},
-  [TOKEN_MINUS]         = {unary,    binary, PREC_TERM},
-  [TOKEN_PLUS]          = {NULL,     binary, PREC_TERM},
-  [TOKEN_SEMICOLON]     = {NULL,     NULL,   PREC_NONE},
-  [TOKEN_SLASH]         = {NULL,     binary, PREC_FACTOR},
-  [TOKEN_STAR]          = {NULL,     binary, PREC_FACTOR},
-  [TOKEN_BANG]          = {NULL,     NULL,   PREC_NONE},
-  [TOKEN_BANG_EQUAL]    = {NULL,     NULL,   PREC_NONE},
-  [TOKEN_EQUAL]         = {NULL,     NULL,   PREC_NONE},
-  [TOKEN_EQUAL_EQUAL]   = {NULL,     NULL,   PREC_NONE},
-  [TOKEN_GREATER]       = {NULL,     NULL,   PREC_NONE},
-  [TOKEN_GREATER_EQUAL] = {NULL,     NULL,   PREC_NONE},
-  [TOKEN_LESS]          = {NULL,     NULL,   PREC_NONE},
-  [TOKEN_LESS_EQUAL]    = {NULL,     NULL,   PREC_NONE},
-  [TOKEN_IDENTIFIER]    = {NULL,     NULL,   PREC_NONE},
-  [TOKEN_STRING]        = {NULL,     NULL,   PREC_NONE},
-  [TOKEN_NUMBER]        = {number,   NULL,   PREC_NONE},
-  [TOKEN_AND]           = {NULL,     NULL,   PREC_NONE},
-  [TOKEN_CLASS]         = {NULL,     NULL,   PREC_NONE},
-  [TOKEN_ELSE]          = {NULL,     NULL,   PREC_NONE},
-  [TOKEN_FALSE]         = {NULL,     NULL,   PREC_NONE},
-  [TOKEN_FOR]           = {NULL,     NULL,   PREC_NONE},
-  [TOKEN_FUN]           = {NULL,     NULL,   PREC_NONE},
-  [TOKEN_IF]            = {NULL,     NULL,   PREC_NONE},
-  [TOKEN_NIL]           = {NULL,     NULL,   PREC_NONE},
-  [TOKEN_OR]            = {NULL,     NULL,   PREC_NONE},
-  [TOKEN_PRINT]         = {NULL,     NULL,   PREC_NONE},
-  [TOKEN_RETURN]        = {NULL,     NULL,   PREC_NONE},
-  [TOKEN_SUPER]         = {NULL,     NULL,   PREC_NONE},
-  [TOKEN_THIS]          = {NULL,     NULL,   PREC_NONE},
-  [TOKEN_TRUE]          = {NULL,     NULL,   PREC_NONE},
-  [TOKEN_VAR]           = {NULL,     NULL,   PREC_NONE},
-  [TOKEN_WHILE]         = {NULL,     NULL,   PREC_NONE},
-  [TOKEN_ERROR]         = {NULL,     NULL,   PREC_NONE},
-  [TOKEN_EOF]           = {NULL,     NULL,   PREC_NONE},
+  [TOKEN_LEFT_PAREN]    = {grouping, NULL,      PREC_NONE},
+  [TOKEN_RIGHT_PAREN]   = {NULL,     NULL,      PREC_NONE},
+  [TOKEN_LEFT_BRACE]    = {NULL,     NULL,      PREC_NONE}, 
+  [TOKEN_RIGHT_BRACE]   = {NULL,     NULL,      PREC_NONE},
+  [TOKEN_COMMA]         = {NULL,     NULL,      PREC_NONE},
+  [TOKEN_DOT]           = {NULL,     NULL,      PREC_NONE},
+  [TOKEN_MINUS]         = {unary,    binary,    PREC_TERM},
+  [TOKEN_PLUS]          = {NULL,     binary,    PREC_TERM},
+  [TOKEN_SEMICOLON]     = {NULL,     NULL,      PREC_NONE},
+  [TOKEN_SLASH]         = {NULL,     binary,    PREC_FACTOR},
+  [TOKEN_STAR]          = {NULL,     binary,    PREC_FACTOR},
+  [TOKEN_BANG]          = {unary,    NULL,      PREC_NONE},
+  [TOKEN_BANG_EQUAL]    = {NULL,     binary,    PREC_EQUALITY},
+  [TOKEN_EQUAL]         = {NULL,     NULL,      PREC_NONE},
+  [TOKEN_EQUAL_EQUAL]   = {NULL,     binary,    PREC_EQUALITY},
+  [TOKEN_GREATER]       = {NULL,     binary,    PREC_COMPARISON},
+  [TOKEN_GREATER_EQUAL] = {NULL,     binary,    PREC_COMPARISON},
+  [TOKEN_LESS]          = {NULL,     binary,    PREC_COMPARISON},
+  [TOKEN_LESS_EQUAL]    = {NULL,     binary,    PREC_COMPARISON},
+  [TOKEN_IDENTIFIER]    = {NULL,     NULL,      PREC_NONE},
+  [TOKEN_STRING]        = {NULL,     NULL,      PREC_NONE},
+  [TOKEN_NUMBER]        = {number,   NULL,      PREC_NONE},
+  [TOKEN_AND]           = {NULL,     NULL,      PREC_NONE},
+  [TOKEN_CLASS]         = {NULL,     NULL,      PREC_NONE},
+  [TOKEN_ELSE]          = {NULL,     NULL,      PREC_NONE},
+  [TOKEN_FALSE]         = {literal,  NULL,      PREC_NONE},
+  [TOKEN_FOR]           = {NULL,     NULL,      PREC_NONE},
+  [TOKEN_FUN]           = {NULL,     NULL,      PREC_NONE},
+  [TOKEN_IF]            = {NULL,     NULL,      PREC_NONE},
+  [TOKEN_NIL]           = {literal,  NULL,      PREC_NONE},
+  [TOKEN_OR]            = {NULL,     NULL,      PREC_NONE},
+  [TOKEN_PRINT]         = {NULL,     NULL,      PREC_NONE},
+  [TOKEN_RETURN]        = {NULL,     NULL,      PREC_NONE},
+  [TOKEN_SUPER]         = {NULL,     NULL,      PREC_NONE},
+  [TOKEN_THIS]          = {NULL,     NULL,      PREC_NONE},
+  [TOKEN_TRUE]          = {literal,  NULL,      PREC_NONE},
+  [TOKEN_VAR]           = {NULL,     NULL,      PREC_NONE},
+  [TOKEN_WHILE]         = {NULL,     NULL,      PREC_NONE},
+  [TOKEN_ERROR]         = {NULL,     NULL,      PREC_NONE},
+  [TOKEN_EOF]           = {NULL,     NULL,      PREC_NONE},
 };
 
 // we need explicit precedence. Otherwise  -a.b + c could be compiled to: - (a.b + c) with how it is written
