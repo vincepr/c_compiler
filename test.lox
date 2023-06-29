@@ -1,0 +1,10 @@
+fun doSomething() {
+    var x = 0;
+    for (x<10) {
+        x = x + 1;
+    }
+    print x;
+}
+
+doSomething();
+print "doSomething() has run";
