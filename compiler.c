@@ -21,6 +21,21 @@ typedef struct {
     bool panicMode;     // Flag helps avoid spewing out 100s of cascading errors, after encountering a first error.
 } Parser;
 
+// First has highest Precedence -> it gets executed first
+typedef enum {
+    PREC_NONE,
+    PREC_ASSIGNMENT,    // =
+    PREC_OR,            // or
+    PREC_AND,           // and 
+    PREC_EQUALITY,      // == !=
+    PREC_COMPARISON,    // < <= > >=
+    PREC_TERM,          // + -
+    PREC_FACTOR,        // * /
+    PREC_UNARY,         // ! -
+    PREC_CALL,          // . ()
+    PREC_PRIMARY,
+}
+
 // global Parser instance we can pass arround
 Parser parser;
 // global Chunk of bytecode-instructions we compile into
@@ -44,7 +59,7 @@ static void errorAtToken(Token* token, const char* message) {
     if (token->type == TOKEN_EOF) {
         fprintf(stderr, " at end");
     } else if (token->type == TOKEN_ERROR) {
-        // DO NOTHING
+        // DO NOTHING (not human readable?)  TODO: check what this would print out?
     } else {
         fprintf(stderr, " at '%.*s'", token->length, token->start);
     }
@@ -102,9 +117,61 @@ static void emitReturn() {
     emitByte(OP_RETURN); // temporaly  - write the OP_RETURN Byte to our Chunk 
 }
 
+// helper for emitConstant() - pushes the value on the runtime stack.
+static uint8_t makeConstant(Value value) {
+    int constant = addConstant(currentChunk(), value);
+    if (constant > UINT8_MAX) {
+        error("Too many constants in one chunk.");      // at the moment 256 limit of constants per chunk
+        return 0;
+    }
+    return (uint8_t)constant;
+}
+
+// emits the Instrucitons to add one constant to our Cunk (like in var x=3.65 -> we would add const 3.65)
+static void emitConstant(Value value) {
+    emitBytes(OP_CONSTANT, makeConstant(value));
+}
+
 // helper for compile() - For now we just add a Return at the end
 static void endCompiler() {
     emitReturn();
+}
+
+// parsing function for an expression type - like a recursive descent parser.
+static void grouping() {
+    expression();
+    consume(TOKEN_RIGHT_PAREN, "Expect ')' after expression.");
+}
+
+// we map TOKEN_NUMBER -> to this function
+static void number() {
+    double value = strtod(parser.previous.start, NULL);
+    emitConstant(value);
+}
+
+// parsing function for an unary negation (-10 or !true)
+static void unary() {
+    TokenType operatorType = parser.previous.type;      // we need to differentiate between ! and -
+    parsePrecedence(PREC_UNARY)                         // compiles the operand (ex: 10)
+
+    // Emit the operator instruction (depending on ! or -)
+    switch (operatorType) {
+        case TOKEN_MINUS: emitByte(OP_NEGATE); break;
+        default: return;                                // Unreachable
+    }
+}
+
+// we need explicit precedence. Otherwise  -a.b + c could be compiled to: - (a.b + c) with how it is written
+static void parsePrecedence(Precedence precedence) {
+
+}
+
+// helper for compile() 
+// - Expressions always evaluate to a Value like 1+2->3 || True == "james"->False 
+// - Implemented are so far: 
+//      []Number-literals, []parentheses, []unary nengation, []Arithmetics: + - * /
+static void expression() {
+    parsePrecedence(PREC_ASSIGNMENT);
 }
 
 // we pass in the chunk where the compiler will write the code, then try to compile the source
