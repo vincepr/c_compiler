@@ -7,6 +7,7 @@
 #include <stdint.h>
 
 
+#define DEBUG_PRINT_CODE        // FLAG to enable Dumping generated Chunks (of bytecode)
 #define DEBUG_TRACE_EXECUTION   // FLAG to enable Diagnostics/Debug print outs
 
 

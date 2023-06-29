@@ -205,8 +205,7 @@ static Token stringToken() {
 // - and by doing this sets the new current to after then end of the 'consumed' token
 Token scanToken() {
     skipWhitespace();                               // ignore leading-whitespace before we start checking for a LEXEME
-    scanner.start = scanner.current;                 // we know our last call to scanToken() ended the current-pointer 'above' the end of the last
-
+    scanner.start = scanner.current;                // we know our last call to scanToken() ended the current-pointer 'above' the end of the last
     if (isAtEnd()) return makeToken(TOKEN_EOF);     // We must add a EOF-Token at the end. The compiler needs this or it will keep going
 
     // advance a character
