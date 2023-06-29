@@ -12,12 +12,24 @@
 // defines all allowed/supported OpCodes:
 typedef enum {
     OP_CONSTANT,    // load/produces a static/constant value.
+
+    // OP-instrunctions to push NIL, True, False on the stack
+    OP_NIL,
+    OP_TRUE,
+    OP_FALSE,
+
+    // euality and comparioson operators ( since  a<=b == !(a>b) these 3 are enough to cover all 6)
+    OP_EQUAL,
+    OP_GREATER,
+    OP_LESS,
+
     // Binary operators:
     OP_ADD,
     OP_SUBTRACT,
     OP_MULTIPLY,
     OP_DIVIDE,
-    
+    // unary operators
+    OP_NOT,         // logical Not. like !true -> false
     OP_NEGATE,      // unary negation. like -x with x=3 -> -3
     OP_RETURN,      // return from the current function
 } OpCode;

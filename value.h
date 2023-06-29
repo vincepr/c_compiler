@@ -29,7 +29,7 @@ typedef struct {
 // converts the C-values -> Value-struct
 #define BOOL_VAL(value)     ((Value){VAL_BOOL,   {.boolean = value}})
 #define NIL_VAL             ((Value){VAL_NIL,    {.number = 0}})
-#define NUMVER_VAL(value)   ((Value){VAL_NUMBER, {.number = value}})
+#define NUMBER_VAL(value)   ((Value){VAL_NUMBER, {.number = value}})
 // - we always have to 'typecheck'/know the type of our shared union-'as' field. Or we might read wrong data.
 // so we define these macros to 'typecheck'
 #define IS_BOOL(value)      ((value).type == VAL_BOOL)
@@ -44,6 +44,9 @@ typedef struct {
     int count;
     Value* values;
 } ValueArray;
+
+// checks if 2 Values are equal like A==B
+bool valuesEqual(Value a, Value b);
 
 // implementing the dynamic data structure:
 void initValueArray(ValueArray* array);
