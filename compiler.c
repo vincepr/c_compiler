@@ -5,6 +5,10 @@
 #include "compiler.h"
 #include "scanner.h"
 
+#ifdef DEBUG_PRINT_CODE
+#include "debug.h"
+#endif
+
 /*
     The Compiler implementaiton
     - Parses source Code (Tokens provided by the Scanner)
@@ -146,6 +150,13 @@ static void emitConstant(Value value) {
 // helper for compile() - For now we just add a Return at the end
 static void endCompiler() {
     emitReturn();
+
+    // Flag that enables dumpink out chunks once the compiler finishes
+    #ifdef DEBUG_PRINT_CODE
+        if (!parser.hadError) {
+            disassembleChunk(currentChunk(), "code");
+        }
+    #endif
 }
 
 // Forward declarations - these get defined later but functions define before and afterwards depend on them. (recursively)
@@ -196,8 +207,8 @@ static void unary() {
 }
 
 // This is just a lookuptable pointing Tokens to the functions that parse it.
-// - prefix
-// - infix
+// - prefix expressions are on the left side (get evaluated first) then poped on the stack
+// - infix expressions are on the right side (get evaluated 2nd) then poped on the stack
 // [TOKEN Name]      = {prefix-Fn, infix-Fn, Precedence Number }
 ParseRule rules[] = {
   [TOKEN_LEFT_PAREN]    = {grouping, NULL,   PREC_NONE},
@@ -244,7 +255,24 @@ ParseRule rules[] = {
 
 // we need explicit precedence. Otherwise  -a.b + c could be compiled to: - (a.b + c) with how it is written
 static void parsePrecedence(Precedence precedence) {
+    advance();                                                  // we read the next token
+    ParseFn prefixRule = getRule(parser.previous.type)->prefix; // then loop up the corresponding Parse Rule
+    // if there is no prefix parser then the token must be a syntax error:
+    if (prefixrule == NULL) {
+        error("Expect expression.");                            
+        return;
+    }
+    prefixRule();   // otherwise we call the Prefix-ParseFunction
+    //                 that call will compile the rest of the prefix expression consuming any other tokens it needs
 
+    // if the next token is too low precedence or isnt an infix operator were done.
+    // otherwise  we consume the operand and off control to the infix parser we found ( to get the right side compiled)
+    while (precedence <= getRule(parser.current.type)->precedence) {
+        advance();
+        ParseFn infixRule = getRule(parser.previous.type)->infix;
+        infixRule();
+    }
+    
 }
 
 // this simply reads the corresponding ParseRule from our rules-lookuptable.
