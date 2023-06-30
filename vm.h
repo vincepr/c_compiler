@@ -15,6 +15,7 @@ typedef struct {
     uint8_t* ip;            // INSTRUCTION POINTER - pointer to the the current instruction-nr were working on in the chunk
     Value stack[STACK_MAX]; // Stack that holds all currently 'in memory' Values
     Value* stackTop;        // pointer to top of the stack(lastElement + 1) is first to be popped and we add 'above it' when push()
+    Obj* objects;           // head of the linked list of all objects (strings, instances etc) -> useful for keeping track of active Objects -> GarbageCollection
 } VM;
 
 // The VM runs the chunk and responds with a value from this enum:
@@ -23,6 +24,8 @@ typedef enum {
     INTERPRET_COMPILE_ERROR,
     INTERPRET_RUNTIME_ERROR
 } InterpretResult;
+
+extern VM vm;       // we expose the vm globally. (since the object-module needs that when allocating a new object (more specific it needs vm.objects <- the linked list))
 
 void initVM();
 void freeVM();
