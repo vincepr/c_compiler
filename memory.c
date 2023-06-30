@@ -25,3 +25,27 @@ void* reallocate(void* pointer, size_t oldSize, size_t newSize) {
         // if it is NULL, a new block is allocated and a pointer to it is returned to by the funciton
     // size: is the new size for the memory block in bytes
     // return value: this function returns a pointer to the newly allocated memory, or NULL if the request fails.
+
+
+// heler for freeObjects() - frees a single object (node of the linked list)
+static void freeObject(Obj* object) {
+    switch (object->type) {
+        case OBJ_STRING: {
+            ObjString* string = (ObjString*)object;
+            FREE_ARRAY(char, string->chars, string->length + 1);
+            FREE(ObjString, object);
+            break;
+        }
+    }
+}
+
+// walk our linked-list of active objects and free each from memory.
+void freeObjects() {
+    Obj* object = vm.objects;
+    while (object != NULL) {
+        Obj* next = object->next;
+        freeObject(object);
+        object = next;
+    }
+}
+

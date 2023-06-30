@@ -2,6 +2,15 @@
 #define clox_memory_h
 
 #include "common.h"
+#include "object.h"
+#include "vm.h"
+
+// macro that allocates an array with given type and count/size:
+#define ALLOCATE(type, count) \
+    (type*)reallocate(NULL, 0, sizeof(type) * (count))
+
+// macro - used to free memory that a custom Object used
+#define FREE(type, pointer) reallocate(pointer, sizeof(type), 0)
 
 // We define we double Capacity whenever we reach its limit
 // - we start at 8 (after upgrade from when it gets initialized with capacity = 0)
@@ -20,5 +29,6 @@
     reallocate(pointer, sizeof(type) * (oldCount), 0);
 
 void* reallocate(void* pointer, size_t oldSize, size_t newSize);
+void freeObjects();
 
 #endif
