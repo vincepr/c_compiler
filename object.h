@@ -40,6 +40,7 @@ struct ObjString {
     Obj obj;
     int length;
     char* chars;
+    uint32_t hash;      // we precalculate/hash the hash. (so we dont have to do it each time we use our map)
 };
 
 ObjString* takeString(char* chars, int length);
