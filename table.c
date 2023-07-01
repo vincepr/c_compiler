@@ -155,5 +155,4 @@ ObjString* tableFindString(Table* table, const char* chars, int length, uint32_t
         }
         index = (index + 1 ) % table->capacity;
     }
-
 }
