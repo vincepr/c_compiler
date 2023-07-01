@@ -36,6 +36,10 @@
     - Good: since it tends to cluster data its cache friendly.
 */
 
+/*
+    For notes on Tombstone strategy used, check comments for tableDelete()
+*/
+
 // The Objects our Maps Holds (ex: key:varname1, value:10.5 )
 typedef struct {
     ObjString* key;
@@ -45,7 +49,7 @@ typedef struct {
 // The struct of our HashMap
 typedef struct {
     int count;          // currently stores key-value pairs
-    int capactiy;       // capacity (so can easly get the load-factor: count/capacity)
+    int capacity;       // capacity (so can easly get the load-factor: count/capacity)
     Entry* entries;     // array of the entries we hash
 } Table;
 
@@ -55,5 +59,6 @@ bool tableGet(Table* table, ObjString* key, Value* value);
 bool tableSet(Table* table, ObjString* key, Value value);
 bool tableDelete(Table* table, ObjString* key);
 void tableAddAll(Table* from, Table* to);
+ObjString* tableFindString(Table* table, const char* chars, int length, uint32_t hash);
 
 #endif

@@ -36,9 +36,11 @@ static void runtimeError(const char* format, ...) {
 void initVM() {
     resetStack();
     vm.objects = NULL;      // reset linked list of all active objects
+    initTable(&vm.strings); // setup the HashTable
 }
 
 void freeVM() {
+    freeTable(&vm.strings);
     freeObjects();          // when free the vm, we need to free all objects in the linked-list of objects.
 }
 
