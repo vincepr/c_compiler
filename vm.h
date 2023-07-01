@@ -2,6 +2,7 @@
 #define clox_vm_h
 
 #include "chunk.h"
+#include "table.h"
 #include "value.h"
 
 /*
@@ -15,6 +16,7 @@ typedef struct {
     uint8_t* ip;            // INSTRUCTION POINTER - pointer to the the current instruction-nr were working on in the chunk
     Value stack[STACK_MAX]; // Stack that holds all currently 'in memory' Values
     Value* stackTop;        // pointer to top of the stack(lastElement + 1) is first to be popped and we add 'above it' when push()
+    Table strings;          // to enable string-interning we store all active-string variables in this table
     Obj* objects;           // head of the linked list of all objects (strings, instances etc) -> useful for keeping track of active Objects -> GarbageCollection
 } VM;
 
