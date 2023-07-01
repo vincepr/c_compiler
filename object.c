@@ -44,7 +44,7 @@ static uint32_t hashString(const char* key, int length) {
 //  (this is done so concatenate can just take the input strings and consume them, without extra copying)
 ObjString* takeString(char* chars, int length) {
     uint32_t hash = hashString(chars, length);
-    ObjString* interned = tablefindString(&vm.strings, chars, length, hash);
+    ObjString* interned = tableFindString(&vm.strings, chars, length, hash);
     if (interned != NULL) {
         FREE_ARRAY(char, chars, length + 1);    // since it already is in the HashTable we can free the string passed in as args
         return interned;                        // and return reference to the identical string in the stringpool-HashTable

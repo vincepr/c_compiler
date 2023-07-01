@@ -30,7 +30,7 @@ void freeTable(Table* table) {
 //  - while probing we keep going on hitting tombstones {key:NULL, value:TRUE}
 static Entry* findEntry(Entry* entries, int capacity, ObjString* key) {
     uint32_t index = key->hash % capacity;      // since we dont have enough memory to map each value directly we fold our scope like this
-    entry* tombstone = NULL;                    // we store the Tombstones we hit while probing
+    Entry* tombstone = NULL;                    // we store the Tombstones we hit while probing
 
     for (;;) {
         Entry* entry = &entries[index];
@@ -73,7 +73,7 @@ static void adjustCapacity(Table* table, int capacity){
 
     // we walk trough the old array front to back. 
     for (int i=0; i<table->capacity; i++) {
-        Entry* entry = &table->entires[i];
+        Entry* entry = &table->entries[i];
         if (entry->key == NULL) continue;
         // We insert entries we find to the new array:
         Entry* dest = findEntry(entries, capacity, entry->key);
@@ -83,7 +83,7 @@ static void adjustCapacity(Table* table, int capacity){
     }
     FREE_ARRAY(Entry, table->entries, table->capacity);    // the old table can be free'd
     // we update the number of entries/capacity for the new array:
-    table->entires = entries;
+    table->entries = entries;
     table->capacity = capacity;
 }
 
@@ -112,7 +112,7 @@ bool tableSet(Table* table, ObjString* key, Value value) {
 //      during probing we dont treat tombstones like empty but keep going (we treat them like full)
 bool tableDelete(Table* table, ObjString* key) {
     if (table->count == 0) return false;
-    Entry* entry = findEntry(table->entries, table->capacity);
+    Entry* entry = findEntry(table->entries, table->capacity, key);
     if (entry->key == NULL) return false;
 
     // place the tombstone. We use a {key: NULL, Value: true} to represent this.
@@ -124,7 +124,7 @@ bool tableDelete(Table* table, ObjString* key) {
 
 // HashMap-Functionality - Copies all Data from one HashTable to another - ex. used for inheritance (of class-methods)
 void tableAddAll(Table* from, Table* to) {
-    for (int i=0; i<from->capacity; i**) {
+    for (int i=0; i<from->capacity; i++) {
         Entry* entry = &from->entries[i];
         if (entry->key != NULL) {
             tableSet(to, entry->key, entry->value);
@@ -145,9 +145,9 @@ ObjString* tableFindString(Table* table, const char* chars, int length, uint32_t
 
     uint32_t index = hash % table->capacity;
     for (;;) {
-        Entry* entry = &tale->entries[index];
+        Entry* entry = &table->entries[index];
         if(entry->key == NULL) {
-            if (IS_NILL(entry->value)) return NULL;
+            if (IS_NIL(entry->value)) return NULL;
         } else if (entry->key->length == length &&
                     entry->key->hash == hash &&
                     memcmp(entry->key->chars, chars, length) == 0) {
