@@ -236,7 +236,7 @@ static void emitConstant(Value value) {
 static void endCompiler() {
     emitReturn();
 
-    // Flag that enables dumpink out chunks once the compiler finishes
+    // Flag that enables dumping out chunks once the compiler finishes
     #ifdef DEBUG_PRINT_CODE
         if (!parser.hadError) {
             disassembleChunk(currentChunk(), "code");
