@@ -23,7 +23,15 @@ static int simpleInstruction(const char* name, int offset) {
     printf("%s\n", name);
     return offset + 1;
 }
-// 2 bytes. 1st=OPcode 2nd=index_to_pool_of_Constants/Values for that chunk
+
+// instruction pointing to a local-variable. But since we dont store names for those, all we can do is return the slot-nr for it.
+static int byteInstruction(const char* name, Chunk* chunk, int offset) {
+    uint8_t slot = chunk->code[offset + 1];
+    printf("%-16s %4d\n", name, slot);
+    return offset + 2;
+}
+
+// 2 bytes instruction. 1st=OPcode 2nd=index_to_pool_of_Constants/Values for that chunk
 static int constantInstruction(const char* name, Chunk* chunk, int offset) {
     uint8_t constant_idx = chunk->code[offset + 1];     // byte after opcode containts idx to constants-pool
     printf("%-16s %4d '", name, constant_idx);
@@ -59,6 +67,10 @@ int disassembleInstruction(Chunk* chunk, int offset) {
         // Stack operations
         case OP_POP:
             return simpleInstruction("OP_POP", offset);
+        case OP_GET_LOCAL:
+            return byteInstruction("OP_GET_LOCAL", chunk, offset);
+        case OP_SET_LOCAL:
+            return byteInstruction("OP_SET_LOCAL", chunk, offset);
         case OP_GET_GLOBAL:
             return constantInstruction("OP_GET_GLOBAL", chunk, offset);
         case OP_DEFINE_GLOBAL:

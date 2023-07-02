@@ -20,7 +20,9 @@ typedef enum {
 
     // Stack operations:
     OP_POP,             // pop top value of the stack and disregard it.
-    OP_GET_GLOBAL,      // read current global val and push it on stack
+    OP_GET_LOCAL,       // read current local value and push it on the stack
+    OP_SET_LOCAL,       // writes to local-variable the top value on the stack.(doesnt touch top of stack)
+    OP_GET_GLOBAL,      // read current global val  and push it on stack
     OP_DEFINE_GLOBAL,   // define a global variable (initialize it)
     OP_SET_GLOBAL,      // writes to existing global variable
 
