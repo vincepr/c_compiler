@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "common.h"
 #include "compiler.h"
@@ -193,6 +194,23 @@ static void emitReturn() {
     emitByte(OP_RETURN); // temporaly  - write the OP_RETURN Byte to our Chunk 
 }
 
+// helper - we call this function when we exit a new local scope with "}"...
+static void endScope() {
+    current->scopeDepth--;
+    // remove all Local-Variables that went out of scope:
+    while (current->localCount > 0 &&
+            current->locals[current->localsCount - 1].depth > current->scopeDepth) {
+        emitByte(OP_POP);
+        current->localsCount--;
+    }
+
+}
+
+// helper - we call this function when we enter a new local scope with "{"...
+static void beginScope() {
+        current->scopeDepth++;
+}
+
 // helper for emitConstant() - pushes the value on the runtime stack.
 static uint8_t makeConstant(Value value) {
     int constant = addConstant(currentChunk(), value);
@@ -249,17 +267,60 @@ static uint8_t identifierConstant(Token* name) {
     return makeConstant(OBJ_VAL(copyString(name->start, name->length)));
 }
 
+// helper for declareVariable - cecks if 2 identifiers are the same. (ex. then a and b point to the same variable )
+static bool identifiersEqual(Token* a, Token* b) {
+    if (a->length != b->length) return false;
+    return memcmp(a->start, b->start, a->length) == 0;
+}
+
+// helper - Adds Local variable to our Compiler-Struct that keeps track of active local-variables on the stack.
+static void addLocal(Token name) {
+    if (current->localCount ==UINT8_COUNT) {
+        error("Too many local variables in function.");         // Scope is hard capped by array size
+        return;
+    }
+    Local* local = &current->locals[current->localCount++];     // initialize the next available local(next element in array)
+    local->name = name;                                         // stores variables Identity and depth
+    local->depth = current->scopeDepth;
+}
+
+// helper for parseVariable() - take The Identifiert and pass it down
+static void declareVariable() {
+    if(current->scopeDepth == 0) return;                        // this happens only for locals, so for globals we return early
+    Token* name = &parser.previous;
+
+    // We have to manually check if were trying to redeclare a local (NOT ALLOWED): like "var x = 1; var x =2;" only "x=2;"" would be
+    for (int i = current->localCount-1; i>=0; i--) {
+        Local* local = &current->locals[i];
+        if (local->depth != -1 && local->depth < current->scopeDepth) {
+            break;
+        }
+        if (identifiersEqual(name, &local->name)) {
+            error("Already a variable with this name in this scope.");
+        }
+    }
+
+    addLocal(*name);
+}
+
+
 // helper working with variables and identifiers - consumes next Token=IDENTIFIER
 static uint8_t parseVariable(const char* errorMessage) {
     consume(TOKEN_IDENTIFIER, errorMessage);
-    return identifierConstant(&parser.previous);
+    declareVariable();
+    if (current->scopeDepth > 0) return 0;          // if were in a scope its a local-var so we dont need to shove it down the constant-Table
+    
+    return identifierConstant(&parser.previous);    // were defining a global -> so we shove it down the constant-Lookup-Table
 }
 
 // helper for varDeclarations() - 
 //  - previously the value of our variable got poped to the stack
 //  - so now we can just emit this instruction afterwards -> takes that value and stores it 
 static void defineVariable(uint8_t global) {
-    emitBytes(OP_DEFINE_GLOBAL, global);
+    if (current->scopeDepth > 0) {
+        return;                             // we hit a local, no need to do the global thing (value is already on top of the stack)
+    }
+    emitBytes(OP_DEFINE_GLOBAL, global);    // this would remove the value from the stack then write it to our lookup-Table
 }
 
 /*
@@ -456,6 +517,14 @@ static void expression() {
     parsePrecedence(PREC_ASSIGNMENT);
 }
 
+// helper for statement() - inner block enclosed by 2 curly-brackets "{" block "}"
+static void block() {
+    while (!check(TOKEN_RIGHT_BRACE) && !check(TOKEN_EOF)) {
+        declaration();
+    }
+    consume(TOKEN_RIGHT_BRACE, "Expect '}' after block.");      // Brackets must be closed again.
+}
+
 // helper for declaration() - initial declaration of variables
 static void varDeclaration() {
     uint8_t global = parseVariable("Expect variable name-");
@@ -521,9 +590,14 @@ static void declaration() {
 
 // Maps different kinds of statements (from our parsing grammar)
 // statement        ->exprStmt | forStmt | ifStmt | printStmt | returnStmt | whileStmt | block;
+// block            -> "{" declaration "}"
 static void statement() {
     if (match(TOKEN_PRINT)) {
         printStatement();
+    } else if (match(TOKEN_LEFT_BRACE)) {       // we need to go one scope deeper (block encountered)
+        beginScope();
+        block();
+        endScope();
     } else {
         expressionStatement();
     }
