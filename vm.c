@@ -142,6 +142,16 @@ static InterpretResult run() {
             case OP_FALSE:      push(BOOL_VAL(false)); break;
             // stack operations:
             case OP_POP:        pop(); break;       // pop value from stack and forget it.
+            case OP_GET_LOCAL: {                    // read current local value and push it on the stack
+                uint8_t slot = READ_BYTE();
+                push(vm.stack[slot]);
+                break;
+            }
+            case OP_SET_LOCAL: {                    // writes to local-variable the top value on the stack.(doesnt touch top of stack)
+                uint8_t slot = READ_BYTE();
+                vm.stack[slot] = peek(0);
+                break;
+            }
             case OP_GET_GLOBAL: {                   // get value for named-variable and push it on stack.
                 ObjString* name = READ_STRING();
                 Value value;

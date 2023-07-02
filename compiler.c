@@ -273,6 +273,20 @@ static bool identifiersEqual(Token* a, Token* b) {
     return memcmp(a->start, b->start, a->length) == 0;
 }
 
+// helper - tries to find Idx to local-variable in use
+// - loop the list of ccurrently in scope local variables. 
+//    - backwards because thats top of our stack. This way inner variables get found first! (like shadowed variables)
+// - If identifiers match -> return index to it
+static int resolveLocal(Compiler* compiler, Token* name) {
+    for (int i = compiler->localCount - 1; i>=0; i--) {     
+        Local* local = &compiler->locals[i];
+        if (identifiersEqual(name, &local->name)) {
+            return i;
+        }
+    }
+    return -1;  // -1 is our custom signal, that it is not found -> globals will get checked for it now!
+}
+
 // helper - Adds Local variable to our Compiler-Struct that keeps track of active local-variables on the stack.
 static void addLocal(Token name) {
     if (current->localCount ==UINT8_COUNT) {
@@ -388,12 +402,23 @@ static void string(bool _canAssign) {
 
 // helper function for variable()
 static void namedVariable(Token name, bool canAssign) {
-    uint8_t arg = identifierConstant(&name);    // get the idx to the value in globals-table
+    // Depending if were dealing with a local (arg !=-1) or a global we set OP_COMMANDS accordingly
+    uint8_t getOp, setOp;
+    int arg = resolveLocal(current, &name);
+    if (arg != -1) {
+        getOp = OP_GET_LOCAL;               // "... x + 99;""
+        setOp = OP_SET_LOCAL;               // "x = 123;";
+    } else {
+        arg = identifierConstant(&name);    // get the idx to the value in globals-table
+        getOp = OP_GET_GLOBAL;              // this will get global from table and push() it
+        setOp = OP_SET_GLOBAL;              // this will set/assign the value from the expr to the existing global in the global-table
+    }
+    // then we do either the assignment (if '=' following), or just get the current value
     if (canAssign && match(TOKEN_EQUAL)) {
         expression();
-        emitBytes(OP_SET_GLOBAL, arg);          // this will set/assign the value from the expr to the existing global in the global-table
+        emitBytes(setOp, (uint8_t)arg);     
     } else {
-        emitBytes(OP_GET_GLOBAL, arg);           // this will get global from table and push() it
+        emitBytes(getOp, (uint8_t)arg);     
     }
 }
 
