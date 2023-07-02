@@ -219,7 +219,6 @@ static InterpretResult run() {
             }
         }
     }
-
 // we only need our macros in run() so we scope them explicity to only be available here:
 #undef READ_BYTE
 #undef READ_CONSTANT
