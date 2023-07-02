@@ -21,7 +21,8 @@ typedef enum {
     // Stack operations:
     OP_POP,             // pop top value of the stack and disregard it.
     OP_GET_GLOBAL,      // read current global val and push it on stack
-    OP_DEFINE_GLOBAL,   // define a global variable
+    OP_DEFINE_GLOBAL,   // define a global variable (initialize it)
+    OP_SET_GLOBAL,      // writes to existing global variable
 
     // euality and comparioson operators ( since  a<=b == !(a>b) these 3 are enough to cover all 6)
     OP_EQUAL,

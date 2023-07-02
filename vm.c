@@ -159,6 +159,16 @@ static InterpretResult run() {
                 pop();
                 break;
             }
+            case OP_SET_GLOBAL: {                   // Try to write to existing global variable
+                ObjString* name = READ_STRING();
+                if (tableSet(&vm.globals, name, peek(0))) {
+                    tableDelete(&vm.globals, name); // delete zombie values from table (important for REPL)
+                    runtimeError("Undefined variable '%s'.", name->chars);
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                // no pop() from the stack, since the assignment could be nested in some larger expression
+                break;
+            }
             //  comparisons:
             case OP_EQUAL: {
                 Value b = pop();

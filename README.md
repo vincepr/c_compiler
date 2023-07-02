@@ -28,10 +28,21 @@ We implement this by storing all active strings in Hash Table. (located in the v
     - This is a must for our object dynamically-typed/oriented lox. Since method calls, or fields on classes are looked up as string identified identifiers/names at runtime.
     - so if those are slow everything will run slow.
 
-### Variables
+### (global) Variables
 jlox implemented variables by building a chain of environments, one for each scope. This will create a new hash table each time you change scope. So its to slow.
 
 #### general info about variables in lox
 **Global variables** in Lox are 'late bound', or resolved dynamically. This means a function can be compiled, that uses a variable that gets declared later on. As long as the code does not **execute** before that definition happens.
 
 **Local variables** on the other hand always get declared before beeing used. Thus our single pass compiler can resolve them at run time more easily.
+
+#### Assignment
+- The problem below is, the single-pass compiler, does not know that this is assignment, till it reaches the `=`
+- By that point the compiler already has emitted bytecode for the whole thing up to it.
+```
+menu.brunch(sunday).beverage = "hello world";
+```
+- Variables only need a single identifier (before the `=`)
+- The idea is, that **before** compiling an expression that could be as an assignment, we peek ahead for an `=`.
+    - if we find a `=` we treat is as assignment or setter.
+    - if not we compile it

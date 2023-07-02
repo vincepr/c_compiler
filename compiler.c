@@ -61,9 +61,10 @@ typedef enum {
     PREC_PRIMARY,
 } Precedence;
 
+
 // used in ParseRule - simple typedef for a function type that takes no arguments and returns nothing.
 // used to map TOKEN_ADDITION -> ParseFn implemention for addition.
-typedef void (*ParseFn)();
+typedef void (*ParseFn) (bool canAssign);
 
 // 
 typedef struct {
@@ -249,7 +250,7 @@ static void defineVariable(uint8_t global) {
 // - when this gets called the left side of the expression has already been parsed and is pop'd on the stack
 // - the operand-Symbol is consumed aswell.
 // so we just compile the right-side-expression and pop it on the stack, then emit the Bytecode for the Addition.
-static void binary() {
+static void binary(bool _canAssign) {
     TokenType operatorType = parser.previous.type;
     ParseRule* rule = getRule(operatorType);                // we need to be able to compare precedence to stop at 3 for (2*3+4) and not get the whole 2*7
     parsePrecedence((Precedence)(rule->precedence + 1));
@@ -273,7 +274,7 @@ static void binary() {
 
 // when hitting a OP_TRUE OP_FALSE OP_NIL we just push the corresponding value on the stack
 // this is done as optimisation-strategy (no casting from C-true -> struct and back) 
-static void literal() {
+static void literal(bool _canAssign) {
     switch (parser.previous.type) {
         case TOKEN_FALSE:       emitByte(OP_FALSE); break;
         case TOKEN_NIL:         emitByte(OP_NIL); break;
@@ -283,13 +284,13 @@ static void literal() {
 }
 
 // parsing function for an expression type - like a recursive descent parser.
-static void grouping() {
+static void grouping(bool _canAssign) {
     expression();
     consume(TOKEN_RIGHT_PAREN, "Expect ')' after expression.");
 }
 
 // we map TOKEN_NUMBER -> to this function
-static void number() {
+static void number(bool _canAssign) {
     double value = strtod(parser.previous.start, NULL);
     emitConstant(NUMBER_VAL(value));
 }
@@ -297,24 +298,31 @@ static void number() {
 // parsing function for strings
 // - the +1 and -2 trim the leading: " and closing: "
 // - then wrap that string in an Object, wrap that in a Value then push that to the constant-table.
-static void string() {
+static void string(bool _canAssign) {
     // if we supported escaping \ or  @strings we could implement this here
     emitConstant(OBJ_VAL(copyString(parser.previous.start + 1, parser.previous.length -2)));
 }
 
 // helper function for variable()
-static void namedVariable(Token name) {
+static void namedVariable(Token name, bool canAssign) {
     uint8_t arg = identifierConstant(&name);    // get the idx to the value in globals-table
-    emitBytes(OP_GET_GLOBAL, arg);               // this will get global from table and push() it
+    if (canAssign && match(TOKEN_EQUAL)) {
+        expression();
+        emitBytes(OP_SET_GLOBAL, arg);          // this will set/assign the value from the expr to the existing global in the global-table
+    } else {
+        emitBytes(OP_GET_GLOBAL, arg);           // this will get global from table and push() it
+    }
 }
 
 // parsing function for resolving variables to their current value at runtime
-static void variable() {
-    namedVariable(parser.previous);
+// - the only time we allow an assignment is when parsing an assignment expression or top-level expression.
+//      the canAssign FLAG makes it's way down to this lowest precedence expression (where we need it)
+static void variable(bool canAssign) {
+    namedVariable(parser.previous, canAssign);
 }
 
 // parsing function for an unary negation (-10 or !true)
-static void unary() {
+static void unary(bool _canAssign) {
     TokenType operatorType = parser.previous.type;      // we need to differentiate between ! and -
     parsePrecedence(PREC_UNARY);                        // compiles the operand (ex: 10)
 
@@ -388,15 +396,21 @@ static void parsePrecedence(Precedence precedence) {
         error("Expect expression.");                            
         return;
     }
-    prefixRule();   // otherwise we call the Prefix-ParseFunction
-    //                 that call will compile the rest of the prefix expression consuming any other tokens it needs
+    bool canAssign = precedence <= PREC_ASSIGNMENT;             // need to pass this flag down to variable()
+    prefixRule(canAssign);   // otherwise we call the Prefix-ParseFunction
+    // that call will compile the rest of the prefix expression consuming any other tokens it needs
 
     // if the next token is too low precedence or isnt an infix operator were done.
     // otherwise  we consume the operand and off control to the infix parser we found ( to get the right side compiled)
     while (precedence <= getRule(parser.current.type)->precedence) {
         advance();
         ParseFn infixRule = getRule(parser.previous.type)->infix;
-        infixRule();
+        infixRule(canAssign);
+    }
+
+    // we failed to match the left side of the `=` as valid assignment target:
+    if (canAssign && match(TOKEN_EQUAL)) {
+        error("Invalid assignment target.");        // ex: x*y=22;
     }
 }
 
