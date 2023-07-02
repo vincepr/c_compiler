@@ -11,7 +11,7 @@
 
 // defines all allowed/supported OpCodes:
 typedef enum {
-    OP_CONSTANT,    // load/produces a static/constant value.
+    OP_CONSTANT,        // load/produces a static/constant value.
 
     // OP-instrunctions to push NIL, True, False on the stack
     OP_NIL,
@@ -19,7 +19,9 @@ typedef enum {
     OP_FALSE,
 
     // Stack operations:
-    OP_POP,         // pop top value of the stack and disregard it.
+    OP_POP,             // pop top value of the stack and disregard it.
+    OP_GET_GLOBAL,      // read current global val and push it on stack
+    OP_DEFINE_GLOBAL,   // define a global variable
 
     // euality and comparioson operators ( since  a<=b == !(a>b) these 3 are enough to cover all 6)
     OP_EQUAL,
@@ -32,10 +34,10 @@ typedef enum {
     OP_MULTIPLY,
     OP_DIVIDE,
     // unary operators
-    OP_NOT,         // logical Not. like !true -> false
-    OP_NEGATE,      // unary negation. like -x with x=3 -> -3
-    OP_PRINT,       // print expression. like "print x+8;"  -> with x="hello" -> "hello8"
-    OP_RETURN,      // return from the current function
+    OP_NOT,             // logical Not. like !true -> false
+    OP_NEGATE,          // unary negation. like -x with x=3 -> -3
+    OP_PRINT,           // print expression. like "print x+8;"  -> with x="hello" -> "hello8"
+    OP_RETURN,          // return from the current function
 } OpCode;
 
 // holds the instructions (dynamic-array of bytes)

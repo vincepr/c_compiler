@@ -88,7 +88,6 @@ static Chunk* currentChunk() {
 *
 */
 
-
 // This function logs Errors (so the user can see them)
 // - first we print the error ocurred and line were in
 // - then we show the lexeme if readable
@@ -206,8 +205,8 @@ static void endCompiler() {
 
 /*
 *
-*      Forward declarations - these get defined later but functions define before and afterwards depend on them. (recursively)
-*
+*      Forward declarations 
+*       - needed to resolve recursive dependencies among those functions. (because c)
 */
 
 static void expression();
@@ -222,7 +221,7 @@ static void parsePrecedence(Precedence precedence);
 *
 */
 
-// helper for parseVariable() - adds lexeme to constant-table. returns idx to it
+// helper - adds lexeme to constant-table. returns idx to it
 static uint8_t identifierConstant(Token* name) {
     return makeConstant(OBJ_VAL(copyString(name->start, name->length)));
 }
@@ -233,14 +232,16 @@ static uint8_t parseVariable(const char* errorMessage) {
     return identifierConstant(&parser.previous);
 }
 
-// helper for varDeclarations() - consumes
+// helper for varDeclarations() - 
+//  - previously the value of our variable got poped to the stack
+//  - so now we can just emit this instruction afterwards -> takes that value and stores it 
 static void defineVariable(uint8_t global) {
-    emitBytes(OP_DEFINE_GLOBAL, global)
+    emitBytes(OP_DEFINE_GLOBAL, global);
 }
 
 /*
 *
-*      Binary, Unary, Literal, Grouping logic
+*      Parsing logic: Binary, Unary, Literal, Grouping logic
 *
 */
 
@@ -301,6 +302,17 @@ static void string() {
     emitConstant(OBJ_VAL(copyString(parser.previous.start + 1, parser.previous.length -2)));
 }
 
+// helper function for variable()
+static void namedVariable(Token name) {
+    uint8_t arg = identifierConstant(&name);    // get the idx to the value in globals-table
+    emitBytes(OP_GET_GLOBAL, arg);               // this will get global from table and push() it
+}
+
+// parsing function for resolving variables to their current value at runtime
+static void variable() {
+    namedVariable(parser.previous);
+}
+
 // parsing function for an unary negation (-10 or !true)
 static void unary() {
     TokenType operatorType = parser.previous.type;      // we need to differentiate between ! and -
@@ -313,6 +325,7 @@ static void unary() {
         default: return;                                // Unreachable
     }
 }
+
 /*
 *
 *      Lookup table for Precedence (what operation gets executed first, what 2nd etc.)
@@ -343,7 +356,7 @@ ParseRule rules[] = {
   [TOKEN_GREATER_EQUAL] = {NULL,        binary,    PREC_COMPARISON},
   [TOKEN_LESS]          = {NULL,        binary,    PREC_COMPARISON},
   [TOKEN_LESS_EQUAL]    = {NULL,        binary,    PREC_COMPARISON},
-  [TOKEN_IDENTIFIER]    = {NULL,        NULL,      PREC_NONE},
+  [TOKEN_IDENTIFIER]    = {variable,    NULL,      PREC_NONE},
   [TOKEN_STRING]        = {string,      NULL,      PREC_NONE},
   [TOKEN_NUMBER]        = {number,      NULL,      PREC_NONE},
   [TOKEN_AND]           = {NULL,        NULL,      PREC_NONE},
@@ -424,7 +437,7 @@ static void varDeclaration() {
 // - Usually to call it's side effects(ex function-call); 
 static void expressionStatement() {
     expression();
-    consume(TOKEN_SEMICOLON, "Expect ';' after expression.")
+    consume(TOKEN_SEMICOLON, "Expect ';' after expression.");
     emitByte(OP_POP);   // discards the result from the stack. Since we are only after side effects.
 }
 
@@ -438,7 +451,7 @@ static void printStatement() {
 // helper for declaration() - after error we enter panic mode and try to get back to a valid state
 // - we just eat tokens till we hit a statement boundary. then exit panic mode.
 static void synchronize() {
-    parser.panic = false;
+    parser.panicMode = false;
     while (parser.current.type != TOKEN_EOF) {
         if (parser.previous.type == TOKEN_SEMICOLON) return;
         switch (parser.current.type) {
@@ -446,7 +459,7 @@ static void synchronize() {
             case TOKEN_FUN:
             case TOKEN_VAR:
             case TOKEN_FOR:
-            case TOKEN_if:
+            case TOKEN_IF:
             case TOKEN_WHILE:
             case TOKEN_PRINT:
             case TOKEN_RETURN:
