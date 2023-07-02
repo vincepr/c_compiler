@@ -14,7 +14,7 @@ var x = "out";
 var x = "outer";
 {
     print x;
-    x = "inner";
+    var x = "inner";
     print x;
 }
 print x;
