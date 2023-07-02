@@ -30,6 +30,13 @@ declaration     -> classDecl
                 | statement;
 */
 
+/*
+*
+*       Type-Declarations and Global-Variables.
+*
+*/
+
+
 // State of our Parser. We only know about the current and previous Token for context.
 typedef struct {
     Token current;
@@ -74,6 +81,13 @@ Chunk* compilingChunk;
 static Chunk* currentChunk() {
     return compilingChunk;
 }
+
+/*
+*
+*       Helpers that deal with Tokens (checking them, consuming them etc...)
+*
+*/
+
 
 // This function logs Errors (so the user can see them)
 // - first we print the error ocurred and line were in
@@ -141,7 +155,12 @@ static bool match(TokenType type) {
     return true;
 }
 
-// after parsing -> translate to a series of bytecoe instructions
+
+/*
+*
+*       Helpers that deal with ByteCode Instructions
+*
+*/
 
 // helper - writes given byte and adds it to the chunk of bytecode-instructions
 static void emitByte(uint8_t byte) {
@@ -185,14 +204,45 @@ static void endCompiler() {
     #endif
 }
 
-// Forward declarations - these get defined later but functions define before and afterwards depend on them. (recursively)
+/*
+*
+*      Forward declarations - these get defined later but functions define before and afterwards depend on them. (recursively)
+*
+*/
+
 static void expression();
 static void statement();                    // recursive with declaration()
 static void declaration();                  // recursive with statment()
 static ParseRule* getRule(TokenType type);
 static void parsePrecedence(Precedence precedence);
 
+/*
+*
+*  HELPERS for dealing with variables and identifiers
+*
+*/
 
+// helper for parseVariable() - adds lexeme to constant-table. returns idx to it
+static uint8_t identifierConstant(Token* name) {
+    return makeConstant(OBJ_VAL(copyString(name->start, name->length)));
+}
+
+// helper working with variables and identifiers - consumes next Token=IDENTIFIER
+static uint8_t parseVariable(const char* errorMessage) {
+    consume(TOKEN_IDENTIFIER, errorMessage);
+    return identifierConstant(&parser.previous);
+}
+
+// helper for varDeclarations() - consumes
+static void defineVariable(uint8_t global) {
+    emitBytes(OP_DEFINE_GLOBAL, global)
+}
+
+/*
+*
+*      Binary, Unary, Literal, Grouping logic
+*
+*/
 
 // parsing function for TOKEN_PLUS, TOKEN_MINUS, TOKEN_START, TOKEN_SLASH
 // - when this gets called the left side of the expression has already been parsed and is pop'd on the stack
@@ -263,6 +313,11 @@ static void unary() {
         default: return;                                // Unreachable
     }
 }
+/*
+*
+*      Lookup table for Precedence (what operation gets executed first, what 2nd etc.)
+*
+*/
 
 // This is just a lookuptable pointing Tokens to the functions that parse it.
 // - prefix expressions are on the left side (get evaluated first) then poped on the stack
@@ -330,8 +385,8 @@ static void parsePrecedence(Precedence precedence) {
         ParseFn infixRule = getRule(parser.previous.type)->infix;
         infixRule();
     }
-    
 }
+
 
 // this simply reads the corresponding ParseRule from our rules-lookuptable.
 static ParseRule* getRule(TokenType type) {
@@ -339,9 +394,9 @@ static ParseRule* getRule(TokenType type) {
 }
 
 /*
-
-    The different types of parsing - expressions/statements:
-
+*
+*      The different types of parsing - expressions/statements:
+*
 */
 
 // helper for compile() 
@@ -350,6 +405,19 @@ static ParseRule* getRule(TokenType type) {
 //      []Number-literals, []parentheses, []unary nengation, []Arithmetics: + - * /
 static void expression() {
     parsePrecedence(PREC_ASSIGNMENT);
+}
+
+// helper for declaration() - initial declaration of variables
+static void varDeclaration() {
+    uint8_t global = parseVariable("Expect variable name-");
+
+    if (match(TOKEN_EQUAL)) {
+        expression();       // pops initial value on the stack
+    } else {
+        emitByte(OP_NIL);   // uninit -> we manually pop NIL on the stack ('var a' becomes 'var a=nil')
+    }
+    consume(TOKEN_SEMICOLON, "Expect ';' after variable declaration.");
+    defineVariable(global);
 }
 
 // "eat("peaches");" is simply an expression followed by a semicolon. 
@@ -367,12 +435,43 @@ static void printStatement() {
     emitByte(OP_PRINT);
 }
 
-// variable declarations
-static void declaration() {
-    statement();                // tries to parse tokens to find a statement
+// helper for declaration() - after error we enter panic mode and try to get back to a valid state
+// - we just eat tokens till we hit a statement boundary. then exit panic mode.
+static void synchronize() {
+    parser.panic = false;
+    while (parser.current.type != TOKEN_EOF) {
+        if (parser.previous.type == TOKEN_SEMICOLON) return;
+        switch (parser.current.type) {
+            case TOKEN_CLASS:
+            case TOKEN_FUN:
+            case TOKEN_VAR:
+            case TOKEN_FOR:
+            case TOKEN_if:
+            case TOKEN_WHILE:
+            case TOKEN_PRINT:
+            case TOKEN_RETURN:
+                return;
+            default:
+                ;   // DO NOTHING
+        }
+        advance();
+    }
 }
 
-// Maps different kinds of statements (print, for, if, return ...)
+// maps different declaration (from our parsing grammar)
+//  declaration     -> classDecl | funDecl | varDecl | statement;
+static void declaration() {
+    if (match(TOKEN_VAR)) {
+        varDeclaration();
+    } else {
+        statement();                            // tries to parse tokens to find a statement
+    }
+    
+    if (parser.panicMode) synchronize();        // encountered error -> we try to get back to a good state.
+}
+
+// Maps different kinds of statements (from our parsing grammar)
+// statement        ->exprStmt | forStmt | ifStmt | printStmt | returnStmt | whileStmt | block;
 static void statement() {
     if (match(TOKEN_PRINT)) {
         printStatement();
@@ -380,6 +479,12 @@ static void statement() {
         expressionStatement();
     }
 }
+
+/*
+*
+*       The 'Main' compile function
+*
+*/
 
 // we pass in the chunk where the compiler will write the code, then try to compile the source
 // - if compilation fails we return false (compilation error) to upstread disregard the whole chunk
