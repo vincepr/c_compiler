@@ -14,6 +14,20 @@
     - Parses source Code (Tokens provided by the Scanner)
     - This is a Single-Pass-Compiler -> where in jlox we seperated creating the AST and traverseing it.
         -> here this compiler combines the 2 steps. 
+
+    Parsing grammar Rules for Statements/Declaration:
+statement       -> exprStmt
+                | forStmt
+                | ifStmt
+                | printStmt
+                | returnStmt
+                | whileStmt
+                | block;
+
+declaration     -> classDecl
+                | funDecl
+                | varDecl
+                | statement;
 */
 
 // State of our Parser. We only know about the current and previous Token for context.
@@ -115,6 +129,18 @@ static void consume(TokenType type, const char* message) {
     errorAtCurrent(message);
 }
 
+// helper - if the current token has the given type we return true.
+static bool check(TokenType type) {
+    return parser.current.type == type;
+}
+
+// helper - if the current token has the given type we consume it and return true.
+static bool match(TokenType type) {
+    if (!check(type)) return false;
+    advance();
+    return true;
+}
+
 // after parsing -> translate to a series of bytecoe instructions
 
 // helper - writes given byte and adds it to the chunk of bytecode-instructions
@@ -161,8 +187,12 @@ static void endCompiler() {
 
 // Forward declarations - these get defined later but functions define before and afterwards depend on them. (recursively)
 static void expression();
+static void statement();                    // recursive with declaration()
+static void declaration();                  // recursive with statment()
 static ParseRule* getRule(TokenType type);
 static void parsePrecedence(Precedence precedence);
+
+
 
 // parsing function for TOKEN_PLUS, TOKEN_MINUS, TOKEN_START, TOKEN_SLASH
 // - when this gets called the left side of the expression has already been parsed and is pop'd on the stack
@@ -308,12 +338,47 @@ static ParseRule* getRule(TokenType type) {
     return &rules[type];
 }
 
+/*
+
+    The different types of parsing - expressions/statements:
+
+*/
+
 // helper for compile() 
 // - Expressions always evaluate to a Value like 1+2->3 || True == "james"->False 
 // - Implemented are so far: 
 //      []Number-literals, []parentheses, []unary nengation, []Arithmetics: + - * /
 static void expression() {
     parsePrecedence(PREC_ASSIGNMENT);
+}
+
+// "eat("peaches");" is simply an expression followed by a semicolon. 
+// - Usually to call it's side effects(ex function-call); 
+static void expressionStatement() {
+    expression();
+    consume(TOKEN_SEMICOLON, "Expect ';' after expression.")
+    emitByte(OP_POP);   // discards the result from the stack. Since we are only after side effects.
+}
+
+// "print x + 1;" -> will eval x+1 then print that;
+static void printStatement() {
+    expression();
+    consume(TOKEN_SEMICOLON, "Expect ';' after value.");
+    emitByte(OP_PRINT);
+}
+
+// variable declarations
+static void declaration() {
+    statement();                // tries to parse tokens to find a statement
+}
+
+// Maps different kinds of statements (print, for, if, return ...)
+static void statement() {
+    if (match(TOKEN_PRINT)) {
+        printStatement();
+    } else {
+        expressionStatement();
+    }
 }
 
 // we pass in the chunk where the compiler will write the code, then try to compile the source
@@ -326,8 +391,9 @@ bool compile(const char* source, Chunk* chunk) {
     parser.panicMode = false;
 
     advance();                  // primes the scanner
-    expression();
-    consume(TOKEN_EOF, "Expected end of expression.");
+    while (!match(TOKEN_EOF)) {
+        declaration();         // this will consume tokens and try to find declaration -> statements etc. (accoring to our lox-syntax)
+    }
     endCompiler();
     return !parser.hadError;    // we return if we encountered an compiletime-Error compiling the Chunk
 }

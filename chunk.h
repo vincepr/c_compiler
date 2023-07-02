@@ -18,6 +18,9 @@ typedef enum {
     OP_TRUE,
     OP_FALSE,
 
+    // Stack operations:
+    OP_POP,         // pop top value of the stack and disregard it.
+
     // euality and comparioson operators ( since  a<=b == !(a>b) these 3 are enough to cover all 6)
     OP_EQUAL,
     OP_GREATER,
@@ -31,6 +34,7 @@ typedef enum {
     // unary operators
     OP_NOT,         // logical Not. like !true -> false
     OP_NEGATE,      // unary negation. like -x with x=3 -> -3
+    OP_PRINT,       // print expression. like "print x+8;"  -> with x="hello" -> "hello8"
     OP_RETURN,      // return from the current function
 } OpCode;
 

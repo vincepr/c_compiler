@@ -136,6 +136,8 @@ static InterpretResult run() {
             case OP_NIL:        push(NIL_VAL); break;
             case OP_TRUE:       push(BOOL_VAL(true)); break;
             case OP_FALSE:      push(BOOL_VAL(false)); break;
+            // stack operations:
+            case OP_POP:        pop(); break;       // pop value from stack and forget it.
             //  comparisons:
             case OP_EQUAL: {
                 Value b = pop();
@@ -173,10 +175,14 @@ static InterpretResult run() {
                 }
                 push(NUMBER_VAL(-AS_NUMBER(pop())));
                 break;
+            // OP_PRINT - console.log() prints to terminal. Like 'print "hello";' -> "hello\n" to Terminal
+            case OP_PRINT: {
+                printValue(pop());
+                printf("\n");
+                break;
+            }
             // OP_RETURN - exits the loop entirely (end of chunk reached/return from the current Lox function)
             case OP_RETURN: {
-                printValue(pop());      // "produce a value from the stack", for now we just print it out.
-                printf("\n");
                 return INTERPRET_OK;
             }
         }
