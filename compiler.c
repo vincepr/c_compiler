@@ -66,15 +66,31 @@ typedef enum {
 // used to map TOKEN_ADDITION -> ParseFn implemention for addition.
 typedef void (*ParseFn) (bool canAssign);
 
-// 
+// Parse Rules Map from the Token to rules that hold precedence(priority) and functions that execute before and after the Token
 typedef struct {
     ParseFn prefix;             // happens before: this Function implements the parsing function for the Token that maps to that ParseRule
     ParseFn infix;              // happens after : this Function implements the parsing function for the Token that maps to that ParseRule
     Precedence precedence;      // The enum (so actually a Number!) we use to decide what to parse first
 } ParseRule;
 
+// field of Compiler struct - holds info about one Local Variable
+typedef struct {
+    Token name;
+    int depth;
+} Local;
+
+
+// we need this struct to keep track of the current scope and all local variables of that scope
+typedef struct {
+    Local locals[UINT8_COUNT];  // Flat arrays of all locals that are in scope during this exact point in the compilation.
+    int localCount;             // current count
+    int scopeDepth;             // how many {} deep are we
+} Compiler;
+
 // global Parser instance we can pass arround
 Parser parser;
+// global Compiler instance - used to keep track where on the stack local variables are currently
+Compiler* current = NULL;
 // global Chunk of bytecode-instructions we compile into
 Chunk* compilingChunk;
 
@@ -185,6 +201,12 @@ static uint8_t makeConstant(Value value) {
         return 0;
     }
     return (uint8_t)constant;
+}
+
+static void initCompiler(Compiler* compiler) {
+    compiler->localCount = 0;
+    compiler->scoreDepth = 0;
+    current = compiler;
 }
 
 // emits the Instrucitons to add one constant to our Cunk (like in var x=3.65 -> we would add const 3.65)
@@ -517,6 +539,8 @@ static void statement() {
 // - if compilation fails we return false (compilation error) to upstread disregard the whole chunk
 bool compile(const char* source, Chunk* chunk) {
     initScanner(source);
+    Compiler compiler;              // set up our compiler
+    initcompiler(&compiler);
     compilingChunk = chunk;         // set our current chunk. Compiled bytecode instructions get added to this
     // 'initialize' our Error-FLAGS:
     parser.hadError = false;

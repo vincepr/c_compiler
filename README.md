@@ -32,7 +32,7 @@ We implement this by storing all active strings in Hash Table. (located in the v
 jlox implemented variables by building a chain of environments, one for each scope. This will create a new hash table each time you change scope. So its to slow.
 
 #### general info about variables in lox
-**Global variables** in Lox are 'late bound', or resolved dynamically. This means a function can be compiled, that uses a variable that gets declared later on. As long as the code does not **execute** before that definition happens.
+**Global variables** in Lox are 'late bound' (aka resolved after compile time), or resolved dynamically. This means a function can be compiled, that uses a variable that gets declared later on. As long as the code does not **execute** before that definition happens.
 
 **Local variables** on the other hand always get declared before beeing used. Thus our single pass compiler can resolve them at run time more easily.
 
@@ -46,3 +46,12 @@ menu.brunch(sunday).beverage = "hello world";
 - The idea is, that **before** compiling an expression that could be as an assignment, we peek ahead for an `=`.
     - if we find a `=` we treat is as assignment or setter.
     - if not we compile it
+
+### (local) Variables
+They are not late bound, so different from globals, they need to be assigned before use.
+- They are lexical scoped.
+- for performance reasons we can just push/pop them on the stack. We can use the same stack we use to evaluate expressions.
+
+![shows_local_scope_of_variables](./local_scope.excalidraw.svg)
+- as seen above, all we need is keep track of the **offset**, to identify where on the stack each value is (ex `a`  after line 6, would need an offset of 2 down from the top).
+
