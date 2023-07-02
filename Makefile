@@ -16,6 +16,9 @@ run: build
 	./binary.out
 #	./binary.out test.lox
 
+test: build
+	./binary.out test.lox
+
 # to remove all artifacts/binary
 clean:
 	rm -rf $(BINARY) *.o

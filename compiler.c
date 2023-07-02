@@ -199,9 +199,9 @@ static void endScope() {
     current->scopeDepth--;
     // remove all Local-Variables that went out of scope:
     while (current->localCount > 0 &&
-            current->locals[current->localsCount - 1].depth > current->scopeDepth) {
+            current->locals[current->localCount - 1].depth > current->scopeDepth) {
         emitByte(OP_POP);
-        current->localsCount--;
+        current->localCount--;
     }
 
 }
@@ -223,7 +223,7 @@ static uint8_t makeConstant(Value value) {
 
 static void initCompiler(Compiler* compiler) {
     compiler->localCount = 0;
-    compiler->scoreDepth = 0;
+    compiler->scopeDepth = 0;
     current = compiler;
 }
 
@@ -281,10 +281,13 @@ static int resolveLocal(Compiler* compiler, Token* name) {
     for (int i = compiler->localCount - 1; i>=0; i--) {     
         Local* local = &compiler->locals[i];
         if (identifiersEqual(name, &local->name)) {
-            return i;
+            if (local->depth == -1) {
+                error("Can't read local variable in its own initializer.");
+            }
+            return i;   // found the variable
         }
     }
-    return -1;  // -1 is our custom signal, that it is not found -> globals will get checked for it now!
+    return -1;          // -1 is our custom signal, that it is not found -> globals will get checked for it now!
 }
 
 // helper - Adds Local variable to our Compiler-Struct that keeps track of active local-variables on the stack.
@@ -294,8 +297,8 @@ static void addLocal(Token name) {
         return;
     }
     Local* local = &current->locals[current->localCount++];     // initialize the next available local(next element in array)
-    local->name = name;                                         // stores variables Identity and depth
-    local->depth = current->scopeDepth;
+    local->name = name;                                         // stores variables Identity
+    local->depth = -1;                                          // -1 WE USE to signal an UNITIALIZED VARIABLE
 }
 
 // helper for parseVariable() - take The Identifiert and pass it down
@@ -327,11 +330,18 @@ static uint8_t parseVariable(const char* errorMessage) {
     return identifierConstant(&parser.previous);    // were defining a global -> so we shove it down the constant-Lookup-Table
 }
 
+// helper for defineVariable - utility to get current scopeDepth
+//  - used this way to handle the special case of declaring:         var x=9; { var x = x; }
+static void markInitialized() {
+    current->locals[current->localCount - 1].depth = current->scopeDepth;
+}
+
 // helper for varDeclarations() - 
 //  - previously the value of our variable got poped to the stack
 //  - so now we can just emit this instruction afterwards -> takes that value and stores it 
 static void defineVariable(uint8_t global) {
     if (current->scopeDepth > 0) {
+        markInitialized();
         return;                             // we hit a local, no need to do the global thing (value is already on top of the stack)
     }
     emitBytes(OP_DEFINE_GLOBAL, global);    // this would remove the value from the stack then write it to our lookup-Table
@@ -639,7 +649,7 @@ static void statement() {
 bool compile(const char* source, Chunk* chunk) {
     initScanner(source);
     Compiler compiler;              // set up our compiler
-    initcompiler(&compiler);
+    initCompiler(&compiler);
     compilingChunk = chunk;         // set our current chunk. Compiled bytecode instructions get added to this
     // 'initialize' our Error-FLAGS:
     parser.hadError = false;
