@@ -36,10 +36,12 @@ static void runtimeError(const char* format, ...) {
 void initVM() {
     resetStack();
     vm.objects = NULL;      // reset linked list of all active objects
-    initTable(&vm.strings); // setup the HashTable
+    initTable(&vm.globals); // setup the HashTable for global variables
+    initTable(&vm.strings); // setup the HashTable for used strings
 }
 
 void freeVM() {
+    freeTable(&vm.globals);
     freeTable(&vm.strings);
     freeObjects();          // when free the vm, we need to free all objects in the linked-list of objects.
 }
@@ -93,6 +95,8 @@ static InterpretResult run() {
 #define READ_BYTE() (*vm.ip++)
 // macro-READ_CONSTANT: reads the next byte from the bytecoat, treats it number as index and looks it up in our constant-pool
 #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
+// macro reads one-byte from the chunk, reats it as idex into the constants-table -> gets that string
+#define READ_STRING() AS_STRING(READ_CONSTANT())
 // macro-Enables all Arithmetic Functions (since only difference is the sign +-/* for the most part) - is this preprocessor abuse?!?
 // - first we check that the two operands(left and right) are numbers. ->if yes we Error out.
 // - if not, we pop the 2 structs unwrap them (struct->C-double) 
@@ -136,6 +140,35 @@ static InterpretResult run() {
             case OP_NIL:        push(NIL_VAL); break;
             case OP_TRUE:       push(BOOL_VAL(true)); break;
             case OP_FALSE:      push(BOOL_VAL(false)); break;
+            // stack operations:
+            case OP_POP:        pop(); break;       // pop value from stack and forget it.
+            case OP_GET_GLOBAL: {                   // get value for named-variable and push it on stack.
+                ObjString* name = READ_STRING();
+                Value value;
+                // if key isnt present, that means the variable has not been defined -> runtime error:
+                if (!tableGet(&vm.globals, name, &value)) {
+                    runtimeError("Undefined variable '%s'.", name->chars);
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                push(value);
+                break;
+            }
+            case OP_DEFINE_GLOBAL: {                // pop the last val from stack and write it to our globals table
+                ObjString* name = READ_STRING();    // get var identifier from constant table
+                tableSet(&vm.globals, name, peek(0));
+                pop();
+                break;
+            }
+            case OP_SET_GLOBAL: {                   // Try to write to existing global variable
+                ObjString* name = READ_STRING();
+                if (tableSet(&vm.globals, name, peek(0))) {
+                    tableDelete(&vm.globals, name); // delete zombie values from table (important for REPL)
+                    runtimeError("Undefined variable '%s'.", name->chars);
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                // no pop() from the stack, since the assignment could be nested in some larger expression
+                break;
+            }
             //  comparisons:
             case OP_EQUAL: {
                 Value b = pop();
@@ -166,17 +199,22 @@ static InterpretResult run() {
                 push(BOOL_VAL(isFalsey(pop())));
                 break;
             // OP_NEGATE - arithmetic negation - unary expression, like -x with x=3 -> -3:
-            case OP_NEGATE:
+            case OP_NEGATE: 
+                // TODO: no {} here! check if this is on purpose? does it make a difference in c?
                 if (!IS_NUMBER(peek(0))) {
                     runtimeError("Operand must be a number.");
                     return INTERPRET_RUNTIME_ERROR;
                 }
                 push(NUMBER_VAL(-AS_NUMBER(pop())));
                 break;
+            // OP_PRINT - console.log() prints to terminal. Like 'print "hello";' -> "hello\n" to Terminal
+            case OP_PRINT: {
+                printValue(pop());
+                printf("\n");
+                break;
+            }
             // OP_RETURN - exits the loop entirely (end of chunk reached/return from the current Lox function)
             case OP_RETURN: {
-                printValue(pop());      // "produce a value from the stack", for now we just print it out.
-                printf("\n");
                 return INTERPRET_OK;
             }
         }
@@ -185,6 +223,7 @@ static InterpretResult run() {
 // we only need our macros in run() so we scope them explicity to only be available here:
 #undef READ_BYTE
 #undef READ_CONSTANT
+#undef READ_STRING
 #undef BINARY_OP
 }
 
