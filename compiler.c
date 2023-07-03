@@ -664,7 +664,7 @@ static void forStatement() {
     // Increment clause             // "for(..;...;x=x+10)":
     // - we will jump over the increment, run the body, 
     // - then jump back to the increment run it then go to the next iteration.
-    if (!match(TOKEN_RIGHT_PAREN)) {    // check if this (optional clause) exists
+    if (!match(TOKEN_RIGHT_PAREN)) {// check if this (optional clause) exists
         int bodyJump = emitJump(OP_JUMP);
         int incrementStart = currentChunk()->count;
         expression();
@@ -676,13 +676,13 @@ static void forStatement() {
         patchJump(bodyJump);
     }
 
-    statement();                // the 'body' of the loop that gets repeated
+    statement();                    // the 'body' of the loop that gets repeated
     emitLoop(loopStart);
     if (exitJump != -1) {
         patchJump(exitJump);
-        emitByte(OP_POP);       // clear the exit-condition from stack. (after we jumped to end)
+        emitByte(OP_POP);           // clear the exit-condition from stack. (after we jumped to end)
     }
-    endScope();                 // we needed a local scope for our loop (counter variable)
+    endScope();                     // we needed a local scope for our loop (counter variable)
 }
 
 // parses ifStatements - "if (isTrue) { // then do this; }"
