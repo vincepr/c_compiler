@@ -198,7 +198,7 @@ static void emitLoop(int loopStart) {
     int offset = currentChunk()->count - loopStart + 2; // +2 is because of OP_JUMP 2 bytes for offset's length
     if (offset > UINT16_MAX) error("Loop body too large.");
     emitByte((offset >> 8) & 0xff);     // the two 8bit of the 16bit int we use to jump
-    emitByte(offset & 0xff)
+    emitByte(offset & 0xff);
 }
 
 // helper for patchJump() - emits the input Jump-Instruction then a 2-byte long offset
