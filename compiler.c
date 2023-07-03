@@ -661,7 +661,6 @@ static void forStatement() {
         exitJump = emitJump(OP_JUMP_IF_FALSE);
         emitByte(OP_POP);           // clear the exit-condition from stack if were not jumping
     }
-    consume(TOKEN_RIGHT_PAREN, "Expect ')' after for clauses.");
     // Increment clause             // "for(..;...;x=x+10)":
     // - we will jump over the increment, run the body, 
     // - then jump back to the increment run it then go to the next iteration.
