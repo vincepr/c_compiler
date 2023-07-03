@@ -371,7 +371,7 @@ static void markInitialized() {
     current->locals[current->localCount - 1].depth = current->scopeDepth;
 }
 
-// helper for varDeclarations() - 
+// helper for varDeclaration() - 
 //  - previously the value of our variable got poped to the stack
 //  - so now we can just emit this instruction afterwards -> takes that value and stores it 
 static void defineVariable(uint8_t global) {
@@ -450,7 +450,7 @@ static void number(bool _canAssign) {
 
 // parsing function for logical OR
 // - control flowy. In this example the right side is not reached: "false OR isNotReached()" -> we use Jumps
-// TODO: this could be made in a new OP_CODE skipp -> less instructions needed -> faster
+// NOTE: this could be made in a new OP_CODE skipp -> less instructions needed -> faster
 static void or_(bool _canAssign) {
     int elseJump = emitJump(OP_JUMP_IF_FALSE);  // if left-side is falsey -> tiny jump over next statement
     int endJump = emitJump(OP_JUMP);            // (else) if left side is true -> big jump to end
@@ -639,6 +639,53 @@ static void expressionStatement() {
     emitByte(OP_POP);   // discards the result from the stack. Since we are only after side effects.
 }
 
+// parse for loops -    "for (var i=0; i<10; i=x+1) print x;"   but also    "for (;;) {doInfiniteLoop;}""
+static void forStatement() {
+    beginScope();                   // we ensure the counter variable is a local variable
+    consume(TOKEN_LEFT_PAREN, "Expect '(' after 'for'.");
+    // Initializer clause           // "for(x=0;...;..)":
+    if (match(TOKEN_SEMICOLON)) {   // check if this (optinal clause) exists
+        // No initializer found     // ex.: for (;x>10;x++)
+    } else if (match(TOKEN_VAR)) {
+        varDeclaration();           // ex.: for(var x=0;x>10;x++)
+    } else {
+        expressionStatement();      // ex.: for(x=0;x>10;x++)
+    }
+    int loopStart = currentChunk()->count;
+    // Condition clause             // "for(..;x>10;..)":
+    int exitJump = -1;
+    if (!match(TOKEN_SEMICOLON)) {  // check if this (optinal clause) exists
+        expression();
+        consume(TOKEN_SEMICOLON, "Expect ';' after loop condition.");
+        // jump out of the loop if exit condition is true:
+        exitJump = emitJump(OP_JUMP_IF_FALSE);
+        emitByte(OP_POP);           // clear the exit-condition from stack if were not jumping
+    }
+    consume(TOKEN_RIGHT_PAREN, "Expect ')' after for clauses.");
+    // Increment clause             // "for(..;...;x=x+10)":
+    // - we will jump over the increment, run the body, 
+    // - then jump back to the increment run it then go to the next iteration.
+    if (!match(TOKEN_RIGHT_PAREN)) {    // check if this (optional clause) exists
+        int bodyJump = emitJump(OP_JUMP);
+        int incrementStart = currentChunk()->count;
+        expression();
+        emitByte(OP_POP);
+        consume(TOKEN_RIGHT_PAREN, "Expect ')' after for increment clause.");
+
+        emitLoop(loopStart);
+        loopStart = incrementStart;
+        patchJump(bodyJump);
+    }
+
+    statement();                // the 'body' of the loop that gets repeated
+    emitLoop(loopStart);
+    if (exitJump != -1) {
+        patchJump(exitJump);
+        emitByte(OP_POP);       // clear the exit-condition from stack. (after we jumped to end)
+    }
+    endScope();                 // we needed a local scope for our loop (counter variable)
+}
+
 // parses ifStatements - "if (isTrue) { // then do this; }"
 static void ifStatement() {
     // the condition, enclosed by round-brackets  "(expression)"
@@ -719,6 +766,8 @@ static void declaration() {
 static void statement() {
     if (match(TOKEN_PRINT)) {
         printStatement();
+    } else if (match(TOKEN_FOR)) {
+        forStatement();
     } else if (match(TOKEN_IF)) {
         ifStatement();
     } else if (match(TOKEN_WHILE)) {
