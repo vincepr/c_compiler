@@ -7,7 +7,7 @@ The book Crafting Interpreters by Robert Nystrom as a guide, the goal is to dip 
 - the jlox interpreter accomplished by recursively traversing(postorder traversal) the AST.
 - But since the interpret() run() function of the clox is flattened out, a place for tempory values is needed (the Value Stack Manipulator)
 
-![value stack](./value_stack.excalidraw.svg)
+![value stack](./docs/value_stack.excalidraw.svg)
 
 - as shown in the above we can just make a stack for our values to store, that we push onto if we need a new temp store or pop off, as needed.
 
@@ -52,7 +52,7 @@ They are not late bound, so different from globals, they need to be assigned bef
 - They are lexical scoped.
 - for performance reasons we can just push/pop them on the stack. We can use the same stack we use to evaluate expressions.
 
-![shows_local_scope_of_variables](./local_scope.excalidraw.svg)
+![shows_local_scope_of_variables](./docs/local_scope.excalidraw.svg)
 - as seen above, all we need is keep track of the **offset**, to identify where on the stack each value is (ex `a`  after line 6, would need an offset of 2 down from the top).
 
 
