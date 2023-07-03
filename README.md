@@ -56,7 +56,8 @@ They are not late bound, so different from globals, they need to be assigned bef
 - as seen above, all we need is keep track of the **offset**, to identify where on the stack each value is (ex `a`  after line 6, would need an offset of 2 down from the top).
 
 
-### Control Flow (Jumping Back and Forth)
+## Control Flow (Jumping Back and Forth)
+### if and if else
 ```
 if (expression) print-statement;
 ```
@@ -66,3 +67,10 @@ The idea (for a simple if statment) is to Jump to after the statment if the cond
 - The solution used is called Backpatching. 
     - We emit the jump instruction with a placeholder for the goto-value
     - after compiling the statement, we go back and replace that placeholder offset with the real one.
+
+### Logical Operators
+And and Or are mathematically binary operators. BUT they function more like control flow.
+
+As in this: `true AND thisFnNeverGetsRun() AND alsoNotRun()` the functions get never run, since they are short-circuit after the `true AND`
+
+

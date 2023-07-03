@@ -236,6 +236,11 @@ static InterpretResult run() {
                 if (isFalsey(peek(0))) vm.ip += offset;
                 break;
             }
+            case OP_LOOP: {                 // unconditionally jumps back to the 16-bit offset that follows in 2 8bit chunks afterwards
+                uint16_t offset = READ_SHORT();
+                vm.ip -= offset;
+                break;
+            }
             // OP_RETURN - exits the loop entirely (end of chunk reached/return from the current Lox function)
             case OP_RETURN: {
                 return INTERPRET_OK;

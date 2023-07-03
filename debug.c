@@ -32,6 +32,7 @@ static int byteInstruction(const char* name, Chunk* chunk, int offset) {
 }
 
 // 2 byte/16bit uint jump instructions
+// sign is +1 to indicate jump forward, -1 to indicate jump backwards
 static int jumpInstruction(const char* name, int sign, Chunk* chunk, int offset) {
     uint16_t jump = (uint16_t)(chunk->code[offset + 1] << 8);
     jump |= chunk->code[offset + 2];
@@ -107,9 +108,11 @@ int disassembleInstruction(Chunk* chunk, int offset) {
             return simpleInstruction("OP_NEGATE", offset);
         // special Instructions:
         case OP_JUMP:
-            return jumpInstruction("OP_JUMP", 1, chunk, offset);
+            return jumpInstruction("OP_JUMP", 1, chunk, offset);            // +1 ->jumps forwards
         case OP_JUMP_IF_FALSE:
-            return jumpInstruction("OP_JUMP_IF_FALSE", 1, chunk, offset);
+            return jumpInstruction("OP_JUMP_IF_FALSE", 1, chunk, offset);   // +1 ->jumps forwards
+        case OP_LOOP:
+            return jumpInstruction("OP_LOOP", -1, chunk, offset);           // -1 -> jumps backwards
         case OP_PRINT:
             return simpleInstruction("OP_PRINT", offset);
         case OP_RETURN:
