@@ -95,6 +95,9 @@ static InterpretResult run() {
 #define READ_BYTE() (*vm.ip++)
 // macro-READ_CONSTANT: reads the next byte from the bytecoat, treats it number as index and looks it up in our constant-pool
 #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
+// reads last 2 8-bit-chunks and interprets it as a 16-bit int.
+#define READ_SHORT() \
+    (vm.ip += 2, (uint16_t)((vm.ip[-2] << 8) | vm.ip[-1]))
 // macro reads one-byte from the chunk, reats it as idex into the constants-table -> gets that string
 #define READ_STRING() AS_STRING(READ_CONSTANT())
 // macro-Enables all Arithmetic Functions (since only difference is the sign +-/* for the most part) - is this preprocessor abuse?!?
@@ -223,6 +226,21 @@ static InterpretResult run() {
                 printf("\n");
                 break;
             }
+            case OP_JUMP: {                 // reads offset of the jump forward. then jumps without any checks.
+                uint16_t offset = READ_SHORT();
+                vm.ip += offset;
+                break;
+            }
+            case OP_JUMP_IF_FALSE: {        // reads offset of the jump forward to it if statement on stack is falsey.
+                uint16_t offset = READ_SHORT();
+                if (isFalsey(peek(0))) vm.ip += offset;
+                break;
+            }
+            case OP_LOOP: {                 // unconditionally jumps back to the 16-bit offset that follows in 2 8bit chunks afterwards
+                uint16_t offset = READ_SHORT();
+                vm.ip -= offset;
+                break;
+            }
             // OP_RETURN - exits the loop entirely (end of chunk reached/return from the current Lox function)
             case OP_RETURN: {
                 return INTERPRET_OK;
@@ -231,6 +249,7 @@ static InterpretResult run() {
     }
 // we only need our macros in run() so we scope them explicity to only be available here:
 #undef READ_BYTE
+#undef READ_SHORT
 #undef READ_CONSTANT
 #undef READ_STRING
 #undef BINARY_OP

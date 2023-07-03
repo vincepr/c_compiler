@@ -36,9 +36,13 @@ typedef enum {
     OP_SUBTRACT,
     OP_MULTIPLY,
     OP_DIVIDE,
-    // unary operators
+    // unary operators:
     OP_NOT,             // logical Not. like !true -> false
     OP_NEGATE,          // unary negation. like -x with x=3 -> -3
+    // special Instructions:
+    OP_JUMP,            // always jumps: used to skipp execution of the else case (if..else...)
+    OP_JUMP_IF_FALSE,   // used to skipp execution of the statement, for ex:  "if(expr) statement"
+    OP_LOOP,            // unconditionally jumps back to the 16-bit offset that follows in 2 8bit chunks afterwards
     OP_PRINT,           // print expression. like "print x+8;"  -> with x="hello" -> "hello8"
     OP_RETURN,          // return from the current function
 } OpCode;

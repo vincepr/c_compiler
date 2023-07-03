@@ -31,6 +31,15 @@ static int byteInstruction(const char* name, Chunk* chunk, int offset) {
     return offset + 2;
 }
 
+// 2 byte/16bit uint jump instructions
+// sign is +1 to indicate jump forward, -1 to indicate jump backwards
+static int jumpInstruction(const char* name, int sign, Chunk* chunk, int offset) {
+    uint16_t jump = (uint16_t)(chunk->code[offset + 1] << 8);
+    jump |= chunk->code[offset + 2];
+    printf("%-16s %4d -> %d\n", name, offset, offset+3+sign*jump);
+    return offset + 3;
+}
+
 // 2 bytes instruction. 1st=OPcode 2nd=index_to_pool_of_Constants/Values for that chunk
 static int constantInstruction(const char* name, Chunk* chunk, int offset) {
     uint8_t constant_idx = chunk->code[offset + 1];     // byte after opcode containts idx to constants-pool
@@ -97,7 +106,13 @@ int disassembleInstruction(Chunk* chunk, int offset) {
             return simpleInstruction("OP_NOT", offset);
         case OP_NEGATE:
             return simpleInstruction("OP_NEGATE", offset);
-        // Statements (print, var declarations ...):
+        // special Instructions:
+        case OP_JUMP:
+            return jumpInstruction("OP_JUMP", 1, chunk, offset);            // +1 ->jumps forwards
+        case OP_JUMP_IF_FALSE:
+            return jumpInstruction("OP_JUMP_IF_FALSE", 1, chunk, offset);   // +1 ->jumps forwards
+        case OP_LOOP:
+            return jumpInstruction("OP_LOOP", -1, chunk, offset);           // -1 -> jumps backwards
         case OP_PRINT:
             return simpleInstruction("OP_PRINT", offset);
         case OP_RETURN:
