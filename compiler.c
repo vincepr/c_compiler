@@ -153,7 +153,7 @@ static void advance() {
 // helper for compile() - reads the next token & advances. 
 // - next Type MUST be provided type otherwise ERRORS
 static void consume(TokenType type, const char* message) {
-    if (parser.current.type= type) {
+    if (parser.current.type == type) {
         advance();
         return;
     }
@@ -187,6 +187,16 @@ static void emitByte(uint8_t byte) {
 static void emitBytes(uint8_t byte1, uint8_t byte2) {
     emitByte(byte1);
     emitByte(byte2);
+}
+
+// helper for patchJump() - emits the input Jump-Instruction then a 2-byte long offset
+// - emits a bytecode instruction and writes a placeholder operand for the jump offset
+// - we use 2 bytes for the jump offset -> so 65535 bytes of code is our max jump length.
+static int emitJump(uint8_t instruction) {
+    emitByte(instruction);
+    emitByte(0xff);
+    emitByte(0xff);
+    return currentChunk()->count -2;
 }
 
 // helper for endCompiler()
@@ -230,6 +240,19 @@ static void initCompiler(Compiler* compiler) {
 // emits the Instrucitons to add one constant to our Cunk (like in var x=3.65 -> we would add const 3.65)
 static void emitConstant(Value value) {
     emitBytes(OP_CONSTANT, makeConstant(value));
+}
+
+// helper for ifStatement() - spaws the placeholder offset for the real offset.
+// - goes back into the bytecode and replaces the calculated jump offset. 
+//   (ex. now we know how long (how many bytecode-instructions) the doStatment after a if(expression)doStatment; was)
+static void patchJump(int offset) {
+    //
+    int jump = currentChunk()->count - offset -2;
+    if (jump > UINT16_MAX) {
+        error("Too much code to jump over.");       // max of 65535bytes of code (2 8 bit blocks)
+    }
+    currentChunk()->code[offset] = (jump >> 8) & 0xff;
+    currentChunk()->code[offset +1] = jump & 0xff;
 }
 
 // helper for compile() - For now we just add a Return at the end
@@ -552,7 +575,7 @@ static void expression() {
     parsePrecedence(PREC_ASSIGNMENT);
 }
 
-// helper for statement() - inner block enclosed by 2 curly-brackets "{" block "}"
+// helper for statement() - inner block enclosed by 2 curly-brackets   "{" block "}"
 static void block() {
     while (!check(TOKEN_RIGHT_BRACE) && !check(TOKEN_EOF)) {
         declaration();
@@ -579,6 +602,23 @@ static void expressionStatement() {
     expression();
     consume(TOKEN_SEMICOLON, "Expect ';' after expression.");
     emitByte(OP_POP);   // discards the result from the stack. Since we are only after side effects.
+}
+
+// parses ifStatements - "if (isTrue) { // then do this; }"
+static void ifStatement() {
+    // the condition, enclosed by round-brackets  "(expression)"
+    consume(TOKEN_LEFT_PAREN, "Expect '(' after 'if'.");
+    expression();
+    consume(TOKEN_RIGHT_PAREN, "Expect ')' after condition.");
+    // we emit the JUMP IF FALSE -> so we skipp our statement if the previous expression evals to false:
+    int thenJump = emitJump(OP_JUMP_IF_FALSE);
+    emitByte(OP_POP);                       //cleanup the condition value on the stack (expr==false case)
+    statement();
+    int elseJump = emitJump(OP_JUMP);
+    patchJump(thenJump);                    // this will skip the statement()-bytecode-instructions if expr==false
+    emitByte(OP_POP);                       // cleanup the condition value on the stack (expr==true/ELSE case)
+    if (match(TOKEN_ELSE)) statement();     // IF...ELSE... Should ONLY execute when expr==true
+    patchJump(elseJump);                    // so we skipp the above bytecode instructions IF expr==true
 }
 
 // "print x + 1;" -> will eval x+1 then print that;
@@ -629,6 +669,8 @@ static void declaration() {
 static void statement() {
     if (match(TOKEN_PRINT)) {
         printStatement();
+    } else if (match(TOKEN_IF)) {
+        ifStatement();
     } else if (match(TOKEN_LEFT_BRACE)) {       // we need to go one scope deeper (block encountered)
         beginScope();
         block();

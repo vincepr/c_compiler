@@ -55,3 +55,14 @@ They are not late bound, so different from globals, they need to be assigned bef
 ![shows_local_scope_of_variables](./local_scope.excalidraw.svg)
 - as seen above, all we need is keep track of the **offset**, to identify where on the stack each value is (ex `a`  after line 6, would need an offset of 2 down from the top).
 
+
+### Control Flow (Jumping Back and Forth)
+```
+if (expression) print-statement;
+```
+The idea (for a simple if statment) is to Jump to after the statment if the condition is true.
+#### Backpatching
+- But we cant know how far to jump. Before actually parsing the (print-)statement.
+- The solution used is called Backpatching. 
+    - We emit the jump instruction with a placeholder for the goto-value
+    - after compiling the statement, we go back and replace that placeholder offset with the real one.
