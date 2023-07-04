@@ -28,13 +28,18 @@ static void runtimeError(const char* format, ...) {
     va_end(args);
     fputs("\n", stderr);
 
-    CallFrame* frame = &vm.frames[vm.frameCount -1];                    // pulls current frame from the top of the CallStack.
-    size_t instruction = frame->ip - frame->function->chunk.code -1;    // pulls current ip from the vm.
-    int line = frame->function->chunk.lines[instruction];               // get the current line from the current frame.
-
-    //size_t instruction = vm.ip - vm.chunk->code -1; // interpreter +1's before interpreting. so we have to -1 to corretly locate the error
-    //int line = vm.chunk->lines[instruction];
-    fprintf(stderr, "[line %d] in script\n", line);
+    // Extract info from current CallStack and print out.
+    // - then we walk the stack top->bottom and find the line number,
+    //      that corresponds to the current ip and print that line number along with function name
+    for (int i = vm.frameCount - 1; i>=0; i--) {
+        CallFrame* frame = &vm.frames[i];
+        ObjFunction* function = frame->function;
+        size_t instruction = frame->ip - function->chunk.code -1;
+        fprintf(stderr, "[line %d] in ", function->chunk.lines[instruction]);
+        if (function->name == NULL) {
+            fprintf(stderr, "%s()\n", function->name->chars);
+        }
+    }
     resetStack();
 }
 
@@ -66,6 +71,45 @@ Value pop() {
 // returns Value from the stack WITHOUT poping it. (distance is an offset from the top) (0 is the top-one)
 static Value peek(int distance) {
     return vm.stackTop[-1-distance];
+}
+
+// initializes the next CallFrame on the stack
+// - stores pointer to the function beeing called and points the frame's ip to the beginning of that functions bytecode
+// - then it sets up slots pointer to give the frame it's window on the stack.
+static bool call(ObjFunction* function, int argCount) {
+    // ErrorChecking "fun do(a,b,c){} do(1,2)" -> called with wrong nr Parameters
+    if (argCount != function->arity) {
+        runtimeError("Expected %d arguments but got %d.", function->arity, argCount);
+        return false;
+    }
+    if (vm.frameCount == FRAMES_MAX) {
+        runtimeError("Stack overflow.");
+        return false;
+    }
+    // Setup the Stack-Frame:
+    CallFrame* frame = &vm.frames[vm.frameCount++];         //  prepare an initial CallFrame 
+    frame->function = function;                             //  in the new CallFrame we point to the function
+    frame->ip = function->chunk.code;                       //  initialize its ip to the beginning of the functions bytecode
+    //                                                          and set up its stack window to start at the bottom of the VM's value stack 
+    frame->slots = vm.stackTop - argCount -1;               // -1 because of the reserved 0-idx stack slot(reserved for methods-calls)
+                                                                
+    return true;
+}
+
+// calls a Function or Class - maps all supported objects that can call or return false on error
+static bool callValue(Value callee, int argCount) {
+    if (IS_OBJ(callee)) {
+        switch(OBJ_TYPE(callee)) {
+        // since lox is a dynamic language, we need to check types calling a Function/Method at runtime-type. 
+        // - to block: "a_string"(); or "var x = 123; x()" 
+            case OBJ_FUNCTION:
+                return call(AS_FUNCTION(callee), argCount);
+            default:
+                break;  // Non-callable object type tried to call ex.: "just string"()
+        }
+    }
+    runtimeError("Can only call functions and classes.");
+    return false;
 }
 
 // we handle what Values may be evaluated as a boolean.
@@ -249,6 +293,14 @@ static InterpretResult run() {
                 frame->ip -= offset;
                 break;
             }
+            case OP_CALL: {                 // reads nr of parameters/arguments from stack -> this is the start of the function on the stack
+                int argCount = READ_BYTE();
+                if (!callValue(peek(argCount), argCount)) {
+                    return INTERPRET_RUNTIME_ERROR;     // if callValue() -> false we know a runtime error happened
+                    break;
+                }
+                frame = &vm.frames[vm.frameCount - 1];  // there will be a new frame on the CallFrame stack for the called function, that we update
+            }
             // OP_RETURN - exits the loop entirely (end of chunk reached/return from the current Lox function)
             case OP_RETURN: {
                 return INTERPRET_OK;
@@ -269,10 +321,7 @@ InterpretResult interpret(const char* source) {
     if (function == NULL) return INTERPRET_COMPILE_ERROR;   // NULL means we hit some kind of Compile-Error(that Compiler already reported)
 
     push(OBJ_VAL(function));                                // store the funcion on the stack
-    CallFrame* frame = &vm.frames[vm.frameCount++];         //  and prepare an initial CallFrame 
-    frame->function = function;                             //   in the new CallFrame we point to the function
-    frame->ip = function->chunk.code;                       //   initialize its ip to the beginning of the functions bytecode
-    frame->slots = vm.stack;                                //   and set up its stack window to start at the bottom of the VM's value stack
+    call(function, 0);                                                // initializes the toplevel Stack-Frame
 
     return run();
 }

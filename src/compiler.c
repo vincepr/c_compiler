@@ -87,7 +87,8 @@ typedef enum {
 } FunctionType;
 
 // we need this struct to keep track of the current scope and all local variables of that scope
-typedef struct {
+typedef struct Compiler {
+    struct Compiler* enclosing; // Each Compiler points back to the Comnpiler for the function that encloses it.
     ObjFunction* function;      // the current function were writing to
     FunctionType type;          // are we parsing top-level or in a function-body currently
 
@@ -251,12 +252,16 @@ static uint8_t makeConstant(Value value) {
 
 // init a new Compiler - we use this every time we need a new Chunk/Call-Stack, in ex.: if we hit a new function
 static void initCompiler(Compiler* compiler, FunctionType type) {
+    compiler->enclosing = current;          // capture previous current compiler and write it to be this one's-enclosing/'parent'
     compiler->function = NULL;
     compiler->type = type;
     compiler->localCount = 0;
     compiler->scopeDepth = 0;
     compiler->function = newFunction();     // create a new ObjFunction -> we compile our code into it's chunk.
     current = compiler;
+    if (type != TYPE_SCRIPT) {              // if not a top-scope function we store its function-name (copy because of lifetimes)
+        current->function->name = copyString(parser.previous.start, parser.previous.length);
+    }
 
     // compiler uses the 0 slot of locals for internal use:
     // - name "" so no one else can write to it (with how our maps work)
@@ -297,7 +302,8 @@ static ObjFunction* endCompiler() {
         }
     #endif
 
-    return function
+    current = current->enclosing;               // put the this one's enclosing/'parent'-compiler as the current, when we close the this recent one
+    return function;
 }
 
 /*
@@ -389,6 +395,8 @@ static uint8_t parseVariable(const char* errorMessage) {
 // helper for defineVariable - utility to get current scopeDepth
 //  - used this way to handle the special case of declaring:         var x=9; { var x = x; }
 static void markInitialized() {
+    // since Function Declarations use this, we return early if global scope -> able to 'use' that function in itself (recursion):
+    if (current->scopeDepth == 0) return;       
     current->locals[current->localCount - 1].depth = current->scopeDepth;
 }
 
@@ -402,6 +410,23 @@ static void defineVariable(uint8_t global) {
     }
     emitBytes(OP_DEFINE_GLOBAL, global);    // this would remove the value from the stack then write it to our lookup-Table
 }
+
+// helper for call() - compile the arguments (of a funciton-call)  ex: doThings(arg1, 99, "Bond James")
+static uint8_t argumentList() {
+    uint8_t argCount = 0;
+    if (!check(TOKEN_RIGHT_PAREN)) {
+        do {
+            expression();
+            if(argCount == 255) {
+                error("Can't have more than 255 arguments.");
+            }
+            argCount++;
+        } while (match(TOKEN_COMMA));
+    }
+    consume(TOKEN_RIGHT_PAREN, "Expect ')' after arguments.");
+    return argCount;
+}
+
 
 /*
 *
@@ -444,6 +469,12 @@ static void binary(bool _canAssign) {
         case TOKEN_SLASH:           emitByte(OP_DIVIDE); break;
         default: return;            // Unreachable
     }
+}
+
+// when hitting an opening '(' followed by an expression (ex, function call)
+static void call(bool canAssign) {
+    uint8_t argCount = argumentList();      // compiles all Function Arguments
+    emitBytes(OP_CALL, argCount);           // invoke the function, using the argument count as operand
 }
 
 // when hitting a OP_TRUE OP_FALSE OP_NIL we just push the corresponding value on the stack
@@ -542,7 +573,7 @@ static void unary(bool _canAssign) {
 // - infix expressions are on the right side (get evaluated 2nd) then poped on the stack
 // [TOKEN Name]      = {prefix-Fn, infix-Fn, Precedence Number }
 ParseRule rules[] = {
-  [TOKEN_LEFT_PAREN]    = {grouping,    NULL,      PREC_NONE},
+  [TOKEN_LEFT_PAREN]    = {grouping,    call,      PREC_CALL},
   [TOKEN_RIGHT_PAREN]   = {NULL,        NULL,      PREC_NONE},
   [TOKEN_LEFT_BRACE]    = {NULL,        NULL,      PREC_NONE}, 
   [TOKEN_RIGHT_BRACE]   = {NULL,        NULL,      PREC_NONE},
@@ -637,6 +668,42 @@ static void block() {
         declaration();
     }
     consume(TOKEN_RIGHT_BRACE, "Expect '}' after block.");      // Brackets must be closed again.
+}
+
+//
+static void function(FunctionType type) {
+    Compiler compiler;
+    initCompiler(&compiler, type);                              // we set a new Compiler that compiles (only) this function
+    beginScope();
+
+    consume(TOKEN_LEFT_PAREN, "Expect '(' after function name.");
+    if (!check(TOKEN_RIGHT_PAREN)) {
+        // parameters is simply a local variable declared in the outermost lexical scope of a function body
+        do {
+            current->function->arity++; // we keep track of nr of parameters since we only max of 256
+            if (current->function->arity > 255) {
+                errorAtCurrent("Can't have more than 255 parameters.");
+            }
+            uint8_t constant = parseVariable("Expect parameter name.");
+            defineVariable(constant);
+        } while (match(TOKEN_COMMA));
+    }
+    consume(TOKEN_RIGHT_PAREN, "Expect ')' after parameters.");
+    consume(TOKEN_LEFT_BRACE, "Expect '{' before function body.");
+    block();        // the function body, in a {}-block
+
+    ObjFunction* function = endCompiler();                      // the Compiler for this function has finished -> we get the Function-Object from it
+    emitBytes(OP_CONSTANT, makeConstant(OBJ_VAL(function)));
+}
+
+// helper for declaration() - parses a Function declaration: ex: "fun doStuff() {...}"
+// - a function declaration at top lvl will bind the function to a global variable
+// - a function inside a block or other function creates a local variable
+static void funDeclaration() {
+    uint8_t global = parseVariable("Expect function name.");
+    markInitialized();          // we can instantly mark the function initialized -> this enables recursion.
+    function(TYPE_FUNCTION);
+    defineVariable(global);
 }
 
 // helper for declaration() - initial declaration of variables
@@ -771,7 +838,9 @@ static void synchronize() {
 // maps different declaration (from our parsing grammar)
 //  declaration     -> classDecl | funDecl | varDecl | statement;
 static void declaration() {
-    if (match(TOKEN_VAR)) {
+    if (match(TOKEN_FUN)) {
+        funDeclaration();
+    } else if (match(TOKEN_VAR)) {
         varDeclaration();
     } else {
         statement();                            // tries to parse tokens to find a statement
@@ -816,7 +885,6 @@ ObjFunction* compile(const char* source) {
     initScanner(source);
     Compiler compiler;                      // set up our compiler
     initCompiler(&compiler, TYPE_SCRIPT);   // we start compiling top-level (TYPE_SCRIPT)
-    compilingChunk = chunk;                 // set our current chunk. Compiled bytecode instructions get added to this
     // 'initialize' our Error-FLAGS:
     parser.hadError = false;
     parser.panicMode = false;

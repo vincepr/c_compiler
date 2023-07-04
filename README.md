@@ -100,3 +100,22 @@ Now the VM has to return back to the chunk where the function was called from, d
 
 #### The call stack - CallFrame
 So we add the `CallFrame` struct that we can stack all the return addresses to. (so even multiple recursions become just one more entry in our CallFrame)
+
+#### Function Calls
+A function call expression is kind of an infix `(` operator. first the `functionName(someArugments, separatedByComma)`
+
+#### Binding Arguments to parameters
+
+```
+fun sum(a, b, c) {
+    return a + b + c;
+}
+
+print 4 + sum(5, 4, 7);
+```
+The following Stack Windows (startIdx -> endIdx on the Stack, given from how many parameters the function takes)
+- when the compiler compiled `sum(a,b,c)` it located slots for the parameters a, b, c
+    - something like `| sum |  a  |  b  |  c  |` for the function-declartation
+    - something like `|  0  |  5  |  6  |  7  |` for the function-call
+- so all we need to do is to match up those 2 windows to the Stack, and its easy to match `a->5, b->6, c->7`
+    - this means no real binding of one value to another with pointers or even worse the heap neccessary. All happens on the 2 stacks, so it should be really fast
