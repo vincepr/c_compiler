@@ -1,21 +1,19 @@
-//fun doSomething() {
-//    var x = 0;
-//    for (x<10) {
-//        x = x + 1;
-//    }
-//    print x;
-//}
-//doSomething();
-
-
-print "checking scope:
-";
-var x = "out";
-var x = "outer";
-{
-    print x;
-    var x = "inner";
+fun doSomething() {
+    var x = 0;
+    while (x<10) {
+        x = x + 1;
+    }
     print x;
 }
-print x;
-print "test.lox has finished";
+doSomething();
+
+
+
+
+// // testing stack trance:
+// fun a() { b(); }
+// fun b() { c(); }
+// fun c() {
+//     c("too", "many");
+// }
+// a();

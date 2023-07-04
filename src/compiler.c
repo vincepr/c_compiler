@@ -80,9 +80,18 @@ typedef struct {
     int depth;
 } Local;
 
+// Compiler needs to differentiate between 2 states, top level and while in a function-body.
+typedef enum {
+    TYPE_FUNCTION,              // in a Function Body
+    TYPE_SCRIPT                 // Top level
+} FunctionType;
 
 // we need this struct to keep track of the current scope and all local variables of that scope
-typedef struct {
+typedef struct Compiler {
+    struct Compiler* enclosing; // Each Compiler points back to the Comnpiler for the function that encloses it.
+    ObjFunction* function;      // the current function were writing to
+    FunctionType type;          // are we parsing top-level or in a function-body currently
+
     Local locals[UINT8_COUNT];  // Flat arrays of all locals that are in scope during this exact point in the compilation.
     int localCount;             // current count
     int scopeDepth;             // how many {} deep are we
@@ -92,12 +101,10 @@ typedef struct {
 Parser parser;
 // global Compiler instance - used to keep track where on the stack local variables are currently
 Compiler* current = NULL;
-// global Chunk of bytecode-instructions we compile into
-Chunk* compilingChunk;
 
 // emits the chunk we compiled our bytecode-instructions to. (so basically all instructions we just 'compiled')
 static Chunk* currentChunk() {
-    return compilingChunk;
+    return &current->function->chunk;
 }
 
 /*
@@ -211,9 +218,10 @@ static int emitJump(uint8_t instruction) {
     return currentChunk()->count -2;
 }
 
-// helper for endCompiler()
+// helper for endCompiler() - function returns explicit (a value) or implicit by reaching } -> it returns nil
 static void emitReturn() {
-    emitByte(OP_RETURN); // temporaly  - write the OP_RETURN Byte to our Chunk 
+    emitByte(OP_NIL);       
+    emitByte(OP_RETURN);    // temporaly  - write the OP_RETURN Byte to our Chunk 
 }
 
 // helper - we call this function when we exit a new local scope with "}"...
@@ -243,10 +251,25 @@ static uint8_t makeConstant(Value value) {
     return (uint8_t)constant;
 }
 
-static void initCompiler(Compiler* compiler) {
+// init a new Compiler - we use this every time we need a new Chunk/Call-Stack, in ex.: if we hit a new function
+static void initCompiler(Compiler* compiler, FunctionType type) {
+    compiler->enclosing = current;          // capture previous current compiler and write it to be this one's-enclosing/'parent'
+    compiler->function = NULL;
+    compiler->type = type;
     compiler->localCount = 0;
     compiler->scopeDepth = 0;
+    compiler->function = newFunction();     // create a new ObjFunction -> we compile our code into it's chunk.
     current = compiler;
+    if (type != TYPE_SCRIPT) {              // if not a top-scope function we store its function-name (copy because of lifetimes)
+        current->function->name = copyString(parser.previous.start, parser.previous.length);
+    }
+
+    // compiler uses the 0 slot of locals for internal use:
+    // - name "" so no one else can write to it (with how our maps work)
+    Local* local = &current->locals[current->localCount++];
+    local->depth = 0;
+    local->name.start = "";
+    local->name.length = 0;
 }
 
 // emits the Instrucitons to add one constant to our Cunk (like in var x=3.65 -> we would add const 3.65)
@@ -261,22 +284,27 @@ static void patchJump(int offset) {
     //
     int jump = currentChunk()->count - offset -2;
     if (jump > UINT16_MAX) {
-        error("Too much code to jump over.");       // max of 65535bytes of code (2 8 bit blocks)
+        error("Too much code to jump over.");   // max of 65535bytes of code (2 8 bit blocks)
     }
     currentChunk()->code[offset] = (jump >> 8) & 0xff;
     currentChunk()->code[offset +1] = jump & 0xff;
 }
 
 // helper for compile() - For now we just add a Return at the end
-static void endCompiler() {
+static ObjFunction* endCompiler() {
     emitReturn();
+    ObjFunction* function = current->function;   // grab the pointer to the current function
 
     // Flag that enables dumping out chunks once the compiler finishes
     #ifdef DEBUG_PRINT_CODE
         if (!parser.hadError) {
-            disassembleChunk(currentChunk(), "code");
+            // user define functions have a name, the toplevel one is NULL:
+            disassembleChunk(currentChunk(), function->name != NULL ? function->name->chars : "<script>");
         }
     #endif
+
+    current = current->enclosing;               // put the this one's enclosing/'parent'-compiler as the current, when we close the this recent one
+    return function;
 }
 
 /*
@@ -368,6 +396,8 @@ static uint8_t parseVariable(const char* errorMessage) {
 // helper for defineVariable - utility to get current scopeDepth
 //  - used this way to handle the special case of declaring:         var x=9; { var x = x; }
 static void markInitialized() {
+    // since Function Declarations use this, we return early if global scope -> able to 'use' that function in itself (recursion):
+    if (current->scopeDepth == 0) return;       
     current->locals[current->localCount - 1].depth = current->scopeDepth;
 }
 
@@ -381,6 +411,23 @@ static void defineVariable(uint8_t global) {
     }
     emitBytes(OP_DEFINE_GLOBAL, global);    // this would remove the value from the stack then write it to our lookup-Table
 }
+
+// helper for call() - compile the arguments (of a funciton-call)  ex: doThings(arg1, 99, "Bond James")
+static uint8_t argumentList() {
+    uint8_t argCount = 0;
+    if (!check(TOKEN_RIGHT_PAREN)) {
+        do {
+            expression();
+            if(argCount == 255) {
+                error("Can't have more than 255 arguments.");
+            }
+            argCount++;
+        } while (match(TOKEN_COMMA));
+    }
+    consume(TOKEN_RIGHT_PAREN, "Expect ')' after arguments.");
+    return argCount;
+}
+
 
 /*
 *
@@ -423,6 +470,12 @@ static void binary(bool _canAssign) {
         case TOKEN_SLASH:           emitByte(OP_DIVIDE); break;
         default: return;            // Unreachable
     }
+}
+
+// when hitting an opening '(' followed by an expression (ex, function call)
+static void call(bool canAssign) {
+    uint8_t argCount = argumentList();      // compiles all Function Arguments
+    emitBytes(OP_CALL, argCount);           // invoke the function, using the argument count as operand
 }
 
 // when hitting a OP_TRUE OP_FALSE OP_NIL we just push the corresponding value on the stack
@@ -521,7 +574,7 @@ static void unary(bool _canAssign) {
 // - infix expressions are on the right side (get evaluated 2nd) then poped on the stack
 // [TOKEN Name]      = {prefix-Fn, infix-Fn, Precedence Number }
 ParseRule rules[] = {
-  [TOKEN_LEFT_PAREN]    = {grouping,    NULL,      PREC_NONE},
+  [TOKEN_LEFT_PAREN]    = {grouping,    call,      PREC_CALL},
   [TOKEN_RIGHT_PAREN]   = {NULL,        NULL,      PREC_NONE},
   [TOKEN_LEFT_BRACE]    = {NULL,        NULL,      PREC_NONE}, 
   [TOKEN_RIGHT_BRACE]   = {NULL,        NULL,      PREC_NONE},
@@ -618,6 +671,42 @@ static void block() {
     consume(TOKEN_RIGHT_BRACE, "Expect '}' after block.");      // Brackets must be closed again.
 }
 
+//
+static void function(FunctionType type) {
+    Compiler compiler;
+    initCompiler(&compiler, type);                              // we set a new Compiler that compiles (only) this function
+    beginScope();
+
+    consume(TOKEN_LEFT_PAREN, "Expect '(' after function name.");
+    if (!check(TOKEN_RIGHT_PAREN)) {
+        // parameters is simply a local variable declared in the outermost lexical scope of a function body
+        do {
+            current->function->arity++; // we keep track of nr of parameters since we only max of 256
+            if (current->function->arity > 255) {
+                errorAtCurrent("Can't have more than 255 parameters.");
+            }
+            uint8_t constant = parseVariable("Expect parameter name.");
+            defineVariable(constant);
+        } while (match(TOKEN_COMMA));
+    }
+    consume(TOKEN_RIGHT_PAREN, "Expect ')' after parameters.");
+    consume(TOKEN_LEFT_BRACE, "Expect '{' before function body.");
+    block();        // the function body, in a {}-block
+
+    ObjFunction* function = endCompiler();                      // the Compiler for this function has finished -> we get the Function-Object from it
+    emitBytes(OP_CONSTANT, makeConstant(OBJ_VAL(function)));
+}
+
+// helper for declaration() - parses a Function declaration: ex: "fun doStuff() {...}"
+// - a function declaration at top lvl will bind the function to a global variable
+// - a function inside a block or other function creates a local variable
+static void funDeclaration() {
+    uint8_t global = parseVariable("Expect function name.");
+    markInitialized();          // we can instantly mark the function initialized -> this enables recursion.
+    function(TYPE_FUNCTION);
+    defineVariable(global);
+}
+
 // helper for declaration() - initial declaration of variables
 static void varDeclaration() {
     uint8_t global = parseVariable("Expect variable name-");
@@ -709,6 +798,20 @@ static void printStatement() {
     emitByte(OP_PRINT);
 }
 
+// "return true;" -> will exit this function scope to one level lower.
+static void returnStatement() {
+    if (current->type == TYPE_SCRIPT) {
+        error("Can't return from top-level code.");
+    }
+    if (match(TOKEN_SEMICOLON)) {
+        emitReturn();                       // return; (-> implicit NIL from emitReturn())
+    } else {
+        expression();                       // return expr;
+        consume(TOKEN_SEMICOLON, "Expect ';' after return value.");
+        emitByte(OP_RETURN);
+    }
+}
+
 // 'while (true) print"loop is running"; '
 //  - we skipp over the statement with a Jump if the while condition is false
 static void whileStatement() {
@@ -750,7 +853,9 @@ static void synchronize() {
 // maps different declaration (from our parsing grammar)
 //  declaration     -> classDecl | funDecl | varDecl | statement;
 static void declaration() {
-    if (match(TOKEN_VAR)) {
+    if (match(TOKEN_FUN)) {
+        funDeclaration();
+    } else if (match(TOKEN_VAR)) {
         varDeclaration();
     } else {
         statement();                            // tries to parse tokens to find a statement
@@ -769,6 +874,8 @@ static void statement() {
         forStatement();
     } else if (match(TOKEN_IF)) {
         ifStatement();
+    } else if (match(TOKEN_RETURN)) {
+        returnStatement();
     } else if (match(TOKEN_WHILE)) {
         whileStatement();
     } else if (match(TOKEN_LEFT_BRACE)) {       // we need to go one scope deeper (block encountered)
@@ -786,21 +893,23 @@ static void statement() {
 *
 */
 
-// we pass in the chunk where the compiler will write the code, then try to compile the source
+// we pass in the source code string, then try to compile the source 
+// - we compile bytecode and write it to the Chunk (that is stored in the ObjFunction, that is stored in the Compiler)
+// - to enable functions (that may exists in toplevel or another function) we return the compiled ObjFunction* 
+//      - we treat toplevel as a ObjFunction with name NULL
 // - if compilation fails we return false (compilation error) to upstread disregard the whole chunk
-bool compile(const char* source, Chunk* chunk) {
+ObjFunction* compile(const char* source) {
     initScanner(source);
-    Compiler compiler;              // set up our compiler
-    initCompiler(&compiler);
-    compilingChunk = chunk;         // set our current chunk. Compiled bytecode instructions get added to this
+    Compiler compiler;                          // set up our compiler
+    initCompiler(&compiler, TYPE_SCRIPT);       // we start compiling top-level (TYPE_SCRIPT)
     // 'initialize' our Error-FLAGS:
     parser.hadError = false;
     parser.panicMode = false;
 
-    advance();                  // primes the scanner
+    advance();                                  // primes the scanner
     while (!match(TOKEN_EOF)) {
-        declaration();         // this will consume tokens and try to find declaration -> statements etc. (accoring to our lox-syntax)
+        declaration();                          // this will consume tokens and try to find declaration -> statements etc. (accoring to our lox-syntax)
     }
-    endCompiler();
-    return !parser.hadError;    // we return if we encountered an compiletime-Error compiling the Chunk
+    ObjFunction* function = endCompiler();      // Calls and Functions call-end-compiler
+    return parser.hadError ? NULL : function;   //  if we encountered compile-time-errors we return NULL, else return the ObjFunction with the bytecode
 }

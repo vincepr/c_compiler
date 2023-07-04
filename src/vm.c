@@ -1,6 +1,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 #include "common.h"
 #include "compiler.h"
@@ -12,9 +13,16 @@
 // instance of our VM:
 VM vm;
 
+// define Static/Native C-Functions - returns time elapsed since the program started running in seconds.
+// - in lox its available with: 'clock()'
+static Value clockNative(int argCount, Value* args) {
+    return NUMBER_VAL((double)clock() / CLOCKS_PER_SEC);
+}
+
 // helperFunction to setup/reset the stack
 static void resetStack() {
     vm.stackTop = vm.stack;     // we just reuse the stack. So we can just point to its start
+    vm.frameCount = 0;          // CallFrame stack is empty when the vm starts up)
 }
 
 // error Handling of Runtime Errors (like trying to - negate a bool)
@@ -27,10 +35,32 @@ static void runtimeError(const char* format, ...) {
     va_end(args);
     fputs("\n", stderr);
 
-    size_t instruction = vm.ip - vm.chunk->code -1; // interpreter +1's before interpreting. so we have to -1 to corretly locate the error
-    int line = vm.chunk->lines[instruction];
-    fprintf(stderr, "[line %d] in script\n", line);
+    // Extract info from current CallStack and print out.
+    // - then we walk the stack top->bottom and find the line number,
+    //      that corresponds to the current ip and print that line number along with function name
+    for (int i = vm.frameCount - 1; i>=0; i--) {
+        CallFrame* frame = &vm.frames[i];
+        ObjFunction* function = frame->function;
+        size_t instruction = frame->ip - function->chunk.code -1;
+        fprintf(stderr, "[line %d] in ", function->chunk.lines[instruction]);
+        if (function->name == NULL) {
+            fprintf(stderr, "script\n");
+        } else {
+            fprintf(stderr, "%s()\n", function->name->chars);
+        }
+    }
     resetStack();
+}
+
+// takes pointer to a C-Function and the name it will be known as in Lox. 
+// We Wrap the function in an ObjNative then store that in a global Variable (that our code can call)
+// -  we push and pop the name and function on the stack -> this is so the GC will not free anything in use
+static void defineNative(const char* name, NativeFn function) {
+    push(OBJ_VAL(copyString(name, (int)strlen(name))));
+    push(OBJ_VAL(newNative(function)));
+    tableSet(&vm.globals, AS_STRING(vm.stack[0]), vm.stack[1]);
+    pop();
+    pop();
 }
 
 void initVM() {
@@ -38,6 +68,9 @@ void initVM() {
     vm.objects = NULL;      // reset linked list of all active objects
     initTable(&vm.globals); // setup the HashTable for global variables
     initTable(&vm.strings); // setup the HashTable for used strings
+
+    // init Native Functions:
+    defineNative("clock", clockNative);
 }
 
 void freeVM() {
@@ -61,6 +94,53 @@ Value pop() {
 // returns Value from the stack WITHOUT poping it. (distance is an offset from the top) (0 is the top-one)
 static Value peek(int distance) {
     return vm.stackTop[-1-distance];
+}
+
+// initializes the next CallFrame on the stack
+// - stores pointer to the function beeing called and points the frame's ip to the beginning of that functions bytecode
+// - then it sets up slots pointer to give the frame it's window on the stack.
+static bool call(ObjFunction* function, int argCount) {
+    // ErrorChecking "fun do(a,b,c){} do(1,2)" -> called with wrong nr Parameters
+    if (argCount != function->arity) {
+        runtimeError("Expected %d arguments but got %d.", function->arity, argCount);
+        return false;
+    }
+    if (vm.frameCount == FRAMES_MAX) {
+        runtimeError("Stack overflow.");
+        return false;
+    }
+    // Setup the Stack-Frame:
+    CallFrame* frame = &vm.frames[vm.frameCount++];         //  prepare an initial CallFrame 
+    frame->function = function;                             //  in the new CallFrame we point to the function
+    frame->ip = function->chunk.code;                       //  initialize its ip to the beginning of the functions bytecode
+    //                                                          and set up its stack window to start at the bottom of the VM's value stack 
+    frame->slots = vm.stackTop - argCount -1;               // -1 because of the reserved 0-idx stack slot(reserved for methods-calls)
+                                                                
+    return true;
+}
+
+// calls a Function or Class - maps all supported objects that can call or return false on error
+static bool callValue(Value callee, int argCount) {
+    if (IS_OBJ(callee)) {
+        switch(OBJ_TYPE(callee)) {
+        // since lox is a dynamic language, we need to check types calling a Function/Method at runtime-type. 
+        // - to block: "a_string"(); or "var x = 123; x()" 
+            case OBJ_FUNCTION:
+                return call(AS_FUNCTION(callee), argCount);
+            case OBJ_NATIVE: {
+                // if the object being called is a native function -> invoke the C-Function right there
+                NativeFn native = AS_NATIVE(callee);
+                Value result = native(argCount, vm.stackTop - argCount);
+                vm.stackTop -= argCount + 1;
+                push(result);   // we use the result from the C-Function and stuff it back in the stack
+                return true;
+            }
+            default:
+                break;  // Non-callable object type tried to call ex.: "just string"()
+        }
+    }
+    runtimeError("Can only call functions and classes.");
+    return false;
 }
 
 // we handle what Values may be evaluated as a boolean.
@@ -89,15 +169,18 @@ static void concatenate() {
 }
 
 
-// helper function for interpret() that actually runs the current instruciton
+// helper function for interpret() that actually runs the current instruction
 static InterpretResult run() {
+    // instance of our CallFrame:
+    CallFrame* frame = &vm.frames[vm.frameCount - 1];
 // macro-READ_BYTE reads the byte currently pointed at by the instruction-pointer(ip) then advances the ip.
-#define READ_BYTE() (*vm.ip++)
-// macro-READ_CONSTANT: reads the next byte from the bytecoat, treats it number as index and looks it up in our constant-pool
-#define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
+#define READ_BYTE() (*frame->ip++)
 // reads last 2 8-bit-chunks and interprets it as a 16-bit int.
 #define READ_SHORT() \
-    (vm.ip += 2, (uint16_t)((vm.ip[-2] << 8) | vm.ip[-1]))
+    (frame->ip += 2, \
+    (uint16_t)((frame->ip[-2] << 8) | frame->ip[-1]))
+// macro-READ_CONSTANT: reads the next byte from the bytecoat, treats it number as index and looks it up in our constant-pool
+#define READ_CONSTANT() (frame->function->chunk.constants.values[READ_BYTE()])
 // macro reads one-byte from the chunk, reats it as idex into the constants-table -> gets that string
 #define READ_STRING() AS_STRING(READ_CONSTANT())
 // macro-Enables all Arithmetic Functions (since only difference is the sign +-/* for the most part) - is this preprocessor abuse?!?
@@ -127,12 +210,12 @@ static InterpretResult run() {
             }
             printf("\n");
             // show the disassembled/interpreted instruction
-            disassembleInstruction(vm.chunk, (int)(vm.ip - vm.chunk->code));
+            disassembleInstruction(&frame->function->chunk, (int)(frame->ip - frame->function->chunk.code));
         #endif
 
         // first byte of each instruction is opcode so we decode/dispatch it:
-        uint8_t instruciton;
-        switch (instruciton = READ_BYTE()) {
+        uint8_t instruction;
+        switch (instruction = READ_BYTE()) {
             // OP_CONSTANT - fixed values,l ike x=3
             case OP_CONSTANT: {
                 Value constant = READ_CONSTANT();
@@ -147,12 +230,12 @@ static InterpretResult run() {
             case OP_POP:        pop(); break;       // pop value from stack and forget it.
             case OP_GET_LOCAL: {                    // read current local value and push it on the stack
                 uint8_t slot = READ_BYTE();
-                push(vm.stack[slot]);
+                push(frame->slots[slot]);
                 break;
             }
             case OP_SET_LOCAL: {                    // writes to local-variable the top value on the stack.(doesnt touch top of stack)
                 uint8_t slot = READ_BYTE();
-                vm.stack[slot] = peek(0);
+                frame->slots[slot] = peek(0);
                 break;
             }
             case OP_GET_GLOBAL: {                   // get value for named-variable and push it on stack.
@@ -228,22 +311,42 @@ static InterpretResult run() {
             }
             case OP_JUMP: {                 // reads offset of the jump forward. then jumps without any checks.
                 uint16_t offset = READ_SHORT();
-                vm.ip += offset;
+                frame->ip += offset;
                 break;
             }
             case OP_JUMP_IF_FALSE: {        // reads offset of the jump forward to it if statement on stack is falsey.
                 uint16_t offset = READ_SHORT();
-                if (isFalsey(peek(0))) vm.ip += offset;
+                if (isFalsey(peek(0))) frame->ip += offset;
                 break;
             }
             case OP_LOOP: {                 // unconditionally jumps back to the 16-bit offset that follows in 2 8bit chunks afterwards
                 uint16_t offset = READ_SHORT();
-                vm.ip -= offset;
+                frame->ip -= offset;
                 break;
             }
-            // OP_RETURN - exits the loop entirely (end of chunk reached/return from the current Lox function)
+            case OP_CALL: {                 // reads nr of parameters/arguments from stack -> this is the start of the function on the stack
+                int argCount = READ_BYTE();
+                if (!callValue(peek(argCount), argCount)) {
+                    return INTERPRET_RUNTIME_ERROR;     // if callValue() -> false we know a runtime error happened
+                }
+                frame = &vm.frames[vm.frameCount - 1];  // there will be a new frame on the CallFrame stack for the called function, that we update
+                break;
+            }
+            // OP_RETURN - when a function returns a value that value will be currently on the top of the stack
+            // - so we can pop that value, then dispose of the whole functions StackFrame
             case OP_RETURN: {
-                return INTERPRET_OK;
+                Value result = pop();
+                vm.frameCount--;
+                if(vm.frameCount == 0) {
+                    // if we reached the last CallFrame it means we finished executing the top-level code -> the program is done.
+                    pop();          // so we pop the main script from the stack and exit the interpreter
+                    return INTERPRET_OK;
+                } 
+                vm.stackTop = frame->slots;
+                push(result);   // we push that result of the finished function back on the stack. (one level lower)
+                frame = &vm.frames[vm.frameCount - 1];
+                break;
+
             }
         }
     }
@@ -257,19 +360,11 @@ static InterpretResult run() {
 
 // takes the source-code string (from file or repl) and interprets/runs it
 InterpretResult interpret(const char* source) {
-    Chunk chunk;
-    initChunk(&chunk);
+    ObjFunction* function = compile(source);                // pass SourceCode to compiler
+    if (function == NULL) return INTERPRET_COMPILE_ERROR;   // NULL means we hit some kind of Compile-Error(that Compiler already reported)
 
-    // if compile functions fails (returns false) we discard the unusable chunk -> compile time error
-    if (!compile(source, &chunk)) {
-        freeChunk(&chunk);
-        return INTERPRET_COMPILE_ERROR;
-    }
-    // otherwise we send the completed chunk over to the vm to be executed:
-    vm.chunk = &chunk;
-    vm.ip = vm.chunk->code;
-    InterpretResult result = run();
-    // and do some cleanup:
-    freeChunk(&chunk);
-    return result;
+    push(OBJ_VAL(function));                                // store the funcion on the stack
+    call(function, 0);                                                // initializes the toplevel Stack-Frame
+
+    return run();
 }
