@@ -2,6 +2,7 @@
 #define clox_object_h
 
 #include "common.h"
+#include "chunk.h"
 #include "value.h"
 
 /*
@@ -18,14 +19,17 @@
 #define OBJ_TYPE(value)     (AS_OBJ(value)->type)
 
 // macro to check if Value is of provided type (need this check to cast it etc.)
+#define IS_FUNCTION(value)  isObjType(value, OBJ_FUNCTION)
 #define IS_STRING(value)    isObjType(value, OBJ_STRING)
 
 // macros take a Value (that is expected to contain a pointer to a valid ObjString)
+#define AS_FUNCTION(value)  ((ObjFunction*)AS_OBJ(value))
 #define AS_STRING(value)    ((ObjString*)AS_OBJ(value))             // this returns the ObjString* pointer
 #define AS_CSTRING(value)   (((ObjString*)AS_OBJ(value))->chars)    // this returns the character array itself
 
 // all supported ObjTypes our Language supports
 typedef enum {
+    OBJ_FUNCTION,
     OBJ_STRING,
 } ObjType;
 
@@ -35,6 +39,14 @@ struct Obj {
     struct Obj* next;   // linked list-ish to next Object. This is used to keep track on active heap -> GarbageColleciton
 };
 
+// Each Function needs its own Chunk (Callstack, etc...)
+typedef struct {
+    Obj obj;
+    int arity;
+    Chunk chunk;
+    ObjString* name;
+} ObjFunction;
+
 // the Payload of the string - this lives on the heap.
 struct ObjString {
     Obj obj;
@@ -43,6 +55,7 @@ struct ObjString {
     uint32_t hash;      // we precalculate/hash the hash. (so we dont have to do it each time we use our map)
 };
 
+ObjFunction* newFunction();
 ObjString* takeString(char* chars, int length);
 ObjString* copyString(const char* chars, int length);
 

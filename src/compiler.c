@@ -80,9 +80,17 @@ typedef struct {
     int depth;
 } Local;
 
+// Compiler needs to differentiate between 2 states, top level and while in a function-body.
+typedef enum {
+    TYPE_FUNCTION,              // in a Function Body
+    TYPE_SCRIPT                 // Top level
+} FunctionType;
 
 // we need this struct to keep track of the current scope and all local variables of that scope
 typedef struct {
+    ObjFunction* function;      // the current function were writing to
+    FunctionType type;          // are we parsing top-level or in a function-body currently
+
     Local locals[UINT8_COUNT];  // Flat arrays of all locals that are in scope during this exact point in the compilation.
     int localCount;             // current count
     int scopeDepth;             // how many {} deep are we
@@ -92,12 +100,10 @@ typedef struct {
 Parser parser;
 // global Compiler instance - used to keep track where on the stack local variables are currently
 Compiler* current = NULL;
-// global Chunk of bytecode-instructions we compile into
-Chunk* compilingChunk;
 
 // emits the chunk we compiled our bytecode-instructions to. (so basically all instructions we just 'compiled')
 static Chunk* currentChunk() {
-    return compilingChunk;
+    return &current->function->chunk;
 }
 
 /*
@@ -243,10 +249,21 @@ static uint8_t makeConstant(Value value) {
     return (uint8_t)constant;
 }
 
-static void initCompiler(Compiler* compiler) {
+// init a new Compiler - we use this every time we need a new Chunk/Call-Stack, in ex.: if we hit a new function
+static void initCompiler(Compiler* compiler, FunctionType type) {
+    compiler->function = NULL;
+    compiler->type = type;
     compiler->localCount = 0;
     compiler->scopeDepth = 0;
+    compiler->function = newFunction();     // create a new ObjFunction -> we compile our code into it's chunk.
     current = compiler;
+
+    // compiler uses the 0 slot of locals for internal use:
+    // - name "" so no one else can write to it (with how our maps work)
+    Local* local = &current->locals[current->localCount++];
+    local->depth = 0;
+    local->name.start = "";
+    local->name.length = 0;
 }
 
 // emits the Instrucitons to add one constant to our Cunk (like in var x=3.65 -> we would add const 3.65)
@@ -261,22 +278,26 @@ static void patchJump(int offset) {
     //
     int jump = currentChunk()->count - offset -2;
     if (jump > UINT16_MAX) {
-        error("Too much code to jump over.");       // max of 65535bytes of code (2 8 bit blocks)
+        error("Too much code to jump over.");   // max of 65535bytes of code (2 8 bit blocks)
     }
     currentChunk()->code[offset] = (jump >> 8) & 0xff;
     currentChunk()->code[offset +1] = jump & 0xff;
 }
 
 // helper for compile() - For now we just add a Return at the end
-static void endCompiler() {
+static ObjFunction* endCompiler() {
     emitReturn();
+    ObjFunction* function = current->function;   // grab the pointer to the current function
 
     // Flag that enables dumping out chunks once the compiler finishes
     #ifdef DEBUG_PRINT_CODE
         if (!parser.hadError) {
-            disassembleChunk(currentChunk(), "code");
+            // user define functions have a name, the toplevel one is NULL:
+            disassembleChunk(currentChunk(), function->name != NULL ? function->name->chars : "<script>");
         }
     #endif
+
+    return function
 }
 
 /*
@@ -786,21 +807,24 @@ static void statement() {
 *
 */
 
-// we pass in the chunk where the compiler will write the code, then try to compile the source
+// we pass in the source code string, then try to compile the source 
+// - we compile bytecode and write it to the Chunk (that is stored in the ObjFunction, that is stored in the Compiler)
+// - to enable functions (that may exists in toplevel or another function) we return the compiled ObjFunction* 
+//      - we treat toplevel as a ObjFunction with name NULL
 // - if compilation fails we return false (compilation error) to upstread disregard the whole chunk
-bool compile(const char* source, Chunk* chunk) {
+ObjFunction* compile(const char* source) {
     initScanner(source);
-    Compiler compiler;              // set up our compiler
-    initCompiler(&compiler);
-    compilingChunk = chunk;         // set our current chunk. Compiled bytecode instructions get added to this
+    Compiler compiler;                      // set up our compiler
+    initCompiler(&compiler, TYPE_SCRIPT);   // we start compiling top-level (TYPE_SCRIPT)
+    compilingChunk = chunk;                 // set our current chunk. Compiled bytecode instructions get added to this
     // 'initialize' our Error-FLAGS:
     parser.hadError = false;
     parser.panicMode = false;
 
-    advance();                  // primes the scanner
+    advance();                              // primes the scanner
     while (!match(TOKEN_EOF)) {
-        declaration();         // this will consume tokens and try to find declaration -> statements etc. (accoring to our lox-syntax)
+        declaration();                      // this will consume tokens and try to find declaration -> statements etc. (accoring to our lox-syntax)
     }
-    endCompiler();
-    return !parser.hadError;    // we return if we encountered an compiletime-Error compiling the Chunk
+    ObjFunction* function = endCompiler();
+    return parser.hadError ? NULL : function;   //  if we encountered compile-time-errors we return NULL, else return the ObjFunction with the bytecode
 }

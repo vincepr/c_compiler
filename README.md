@@ -73,4 +73,12 @@ And and Or are mathematically binary operators. BUT they function more like cont
 
 As in this: `true AND thisFnNeverGetsRun() AND alsoNotRun()` the functions get never run, since they are short-circuit after the `true AND`
 
+### Function
+#### what is a function (from the perspective of the VM)
+- A function has a body that can be executed, gets compiled to bytecode.
+- Each Function gets its own Chunk, with some extra Metadata: `ObjFunction`
+- Functions are first class in lox so they each are `Obj`.
 
+When compiling: 
+- Once the compiler hits a function declaration it stops writing to the current chunk.
+- It then writes all code in the function body to a new chunk, afterwards switches back to the active chunk.

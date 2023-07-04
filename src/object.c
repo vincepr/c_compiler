@@ -18,6 +18,15 @@ static Obj* allocateObject(size_t size, ObjType type) {
     return object;
 }
 
+// helper for ALLOCATE_OBJ macro - allocates a new Function and initializes its fields.
+ObjFunction* newFunction() {
+    ObjFunction* function = ALLOCATE_OBJ(ObjFunction, OBJ_FUNCTION);
+    function->arity = 0;
+    function->name = NULL;
+    initChunk(&function->chunk);
+    return function;
+}
+
 // constructor for ObjString - creates a new ObjString on the heap then initializes the fields
 static ObjString* allocateString(char* chars, int length, uint32_t hash) {
     ObjString* string = ALLOCATE_OBJ(ObjString, OBJ_STRING);
@@ -65,9 +74,21 @@ ObjString* copyString(const char* chars, int length) {
     return allocateString(heapChars, length, hash);
 }
 
+// helper for printObject()
+static void printFunction(ObjFunction* function) {
+    if (function->name == NULL) {               // top level uses a function name of NULL
+        printf("<script>");
+        return;
+    }
+    printf("<fn %s", funciton->name->chars);    // for other functions we just print out the name
+}
+
 // helper for printValue() - print functionality for heap allocated datastructures
 void printObject(Value value) {
     switch (OBJ_TYPE(value)) {
+        case OBJ_FUNCTION:
+            printFunction(AS_FUNCTION(value));
+            break;
         case OBJ_STRING:
             printf("%s", AS_CSTRING(value));
             break;
