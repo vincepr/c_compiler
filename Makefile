@@ -15,6 +15,18 @@ $(CCPATH)scanner.c \
 $(CCPATH)object.c \
 $(CCPATH)table.c
 
+## list all cfiles included in our wasm-build:
+WEBFILES= main-web.c \
+$(CCPATH)chunk.c \
+$(CCPATH)memory.c \
+$(CCPATH)debug.c \
+$(CCPATH)value.c \
+$(CCPATH)vm.c \
+$(CCPATH)compiler.c \
+$(CCPATH)scanner.c \
+$(CCPATH)object.c \
+$(CCPATH)table.c
+
 ## name of our executable we build to run
 BINARY=binary.out
 
@@ -30,6 +42,10 @@ run: build
 
 test: build
 	./binary.out test.lox
+
+# build the wasm-build:
+web: 
+	emcc $(WEBFILES) -o build_wasm/compiler.html -sEXPORTED_FUNCTIONS=_compileSourceCode -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
 
 # to remove all artifacts/binary
 clean:
