@@ -16,7 +16,7 @@ $(CCPATH)object.c \
 $(CCPATH)table.c
 
 ## list all cfiles included in our wasm-build:
-WEBFILES= main-web.c \
+WEBFILES= srcweb/main-web.c \
 $(CCPATH)chunk.c \
 $(CCPATH)memory.c \
 $(CCPATH)debug.c \
@@ -45,7 +45,8 @@ test: build
 
 # build the wasm-build:
 web: 
-	emcc $(WEBFILES) -o build_wasm/compiler.html -sEXPORTED_FUNCTIONS=_compileSourceCode -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
+	emcc  $(WEBFILES) -o build_wasm/compiler.html --shell-file srcweb/shell_minimal.html -s NO_EXIT_RUNTIME=1 -s "EXPORTED_RUNTIME_METHODS=['ccall']"
+#	emcc $(WEBFILES) -o build_wasm/compiler.html -sEXPORTED_FUNCTIONS=_compileSourceCode -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
 
 # to remove all artifacts/binary
 clean:

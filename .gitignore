@@ -1,5 +1,4 @@
 .vscode
 .vscode/*
-build_wasm/*
 binary.out
 *.o
