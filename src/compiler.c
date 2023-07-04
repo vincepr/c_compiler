@@ -900,16 +900,16 @@ static void statement() {
 // - if compilation fails we return false (compilation error) to upstread disregard the whole chunk
 ObjFunction* compile(const char* source) {
     initScanner(source);
-    Compiler compiler;                      // set up our compiler
-    initCompiler(&compiler, TYPE_SCRIPT);   // we start compiling top-level (TYPE_SCRIPT)
+    Compiler compiler;                          // set up our compiler
+    initCompiler(&compiler, TYPE_SCRIPT);       // we start compiling top-level (TYPE_SCRIPT)
     // 'initialize' our Error-FLAGS:
     parser.hadError = false;
     parser.panicMode = false;
 
-    advance();                              // primes the scanner
+    advance();                                  // primes the scanner
     while (!match(TOKEN_EOF)) {
-        declaration();                      // this will consume tokens and try to find declaration -> statements etc. (accoring to our lox-syntax)
+        declaration();                          // this will consume tokens and try to find declaration -> statements etc. (accoring to our lox-syntax)
     }
-    ObjFunction* function = endCompiler();
+    ObjFunction* function = endCompiler();      // Cals and Functions ca..end-compiler
     return parser.hadError ? NULL : function;   //  if we encountered compile-time-errors we return NULL, else return the ObjFunction with the bytecode
 }
