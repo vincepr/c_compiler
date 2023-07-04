@@ -73,8 +73,8 @@ And and Or are mathematically binary operators. BUT they function more like cont
 
 As in this: `true AND thisFnNeverGetsRun() AND alsoNotRun()` the functions get never run, since they are short-circuit after the `true AND`
 
-### Function
-#### what is a function (from the perspective of the VM)
+## Function
+### what is a function (from the perspective of the VM)
 - A function has a body that can be executed, gets compiled to bytecode.
 - Each Function gets its own Chunk, with some extra Metadata: `ObjFunction`
 - Functions are first class in lox so they each are `Obj`.
@@ -82,3 +82,21 @@ As in this: `true AND thisFnNeverGetsRun() AND alsoNotRun()` the functions get n
 When compiling: 
 - Once the compiler hits a function declaration it stops writing to the current chunk.
 - It then writes all code in the function body to a new chunk, afterwards switches back to the active chunk.
+
+### Call Frames
+#### Allocating local variables:
+Local variables and temporaries behave in a last-in-first-out fashion. This even holds true with function calls.
+- This enables us to use a stack.
+
+At the beginning of each function call, the VM records the location of the first slot(*starting slot*) where that functions own locals begin.
+- The instructions for working with local variables access them by a slot index relative to that. (instead of relative to the top/bottom)
+    - at runtime we can convert the relative to absulute by adding the *starting slot*.
+- The historic name for this recorded location (starting slot) is a **frame pointer**. Because it points to the beginning of the functions call frame.
+
+#### Return adresses
+Before implementing Functions, all the VM had to do was increment the ip-field, or add/subtract an offset for jumps.
+
+Now the VM has to return back to the chunk where the function was called from, directly after the function call. This is called **return address** because its the address of the instruction that the VM returns to after the call.
+
+#### The call stack - CallFrame
+So we add the `CallFrame` struct that we can stack all the return addresses to. (so even multiple recursions become just one more entry in our CallFrame)
