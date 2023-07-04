@@ -326,9 +326,9 @@ static InterpretResult run() {
                 int argCount = READ_BYTE();
                 if (!callValue(peek(argCount), argCount)) {
                     return INTERPRET_RUNTIME_ERROR;     // if callValue() -> false we know a runtime error happened
-                    break;
                 }
                 frame = &vm.frames[vm.frameCount - 1];  // there will be a new frame on the CallFrame stack for the called function, that we update
+                break;
             }
             // OP_RETURN - when a function returns a value that value will be currently on the top of the stack
             // - so we can pop that value, then dispose of the whole functions StackFrame
