@@ -301,9 +301,21 @@ static InterpretResult run() {
                 }
                 frame = &vm.frames[vm.frameCount - 1];  // there will be a new frame on the CallFrame stack for the called function, that we update
             }
-            // OP_RETURN - exits the loop entirely (end of chunk reached/return from the current Lox function)
+            // OP_RETURN - when a function returns a value that value will be currently on the top of the stack
+            // - so we can pop that value, then dispose of the whole functions StackFrame
             case OP_RETURN: {
-                return INTERPRET_OK;
+                Value result = pop();
+                vm.frameCount--;
+                if(vm.frameCount == 0) {
+                    // if we reached the last CallFrame it means we finished executing the top-level code -> the program is done.
+                    pop();          // so we pop the main script from the stack and exit the interpreter
+                    return INTERPRET_OK;
+                } 
+                vm.stackTop = frame->slots;
+                push(result);   // we push that result of the finished function back on the stack. (one level lower)
+                frame = &vm.frames[vm.frameCount - 1];
+                break;
+
             }
         }
     }

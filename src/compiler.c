@@ -218,9 +218,10 @@ static int emitJump(uint8_t instruction) {
     return currentChunk()->count -2;
 }
 
-// helper for endCompiler()
+// helper for endCompiler() - function returns explicit (a value) or implicit by reaching } -> it returns nil
 static void emitReturn() {
-    emitByte(OP_RETURN); // temporaly  - write the OP_RETURN Byte to our Chunk 
+    emitByte(OP_NIL);       
+    emitByte(OP_RETURN);    // temporaly  - write the OP_RETURN Byte to our Chunk 
 }
 
 // helper - we call this function when we exit a new local scope with "}"...
@@ -797,6 +798,20 @@ static void printStatement() {
     emitByte(OP_PRINT);
 }
 
+// "return true;" -> will exit this function scope to one level lower.
+static void returnStatement() {
+    if (current->type == TYPE_SCRIPT) {
+        error("Can't return from top-level code.");
+    }
+    if (match(TOKEN_SEMICOLON)) {
+        emitReturn();                       // return; (-> implicit NIL from emitReturn())
+    } else {
+        expression();                       // return expr;
+        consume(TOKEN_SEMICOLON, "Expect ';' after return value.");
+        emitByte(OP_RETURN);
+    }
+}
+
 // 'while (true) print"loop is running"; '
 //  - we skipp over the statement with a Jump if the while condition is false
 static void whileStatement() {
@@ -859,6 +874,8 @@ static void statement() {
         forStatement();
     } else if (match(TOKEN_IF)) {
         ifStatement();
+    } else if (match(TOKEN_RETURN)) {
+        returnStatement();
     } else if (match(TOKEN_WHILE)) {
         whileStatement();
     } else if (match(TOKEN_LEFT_BRACE)) {       // we need to go one scope deeper (block encountered)

@@ -119,3 +119,10 @@ The following Stack Windows (startIdx -> endIdx on the Stack, given from how man
     - something like `|  0  |  5  |  6  |  7  |` for the function-call
 - so all we need to do is to match up those 2 windows to the Stack, and its easy to match `a->5, b->6, c->7`
     - this means no real binding of one value to another with pointers or even worse the heap neccessary. All happens on the 2 stacks, so it should be really fast
+
+#### Return Statements
+We do recursive descent during parsing, but at runtime the VM's bytecode dispatch loop is completely flat.
+So returning some function is as easy, as returning from the end of the functions body.
+
+## Native Functions
+- like `return`
