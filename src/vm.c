@@ -1,6 +1,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 #include "common.h"
 #include "compiler.h"
@@ -11,6 +12,12 @@
 
 // instance of our VM:
 VM vm;
+
+// define Static/Native C-Functions - returns time elapsed since the program started running in seconds.
+// - in lox its available with: 'clock()'
+static Value clockNative(int argCount, Value* args) {
+    return NUMBER_VAL((double)clock() / CLOCKS_PER_SEC);
+}
 
 // helperFunction to setup/reset the stack
 static void resetStack() {
@@ -43,11 +50,25 @@ static void runtimeError(const char* format, ...) {
     resetStack();
 }
 
+// takes pointer to a C-Function and the name it will be known as in Lox. 
+// We Wrap the function in an ObjNative then store that in a global Variable (that our code can call)
+// -  we push and pop the name and function on the stack -> this is so the GC will not free anything in use
+static void defineNative(const char* name, NativeFn function) {
+    push(OBJ_VAL(copyString(name, (int)strlen(name))));
+    push(OBJ_VAL(newNative(function)));
+    tableSet(&vm.globals, AS_STRING(vm.stack[0]), vm.stack[1]);
+    pop();
+    pop();
+}
+
 void initVM() {
     resetStack();
     vm.objects = NULL;      // reset linked list of all active objects
     initTable(&vm.globals); // setup the HashTable for global variables
     initTable(&vm.strings); // setup the HashTable for used strings
+
+    // init Native Functions:
+    defineNative("clock", clockNative);
 }
 
 void freeVM() {
@@ -104,6 +125,14 @@ static bool callValue(Value callee, int argCount) {
         // - to block: "a_string"(); or "var x = 123; x()" 
             case OBJ_FUNCTION:
                 return call(AS_FUNCTION(callee), argCount);
+            case OBJ_NATIVE: {
+                // if the object being called is a native function -> invoke the C-Function right there
+                NativeFn native = AS_NATIVE(callee);
+                Value result = native(argCount, vm.stackTop - argCount);
+                vm.stackTop -= argCount + 1;
+                push(result);   // we use the result from the C-Function and stuff it back in the stack
+                return true;
+            }
             default:
                 break;  // Non-callable object type tried to call ex.: "just string"()
         }
