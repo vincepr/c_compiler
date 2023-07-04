@@ -44,6 +44,8 @@ static void runtimeError(const char* format, ...) {
         size_t instruction = frame->ip - function->chunk.code -1;
         fprintf(stderr, "[line %d] in ", function->chunk.lines[instruction]);
         if (function->name == NULL) {
+            fprintf(stderr, "script\n");
+        } else {
             fprintf(stderr, "%s()\n", function->name->chars);
         }
     }
