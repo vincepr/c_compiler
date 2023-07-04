@@ -910,6 +910,6 @@ ObjFunction* compile(const char* source) {
     while (!match(TOKEN_EOF)) {
         declaration();                          // this will consume tokens and try to find declaration -> statements etc. (accoring to our lox-syntax)
     }
-    ObjFunction* function = endCompiler();      // Cals and Functions ca..end-compiler
+    ObjFunction* function = endCompiler();      // Calls and Functions ca..end-compiler
     return parser.hadError ? NULL : function;   //  if we encountered compile-time-errors we return NULL, else return the ObjFunction with the bytecode
 }
