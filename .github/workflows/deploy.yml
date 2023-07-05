@@ -1,0 +1,51 @@
+name: Custom Deploy to Gihub Pages
+
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    brnches:
+      - main
+
+
+jobs:
+  build:
+    name: Build for Github Pages
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+      - name: Setup emsdk
+        uses: mymindstorm/setup-emsdk@v11
+      - name: Verify emsdk
+        run: emcc -v
+      - name: build web-wasm with emsdk
+        run: make web
+      # store files for the next step:
+      - name: Upload build files 
+        uses: actions/upload-artifact@v3
+        with:
+          name: production-files
+          path: ./build_wasm
+
+  deploy:
+    name: Deploy to Github Pages
+    needs: build
+    runs-on: ubuntu-latest
+    # only run this when on main:
+    if: github.ref == 'refs/heads/main' 
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: production-files
+          path: ./dist
+      - name: Deploy to gh-pages branch
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist

@@ -45,7 +45,7 @@ test: build
 
 # build the wasm-build:
 web: 
-	emcc  $(WEBFILES) -o build_wasm/compiler.html --shell-file srcweb/shell_minimal.html -s NO_EXIT_RUNTIME=1 -s "EXPORTED_RUNTIME_METHODS=['ccall']"
+	emcc  $(WEBFILES) -o build_wasm/index.html --shell-file srcweb/shell_minimal.html -s NO_EXIT_RUNTIME=1 -s "EXPORTED_RUNTIME_METHODS=['ccall']"
 #	emcc $(WEBFILES) -o build_wasm/compiler.html -sEXPORTED_FUNCTIONS=_compileSourceCode -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
 
 # to remove all artifacts/binary

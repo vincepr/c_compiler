@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <link
+			rel="stylesheet"
+			data-name="vs/editor/editor.main"
+			href="./node_modules/monaco-editor/min/vs/editor/editor.main.css"
+		/>
+    <style>
+        
+    </style>
+    <title>Lox Web-Interpreter</title>
+    <style>
+      html, body {height: 100%;width: 100%;margin: 0;}
+      h1,h2 {margin:0;}
+      .emscripten { padding-right: 0; margin-left: auto; margin-right: auto; display: block; }
+      textarea.emscripten { font-family: monospace; width: 80%; margin-left:0px;}
+      div.emscripten { text-align: center; }
+      div.emscripten_border { border: 1px solid black; }
+
+      .spinner {
+        height: 50px;
+        width: 50px;
+        margin: 0px auto;
+        -webkit-animation: rotation .8s linear infinite;
+        -moz-animation: rotation .8s linear infinite;
+        -o-animation: rotation .8s linear infinite;
+        animation: rotation 0.8s linear infinite;
+        border-left: 10px solid rgb(0,150,240);
+        border-right: 10px solid rgb(0,150,240);
+        border-bottom: 10px solid rgb(0,150,240);
+        border-top: 10px solid rgb(100,0,200);
+        border-radius: 100%;
+        background-color: rgb(200,100,250);
+      }
+      @-webkit-keyframes rotation {
+        from {-webkit-transform: rotate(0deg);}
+        to {-webkit-transform: rotate(360deg);}
+      }
+      @-moz-keyframes rotation {
+        from {-moz-transform: rotate(0deg);}
+        to {-moz-transform: rotate(360deg);}
+      }
+      @-o-keyframes rotation {
+        from {-o-transform: rotate(0deg);}
+        to {-o-transform: rotate(360deg);}
+      }
+      @keyframes rotation {
+        from {transform: rotate(0deg);}
+        to {transform: rotate(360deg);}
+      }
+
+    </style>
+  </head>
+  <body>
+    <figure style="overflow:visible;" id="spinner"><div class="spinner"></div><center style="margin-top:0.5em"><strong>emscripten</strong></center></figure>
+    <div class="emscripten" id="status">Downloading...</div>
+    <div class="emscripten">
+      <progress value="0" max="100" id="progress" hidden=1></progress>  
+    </div>
+    <hr/>
+    <div>
+      <button id="btnhello">hello.lox</button>
+      <button id="btnfib">fib.lox</button>
+      <button id="btnclojure">clojure.lox</button>
+      <button id="btncompile">COMPILE AND RUN</button>
+    </div>    
+    <hr/>
+    <div id="container" style="width: 60%; height: 60%; border: 1px solid grey"></div>
+    <textarea class="emscripten" id="output" style="margin-left:0; width: 60%; height: 30%; resize: none;">some text</textarea>
+    <hr>
+
+    <script type='text/javascript'>
+      var statusElement = document.getElementById('status');
+      var progressElement = document.getElementById('progress');
+      var spinnerElement = document.getElementById('spinner');
+
+      var Module = {
+        preRun: [],
+        postRun: [],
+        print: (function() {
+          var element = document.getElementById('output');
+          if (element) element.value = ''; // clear browser cache
+          return function(text) {
+            if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
+            // These replacements are necessary if you render to raw HTML
+            //text = text.replace(/&/g, "&amp;");
+            //text = text.replace(/</g, "&lt;");
+            //text = text.replace(/>/g, "&gt;");
+            //text = text.replace('\n', '<br>', 'g');
+            console.log(text);
+            if (element) {
+              element.value += text + "\n";
+              element.scrollTop = element.scrollHeight; // focus on bottom
+            }
+          };
+        })(),
+        setStatus: (text) => {
+          if (!Module.setStatus.last) Module.setStatus.last = { time: Date.now(), text: '' };
+          if (text === Module.setStatus.last.text) return;
+          var m = text.match(/([^(]+)\((\d+(\.\d+)?)\/(\d+)\)/);
+          var now = Date.now();
+          if (m && now - Module.setStatus.last.time < 30) return; // if this is a progress update, skip it if too soon
+          Module.setStatus.last.time = now;
+          Module.setStatus.last.text = text;
+          if (m) {
+            text = m[1];
+            progressElement.value = parseInt(m[2])*100;
+            progressElement.max = parseInt(m[4])*100;
+            progressElement.hidden = false;
+            spinnerElement.hidden = false;
+          } else {
+            progressElement.value = null;
+            progressElement.max = null;
+            progressElement.hidden = true;
+            if (!text) spinnerElement.hidden = true;
+          }
+          statusElement.innerHTML = text;
+        },
+        totalDependencies: 0,
+        monitorRunDependencies: (left) => {
+          this.totalDependencies = Math.max(this.totalDependencies, left);
+          Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' + this.totalDependencies + ')' : 'All downloads complete.');
+        }
+      };
+      Module.setStatus('Downloading...');
+      window.onerror = () => {
+        Module.setStatus('Exception thrown, see JavaScript console');
+        spinnerElement.style.display = 'none';
+        Module.setStatus = (text) => {
+          if (text) console.error('[post-exception status] ' + text);
+        };
+      };
+
+      /* custom lox-syntax highlighting: */
+      const makeTokensProvider = () => {
+          return {
+              keywords: [
+                  "and",
+                  "break",
+                  "class",
+                  "else",
+                  "false",
+                  "for",
+                  "fun",
+                  "if",
+                  "init",
+                  "let",
+                  "nil",
+                  "or",
+                  "print",
+                  "return",
+                  "super",
+                  "this",
+                  "true",
+                  "var",
+                  "while",
+              ],
+
+              operators: [
+                  ":",
+                  "-",
+                  "+",
+                  "/",
+                  "*",
+                  "!",
+                  "!=",
+                  "=",
+                  "==",
+                  ">",
+                  ">=",
+                  "<",
+                  "<=",
+                  ",",
+              ],
+
+              symbols: /[=><!:+\-*\/,]+/,
+
+              tokenizer: {
+                  root: [
+                      // identifiers and keywords
+                      [
+                          /[a-z_$][\w$]*/,
+                          { cases: { "@keywords": "keyword", "@default": "identifier" } },
+                      ],
+                      [/[A-Z][\w\$]*/, "type.identifier"], // to show class names nicely
+              
+                      // whitespace
+                      { include: "@whitespace" },
+              
+                      // delimiters and operators
+                      [/[{}()]/, "@brackets"],
+                      [/@symbols/, { cases: { "@operators": "operators", "@default": "" } }],
+              
+                      // numbers
+                      [/\d*\.\d+/, "number.float"],
+                      [/\d+/, "number"],
+              
+                      // delimiter: after number because of .\d floats
+                      [/[;,.]/, "delimiter"],
+              
+                      // strings
+                      [/"([^"\\]|\\.)*$/, "string.invalid"], // non-teminated string
+                      [/"/, { token: "string.quote", bracket: "@open", next: "@string" }],
+                  ],
+          
+                  string: [
+                      [/[^\\"]+/, "string"],
+                      [/"/, { token: "string.quote", bracket: "@close", next: "@pop" }],
+                  ],
+          
+                  whitespace: [
+                      [/[ \t\r\n]+/, "white"],
+                      [/\/\*/, "comment", "@comment"],
+                      [/\/\/.*$/, "comment"],
+                  ],
+          
+                  comment: [
+                      [/[^\/*]+/, "comment"],
+                      [/\/\*/, "comment", "@push"], // nested comment
+                      ["\\*/", "comment", "@pop"],
+                      [/[\/*]/, "comment"],
+                  ],
+              },
+          };
+      };
+    </script>
+    <script>
+			var require = { paths: { vs: './node_modules/monaco-editor/min/vs' } };
+		</script>
+		<script src="./node_modules/monaco-editor/min/vs/loader.js"></script>
+		<script src="./node_modules/monaco-editor/min/vs/editor/editor.main.nls.js"></script>
+		<script src="./node_modules/monaco-editor/min/vs/editor/editor.main.js"></script>
+
+    <script type="module" src="load_monaco.js" defer></script>
+    
+    <script async type="text/javascript" src="index.js"></script>
+  </body>
+</html>
