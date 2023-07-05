@@ -9,6 +9,10 @@ on:
     brnches:
       - main
 
+# we cache the emsdk (and system libaries generated during build time)
+env:
+  EM_VERSION: 3.1.42
+  EM_CACHE_FOLDER: 'emsdk-cache'
 
 jobs:
   build:
@@ -18,8 +22,19 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
+      # setup cache:
+      - name: Setup cache
+        id: cache-systen-libraries
+        uses: actions/cache@v2
+        with:
+          path: ${{env.EM_CACHE_FOLDER}}
+          key: ${{env.EM_VERSION}}-${{ runner.os }}
+
       - name: Setup emsdk
         uses: mymindstorm/setup-emsdk@v11
+        with:
+          version: ${{env.EM_VERSION}}
+          actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
       - name: Verify emsdk
         run: emcc -v
       - name: build web-wasm with emsdk
