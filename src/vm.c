@@ -23,6 +23,7 @@ static Value clockNative(int argCount, Value* args) {
 static void resetStack() {
     vm.stackTop = vm.stack;     // we just reuse the stack. So we can just point to its start
     vm.frameCount = 0;          // CallFrame stack is empty when the vm starts up)
+    vm.openUpvalues = NULL;     // empty 'linked list'
 }
 
 // error Handling of Runtime Errors (like trying to - negate a bool)
@@ -145,8 +146,32 @@ static bool callValue(Value callee, int argCount) {
 
 // creates a new Upvalue for captured local variable:
 static ObjUpvalue* captureUpvalue(Value* local) {
+    // walk the linked-list of active/openUpvalues - to add it if new
+    ObjUpvalue* prevUpvalue = NULL;
+    ObjUpvalue* upvalue = vm.openUpvalues;
+    // we check for an upvalue with slot below the one were looking for -> gone past where were closing over-> not found
+    while (upvalue != NULL && upvalue->location > local) {
+        prevUpvalue = upvalue;      // add it if new to list
+        upvalue = upvalue->next;
+    }
+    if (upvalue != NULL && upvalue->location == local)  {
+        return upvalue;             // or return reference if local is already captured
+    }
     ObjUpvalue* createUpvalue = newUpvalue(local);  // allocates the new upvalue
     return createUpvalue;
+}
+
+// when a function returns local-vars will close -> need to be captured if used in Upvalue
+// - closes every open upvalue it can find, that points to that slot or above(on the stack)
+// - we walk list of open Upvalues till we hit range while closing any we find
+static void closeUpvalues(Value* last) {
+    while (vm.openUpvalues != NULL && vm.openUpvalues->location >= last) {
+        ObjUpvalue* upvalue = vm.openUpvalues;
+        // 
+        upvalue->closed = *upvalue->location;       // close the upvalue by: copying value to closed field
+        upvalue->location = &upvalue->closed;       // instead of pointing to where stack-variable we now point to itself->closed 
+        vm.openUpvalues = upvalue->next;
+    }
 }
 
 // we handle what Values may be evaluated as a boolean.
@@ -365,10 +390,15 @@ static InterpretResult run() {
                 }
                 break;
             }
+            case OP_CLOSE_UPVALUE:                                      // we have to hoist a local-variable to the heap (because of closure)
+                closeUpvalues(vm.stackTop -1);
+                pop();
+                break;
             // OP_RETURN - when a function returns a value that value will be currently on the top of the stack
             // - so we can pop that value, then dispose of the whole functions StackFrame
             case OP_RETURN: {
                 Value result = pop();
+                closeUpvalues(frame->slots);        // when a function returns local-vars will close -> need to be captured if used in Upvalue
                 vm.frameCount--;
                 if(vm.frameCount == 0) {
                     // if we reached the last CallFrame it means we finished executing the top-level code -> the program is done.

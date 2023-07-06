@@ -72,8 +72,10 @@ struct ObjString {
 
 // Runtime representation for upvalues.
 typedef struct ObjUpvalue {
-    Obj obj;            // the Object that this upvalue points to (for example the pointer to Obj enclosing the Number 99)
-    Value* location;    // points to the closed over variable. (the variable used to store the 99)
+    Obj obj;                    // the Object that this upvalue points to (for example the pointer to Obj enclosing the Number 99)
+    Value* location;            // points to the closed over variable. (the variable used to store the 99)
+    Value closed;               // once closed (value moves from stack by leaving scope) this will store the value itself on the heap.
+    struct ObjUpvalue* next;    // linked list ish points to next upvalue (if there is any)
 } ObjUpvalue;
 
 // To enable Closures at runtime we wrap every ObjFunction(created at compiletime) in a ObjClosure, 

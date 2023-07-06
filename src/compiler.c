@@ -78,6 +78,7 @@ typedef struct {
 typedef struct {
     Token name;
     int depth;
+    bool isCaptured;            // take notice when we need to enclose it when leaving scope (Upvalue took reference to it)
 } Local;
 
 // We use Upvalues to resolve in Closures captured outer Variables and reslove them to the memory where the actual x=1 is stored.
@@ -237,7 +238,11 @@ static void endScope() {
     // remove all Local-Variables that went out of scope:
     while (current->localCount > 0 &&
             current->locals[current->localCount - 1].depth > current->scopeDepth) {
-        emitByte(OP_POP);
+        if (current->locals[current->localCount -1].isCaptured) {
+            emitByte(OP_CLOSE_UPVALUE);         // if a upvalue closed over the value it takes ownership of it
+        } else {
+            emitByte(OP_POP);                   // if not we can remove it forever
+        }
         current->localCount--;
     }
 
@@ -275,6 +280,7 @@ static void initCompiler(Compiler* compiler, FunctionType type) {
     // - name "" so no one else can write to it (with how our maps work)
     Local* local = &current->locals[current->localCount++];
     local->depth = 0;
+    local->isCaptured = false;
     local->name.start = "";
     local->name.length = 0;
 }
@@ -384,9 +390,10 @@ static int addUpvalue(Compiler* compiler, uint8_t index, bool isLocal) {
 // after failing to reslove a local variable this gets called
 // - and will start looking trough the Upvalues
 static int resolveUpvalue(Compiler* compiler, Token* name) {
-    if (compiler->enclosing == NULL) return -1;             // its global scope
+    if (compiler->enclosing == NULL) return -1;                 // its global scope
     int local = resolveLocal(compiler->enclosing, name);
     if (local != -1) {
+        compiler->enclosing->locals[local].isCaptured = true;   // we note in the local-variable that an upvalue referenced it
         return addUpvalue(compiler, (uint8_t)local, true);
     }
     // it can recursively chain Upvalue->Upvalue->Upvalue->local x=1
@@ -407,6 +414,7 @@ static void addLocal(Token name) {
     Local* local = &current->locals[current->localCount++];     // initialize the next available local(next element in array)
     local->name = name;                                         // stores variables Identity
     local->depth = -1;                                          // -1 WE USE to signal an UNITIALIZED VARIABLE
+    local->isCaptured = false;
 }
 
 // helper for parseVariable() - take The Identifiert and pass it down

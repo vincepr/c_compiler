@@ -47,6 +47,7 @@ typedef enum {
     OP_LOOP,            // unconditionally jumps back to the 16-bit offset that follows in 2 8bit chunks afterwards
     OP_CALL,            // a function call
     OP_CLOSURE,         // each OP_CLOSURE is followed by the series of bytes that specify the upvalues the ObjClosure should own.
+    OP_CLOSE_UPVALUE,   // (when local goes out of scope and an upvalue still needs it) it takes ownership of it (the value on the stack)
     OP_PRINT,           // print expression. like "print x+8;"  -> with x="hello" -> "hello8"
     OP_RETURN,          // return from the current function
 } OpCode;

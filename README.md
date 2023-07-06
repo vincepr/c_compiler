@@ -164,3 +164,12 @@ fun doThings() {
 }
 ```
 - here the struct in memory should be an array that points to the place in memory the x=9 is stored in.
+
+##### Closed Upvalues
+A feature of closures is, that they hold onto vairables as long as needed. Even after the function itself has returned.
+- ObjUpvalue will store the closed over variables on the heap.
+- As long as the variable is on the stack, there may be code that still needs it there. So once the local variable goes out of scope, we can move that value to the heap
+
+The `OP_CLOSE_UPVALUE` bytecode takes ownership of a local variable, that is leaving scope. By storing it on the heap.
+
+At runtime the VM stores a list of all upvalues that capture a particular local variable that way. Because otherwise 2 closures pointing/capturing the same variable would not be possible. `ObjUpvalue* openUpvalues;` in the VM struct.
