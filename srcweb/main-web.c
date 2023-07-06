@@ -25,7 +25,7 @@ EXTERN EMSCRIPTEN_KEEPALIVE void runCompiler(char* sourceCode) {
     //printf("%s + hello!", str);
     //printf("MyFunction Called\n");
     // entry point for our custom javascript
-     printf(" -- Compiling code: --\n");
+    printf(" -- Compiling code: --\n\n");
 
     // initialize our VM:
     initVM();

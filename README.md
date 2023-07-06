@@ -124,4 +124,30 @@ The following Stack Windows (startIdx -> endIdx on the Stack, given from how man
 We do recursive descent during parsing, but at runtime the VM's bytecode dispatch loop is completely flat.
 So returning some function is as easy, as returning from the end of the functions body.
 
-### Closure
+### Closure implementation
+Goal is to use the stack for local variables, for all its benefits. The Problem is, a inner function needs access to all local scopes of functions/scopes that encompass it.
+
+With our stack based approach we need to implement quite some extra logic to make them available properly.
+
+#### Closure Objects
+- The VM represents functions at runtime using `ObjFunction`. Those are created **only** during compilation.
+    - At runtime the VM loads the function object from a constant table and binds it to a name
+
+This no longer is enough to make closures work:
+```lox
+fun closureFactory(value) {
+    fun closure() {
+        print value;
+    }
+    return closure
+}
+
+var x1 = closureFactory("bob");
+var x2 = closureFactory("ross");
+
+x1();
+x2();
+```
+- In the above example we need some runtime representation for a closure, that captures the local variables surrounding the function as they exist when the function declaration is executed (not when compiled)
+
+- We wrap every function in an Closure Object: `ObjClosure`. 
