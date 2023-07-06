@@ -109,7 +109,7 @@ const allfiles = {
         name: "hello.lox",
         language: "lox",
         theme: "vs-dark",
-        value: 'print("James Bond")',
+        value: 'print "Bob Ross";',
     },
 
     "fib.lox": {
@@ -130,7 +130,15 @@ print clock() - start;`,
         name: "clojure.lox",
         language: "lox",
         theme: "vs-dark",
-        value: "not implemented"
+        value: `var x = "global";
+fun outer() {
+  var x = "outer";
+  fun inner() {
+    print x;
+  }
+  inner();
+}
+outer();`,
     },
 }
 
