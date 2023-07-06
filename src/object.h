@@ -37,6 +37,7 @@ typedef enum {
     OBJ_FUNCTION,
     OBJ_NATIVE,
     OBJ_STRING,
+    OBJ_UPVALUE,
 } ObjType;
 
 // The Obj that gets allocated on the stack:
@@ -48,7 +49,8 @@ struct Obj {
 // Each Function needs its own Chunk (Callstack, etc...)
 typedef struct {
     Obj obj;
-    int arity;
+    int arity;          // nr of parameters the function takes in
+    int upvalueCount;   // keep track of upvalues we use
     Chunk chunk;
     ObjString* name;
 } ObjFunction;
@@ -68,11 +70,19 @@ struct ObjString {
     uint32_t hash;      // we precalculate/hash the hash. (so we dont have to do it each time we use our map)
 };
 
+// Runtime representation for upvalues.
+typedef struct ObjUpvalue {
+    Obj obj;            // the Object that this upvalue points to (for example the pointer to Obj enclosing the Number 99)
+    Value* location;    // points to the closed over variable. (the variable used to store the 99)
+} ObjUpvalue;
+
 // To enable Closures at runtime we wrap every ObjFunction(created at compiletime) in a ObjClosure, 
 // - so we can capture run time-state of encompassing Scopes
 typedef struct {
     Obj obj;
     ObjFunction* function;
+    ObjUpvalue** upvalues;  // pointer to dynamic upvalue array that stores array of pointers of upvalues
+    int upvalueCount;       // we count the nr of Upvalues this Closure holds (useful for GC)
 } ObjClosure;
 
 
@@ -81,6 +91,7 @@ ObjFunction* newFunction();
 ObjNative* newNative(NativeFn function);
 ObjString* takeString(char* chars, int length);
 ObjString* copyString(const char* chars, int length);
+ObjUpvalue* newUpvalue(Value* slot);
 
 // helper for printValue() - print functionality for heap allocated datastructures
 void printObject(Value value);

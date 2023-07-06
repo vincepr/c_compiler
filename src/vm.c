@@ -143,6 +143,12 @@ static bool callValue(Value callee, int argCount) {
     return false;
 }
 
+// creates a new Upvalue for captured local variable:
+static ObjUpvalue* captureUpvalue(Value* local) {
+    ObjUpvalue* createUpvalue = newUpvalue(local);  // allocates the new upvalue
+    return createUpvalue;
+}
+
 // we handle what Values may be evaluated as a boolean.
 // - nil and false are falsey.
 // - every other value behaves like true.
@@ -265,6 +271,16 @@ static InterpretResult run() {
                 // no pop() from the stack, since the assignment could be nested in some larger expression
                 break;
             }
+            case OP_SET_UPVALUE: {                  // we take the value on top of the stack and store it into the slot pointed by upvalue
+                uint8_t slot = READ_BYTE();
+                *frame->closure->upvalues[slot]->location = peek(0);
+                break;
+            } 
+            case OP_GET_UPVALUE: {                  // resolves the underlying value from a Enclosed Upvalue (variable used by closure)
+                uint8_t slot = READ_BYTE();
+                push(*frame->closure->upvalues[slot]->location);
+                break;
+            }
             //  comparisons:
             case OP_EQUAL: {
                 Value b = pop();
@@ -336,6 +352,17 @@ static InterpretResult run() {
                 ObjFunction* function = AS_FUNCTION(READ_CONSTANT());   // load the compiled function from the const-table
                 ObjClosure* closure = newClosure(function);             // -> wrap it in ObjClosure
                 push(OBJ_VAL(closure));                                 // -> and push it to the stack
+                // we iterate over each upvalue the closure expects:
+                for (int i=0; i<closure->upvalueCount; i++) {
+                    // Read the pair of 2 Bytes of data after the OP_CLOSURE from the stack (isLocal/isNotAnotherUpvalue and index)
+                    uint8_t isLocal = READ_BYTE();
+                    uint8_t index = READ_BYTE();
+                    if (isLocal) {
+                        captureUpvalue(frame->slots + index);           // if upvalue closes over a local variable
+                    } else {
+                        closure->upvalues[i] = frame->closure->upvalues[index]; // otherwise we capture an from surrounding function
+                    }
+                }
                 break;
             }
             // OP_RETURN - when a function returns a value that value will be currently on the top of the stack

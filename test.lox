@@ -5,17 +5,16 @@ fun doSomething() {
     }
     print x;
 }
-doSomething();
+//doSomething();
 
-var x = "global";
 fun outer() {
-  var x = "outer";
+  var x = "outside";
   fun inner() {
     print x;
   }
   inner();
 }
-outer(); // should print outer
+outer(); // should print outside
 
 // // testing stack trance:
 // fun a() { b(); }

@@ -145,9 +145,22 @@ fun closureFactory(value) {
 var x1 = closureFactory("bob");
 var x2 = closureFactory("ross");
 
-x1();
-x2();
+x2();   // should print -> ross
+x1();   // should print -> bob
 ```
 - In the above example we need some runtime representation for a closure, that captures the local variables surrounding the function as they exist when the function declaration is executed (not when compiled)
 
-- We wrap every function in an Closure Object: `ObjClosure`. 
+- We wrap every function in an Closure Object: `ObjClosure`. Our VM never touches Functions at runtime, only the wrapper Closures.
+
+#### Upvalues
+An upvalue refers to a local variable enclosing function. Every closure maintains an array of upvalues, one for each surrounding local variable (that the closure uses).
+- It points back into the stack, where the variable captured lives.
+- When a function declaration is first executed, the VM creates the array of upvalues and captures the surrounding local variables (it needs)
+
+```lox
+var x = 9;
+fun doThings() {
+    print x;
+}
+```
+- here the struct in memory should be an array that points to the place in memory the x=9 is stored in.

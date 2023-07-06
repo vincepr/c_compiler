@@ -20,8 +20,16 @@ static Obj* allocateObject(size_t size, ObjType type) {
 
 // helper for ALLOCATE_OBJ macro- allocates a new ClosureObject that wraps the ObjFunction we put in
 ObjClosure* newClosure(ObjFunction* function) {
+    // allocate our Arrays that hold Upvalues in use by this closure:
+    ObjUpvalue** upvalues = ALLOCATE(ObjUpvalue*, function->upvalueCount);
+    for (int i=0; i<function->upvalueCount; i++) {
+        upvalues[i] = NULL;     // initialize the whole array as NULL (needed for GC)
+    }
+    // allocate the Closure (that wraps the function)
     ObjClosure* closure = ALLOCATE_OBJ(ObjClosure, OBJ_CLOSURE);
     closure->function = function;
+    closure->upvalues = upvalues;
+    closure->upvalueCount = function->upvalueCount;
     return closure;
 }
 
@@ -29,6 +37,7 @@ ObjClosure* newClosure(ObjFunction* function) {
 ObjFunction* newFunction() {
     ObjFunction* function = ALLOCATE_OBJ(ObjFunction, OBJ_FUNCTION);
     function->arity = 0;
+    function->upvalueCount = 0;
     function->name = NULL;
     initChunk(&function->chunk);
     return function;
@@ -88,6 +97,13 @@ ObjString* copyString(const char* chars, int length) {
     return allocateString(heapChars, length, hash);
 }
 
+// constructor function for upvalues
+ObjUpvalue* newUpvalue(Value* slot) {
+    ObjUpvalue* upvalue = ALLOCATE_OBJ(ObjUpvalue, OBJ_UPVALUE);
+    upvalue->location = slot;
+    return upvalue;
+}
+
 // helper for printObject()
 static void printFunction(ObjFunction* function) {
     if (function->name == NULL) {               // top level uses a function name of NULL
@@ -111,6 +127,9 @@ void printObject(Value value) {
             break;
         case OBJ_STRING:
             printf("%s", AS_CSTRING(value));
+            break;
+        case OBJ_UPVALUE: // this never gets reached, just there to satisfy all cases (prints the resolved var)
+            printf("upvalue");
             break;
     }
 }
