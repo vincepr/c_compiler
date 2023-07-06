@@ -1,5 +1,65 @@
-/* custom lox-syntax highlighting: */
 
+/* Custom Editor Theme */
+monaco.editor.defineTheme('ace', {
+    base: 'vs',
+    inherit: true,
+    rules: [
+        { token: '', foreground: '5c6773' },
+        { token: 'invalid', foreground: 'ff3333' },
+        { token: 'emphasis', fontStyle: 'italic' },
+        { token: 'strong', fontStyle: 'bold' },
+        { token: 'variable', foreground: '5c6773' },
+        { token: 'variable.predefined', foreground: '5c6773' },
+        { token: 'constant', foreground: 'f08c36' },
+        { token: 'comment', foreground: 'abb0b6', fontStyle: 'italic' },
+        { token: 'number', foreground: 'f08c36' },
+        { token: 'number.hex', foreground: 'f08c36' },
+        { token: 'regexp', foreground: '4dbf99' },
+        { token: 'annotation', foreground: '41a6d9' },
+        { token: 'type', foreground: '41a6d9' },
+        { token: 'delimiter', foreground: '5c6773' },
+        { token: 'delimiter.html', foreground: '5c6773' },
+        { token: 'delimiter.xml', foreground: '5c6773' },
+        { token: 'tag', foreground: 'e7c547' },
+        { token: 'tag.id.jade', foreground: 'e7c547' },
+        { token: 'tag.class.jade', foreground: 'e7c547' },
+        { token: 'meta.scss', foreground: 'e7c547' },
+        { token: 'metatag', foreground: 'e7c547' },
+        { token: 'metatag.content.html', foreground: '86b300' },
+        { token: 'metatag.html', foreground: 'e7c547' },
+        { token: 'metatag.xml', foreground: 'e7c547' },
+        { token: 'metatag.php', fontStyle: 'bold' },
+        { token: 'key', foreground: '41a6d9' },
+        { token: 'string.key.json', foreground: '41a6d9' },
+        { token: 'string.value.json', foreground: '86b300' },
+        { token: 'attribute.name', foreground: 'f08c36' },
+        { token: 'attribute.value', foreground: '0451A5' },
+        { token: 'attribute.value.number', foreground: 'abb0b6' },
+        { token: 'attribute.value.unit', foreground: '86b300' },
+        { token: 'attribute.value.html', foreground: '86b300' },
+        { token: 'attribute.value.xml', foreground: '86b300' },
+        { token: 'string', foreground: '86b300' },
+        { token: 'string.html', foreground: '86b300' },
+        { token: 'string.sql', foreground: '86b300' },
+        { token: 'string.yaml', foreground: '86b300' },
+        { token: 'keyword', foreground: 'f2590c' },
+        { token: 'keyword.json', foreground: 'f2590c' },
+        { token: 'keyword.flow', foreground: 'f2590c' },
+        { token: 'keyword.flow.scss', foreground: 'f2590c' },
+        { token: 'operator.scss', foreground: '666666' }, //
+        { token: 'operator.sql', foreground: '778899' }, //
+        { token: 'operator.swift', foreground: '666666' }, //
+        { token: 'predefined.sql', foreground: 'FF00FF' }, //
+    ],
+    colors: {
+        'editor.background': '#fafafa',
+        'editor.foreground': '#5c6773',
+        'editorIndentGuide.background': '#ecebec',
+        'editorIndentGuide.activeBackground': '#e0e0e0',
+    },
+});
+
+/* custom lox-syntax highlighting: */
 const makeTokensProvider = () => {
     return {
         keywords: [
@@ -108,7 +168,7 @@ const allfiles = {
     "hello.lox": {
         name: "hello.lox",
         language: "lox",
-        theme: "iPlastic",
+        theme: "ace",
         value: `//you can leave out () with print: \n
 for (var i=0; i<10; i=i+1){
   print "Bob Ross";
@@ -119,7 +179,7 @@ for (var i=0; i<10; i=i+1){
     "fib.lox": {
         name: "fib.lox",
         language: "lox",
-        theme: "vs-dark",
+        theme: "ace",
         value: `// calculate a fibonacci-nr and return the time it took in seconds:\n
 fun fib(n) {
   if (n < 2) return n;
@@ -134,7 +194,7 @@ print clock() - start;`,
     "clojure.lox": {
         name: "clojure.lox",
         language: "lox",
-        theme: "vs-dark",
+        theme: "vs",
         value: `// when closures are implemented this should print out outer:\n
 var x = "global";
 fun outer() {
@@ -144,7 +204,8 @@ fun outer() {
   }
   inner();
 }
-outer();`,
+outer();    // closure captured "outer" and should print that
+`,
     },
 
     "error.lox": {
@@ -163,32 +224,34 @@ a();`,
 
 
 // set the monaco-editor-window:
-var activeFile = allfiles["hello.lox"];
-var editor = monaco.editor.create(document.getElementById('container'), activeFile);
+var activeFile = "hello.lox"
+var editor = monaco.editor.create(document.getElementById('container'), allfiles[activeFile]);
 
 
 // Add the event listeners (onClick events)
 
 
-function handleClick(filename) {
-    editor.setValue(allfiles[filename].value);
+function changeOpenFile(filename) {
+    allfiles[activeFile].value = editor.getValue();     // persist change to 'file'-tab
+    activeFile = filename;                              // set new active tab
+    editor.setValue(allfiles[filename].value);          // open clicked tab to editor
     //editor.getModel().setValue('some value')
 }
 
 document.getElementById("btnhello").addEventListener("click", () => {
-    handleClick("hello.lox");
+    changeOpenFile("hello.lox");
 });
 
 document.getElementById("btnfib").addEventListener("click", () => {
-    handleClick("fib.lox");
+    changeOpenFile("fib.lox");
 });
 
 document.getElementById("btnclojure").addEventListener("click", () => {
-    handleClick("clojure.lox");
+    changeOpenFile("clojure.lox");
 });
 
 document.getElementById("btnerror").addEventListener("click", () => {
-    handleClick("error.lox");
+    changeOpenFile("error.lox");
 });
 
 document.getElementById("btncompile").addEventListener("click", () => {
