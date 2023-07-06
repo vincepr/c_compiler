@@ -370,10 +370,10 @@ InterpretResult interpret(const char* source) {
     if (function == NULL) return INTERPRET_COMPILE_ERROR;   // NULL means we hit some kind of Compile-Error(that Compiler already reported)
 
     push(OBJ_VAL(function));                                // store the funcion on the stack
-    ObjClosure* closure = newClosure(function);
-    pop();
-    push(OBJ_VAL(closure));
-    call(closure, 0);                                        // initializes the toplevel Stack-Frame
+    ObjClosure* closure = newClosure(function);             // wrap the function in its wrapper Closure (vm, only touches closures not functions)
+    pop();                                                  // pop the created Function
+    push(OBJ_VAL(closure));                                 // and push the closure (so its there instead the function) this happens for gc-reasons
+    call(closure, 0);                                       // initializes the toplevel Stack-Frame
 
     return run();
 }
