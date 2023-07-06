@@ -108,7 +108,7 @@ const allfiles = {
     "hello.lox": {
         name: "hello.lox",
         language: "lox",
-        theme: "vs-dark",
+        theme: "iPlastic",
         value: `//you can leave out () with print: \n
 for (var i=0; i<10; i=i+1){
   print "Bob Ross";

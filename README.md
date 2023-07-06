@@ -124,5 +124,4 @@ The following Stack Windows (startIdx -> endIdx on the Stack, given from how man
 We do recursive descent during parsing, but at runtime the VM's bytecode dispatch loop is completely flat.
 So returning some function is as easy, as returning from the end of the functions body.
 
-## Native Functions
-- like `return`
+### Closure

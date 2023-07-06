@@ -7,12 +7,20 @@ fun doSomething() {
 }
 doSomething();
 
-
-
-// testing stack trance:
-fun a() { b(); }
-fun b() { c(); }
-fun c() {
-    c("too", "many");
+var x = "global";
+fun outer() {
+  var x = "outer";
+  fun inner() {
+    print x;
+  }
+  inner();
 }
-a();
+outer(); // should print outer
+
+// // testing stack trance:
+// fun a() { b(); }
+// fun b() { c(); }
+// fun c() {
+//     c("too", "many");
+// }
+// a();
