@@ -383,7 +383,7 @@ static InterpretResult run() {
                     uint8_t isLocal = READ_BYTE();
                     uint8_t index = READ_BYTE();
                     if (isLocal) {
-                        captureUpvalue(frame->slots + index);           // if upvalue closes over a local variable
+                        closure->upvalues[i] = captureUpvalue(frame->slots + index); // if upvalue closes over a local variable
                     } else {
                         closure->upvalues[i] = frame->closure->upvalues[index]; // otherwise we capture an from surrounding function
                     }
