@@ -9,11 +9,10 @@ doSomething();
 
 
 
-
-// // testing stack trance:
-// fun a() { b(); }
-// fun b() { c(); }
-// fun c() {
-//     c("too", "many");
-// }
-// a();
+// testing stack trance:
+fun a() { b(); }
+fun b() { c(); }
+fun c() {
+    c("too", "many");
+}
+a();

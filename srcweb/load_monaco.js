@@ -109,14 +109,19 @@ const allfiles = {
         name: "hello.lox",
         language: "lox",
         theme: "vs-dark",
-        value: 'print "Bob Ross";',
+        value: `//you can leave out () with print: \n
+for (var i=0; i<10; i=i+1){
+  print "Bob Ross";
+}
+`,
     },
 
     "fib.lox": {
         name: "fib.lox",
         language: "lox",
         theme: "vs-dark",
-        value: `fun fib(n) {
+        value: `// calculate a fibonacci-nr and return the time it took in seconds:\n
+fun fib(n) {
   if (n < 2) return n;
   return fib(n - 2) + fib(n - 1);
 }
@@ -130,7 +135,8 @@ print clock() - start;`,
         name: "clojure.lox",
         language: "lox",
         theme: "vs-dark",
-        value: `var x = "global";
+        value: `// when closures are implemented this should print out outer:\n
+var x = "global";
 fun outer() {
   var x = "outer";
   fun inner() {
@@ -140,11 +146,24 @@ fun outer() {
 }
 outer();`,
     },
+
+    "error.lox": {
+        name: "error.lox",
+        language: "lox",
+        theme: "vs-dark",
+        value: `// this should error out to show the stack-trace:\n
+fun a() { b(); }
+fun b() { c(); }
+fun c() {
+  c("too", "many");
+}
+a();`,
+    },
 }
 
 
 // set the monaco-editor-window:
-var activeFile = allfiles["fib.lox"];
+var activeFile = allfiles["hello.lox"];
 var editor = monaco.editor.create(document.getElementById('container'), activeFile);
 
 
@@ -152,8 +171,6 @@ var editor = monaco.editor.create(document.getElementById('container'), activeFi
 
 
 function handleClick(filename) {
-    // var x = editor.getValue();
-    // console.log(x)
     editor.setValue(allfiles[filename].value);
     //editor.getModel().setValue('some value')
 }
@@ -168,6 +185,10 @@ document.getElementById("btnfib").addEventListener("click", () => {
 
 document.getElementById("btnclojure").addEventListener("click", () => {
     handleClick("clojure.lox");
+});
+
+document.getElementById("btnerror").addEventListener("click", () => {
+    handleClick("error.lox");
 });
 
 document.getElementById("btncompile").addEventListener("click", () => {
