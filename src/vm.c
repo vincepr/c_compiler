@@ -40,7 +40,7 @@ static void runtimeError(const char* format, ...) {
     //      that corresponds to the current ip and print that line number along with function name
     for (int i = vm.frameCount - 1; i>=0; i--) {
         CallFrame* frame = &vm.frames[i];
-        ObjFunction* function = frame->function;
+        ObjFunction* function = frame->closure->function;
         size_t instruction = frame->ip - function->chunk.code -1;
         fprintf(stderr, "[line %d] in ", function->chunk.lines[instruction]);
         if (function->name == NULL) {
@@ -99,10 +99,10 @@ static Value peek(int distance) {
 // initializes the next CallFrame on the stack
 // - stores pointer to the function beeing called and points the frame's ip to the beginning of that functions bytecode
 // - then it sets up slots pointer to give the frame it's window on the stack.
-static bool call(ObjFunction* function, int argCount) {
+static bool call(ObjClosure* closure, int argCount) {
     // ErrorChecking "fun do(a,b,c){} do(1,2)" -> called with wrong nr Parameters
-    if (argCount != function->arity) {
-        runtimeError("Expected %d arguments but got %d.", function->arity, argCount);
+    if (argCount != closure->function->arity) {
+        runtimeError("Expected %d arguments but got %d.", closure->function->arity, argCount);
         return false;
     }
     if (vm.frameCount == FRAMES_MAX) {
@@ -111,8 +111,8 @@ static bool call(ObjFunction* function, int argCount) {
     }
     // Setup the Stack-Frame:
     CallFrame* frame = &vm.frames[vm.frameCount++];         //  prepare an initial CallFrame 
-    frame->function = function;                             //  in the new CallFrame we point to the function
-    frame->ip = function->chunk.code;                       //  initialize its ip to the beginning of the functions bytecode
+    frame->closure = closure;                               //  in the new CallFrame we point to the function
+    frame->ip = closure->function->chunk.code;              //  initialize its ip to the beginning of the functions bytecode
     //                                                          and set up its stack window to start at the bottom of the VM's value stack 
     frame->slots = vm.stackTop - argCount -1;               // -1 because of the reserved 0-idx stack slot(reserved for methods-calls)
                                                                 
@@ -125,8 +125,8 @@ static bool callValue(Value callee, int argCount) {
         switch(OBJ_TYPE(callee)) {
         // since lox is a dynamic language, we need to check types calling a Function/Method at runtime-type. 
         // - to block: "a_string"(); or "var x = 123; x()" 
-            case OBJ_FUNCTION:
-                return call(AS_FUNCTION(callee), argCount);
+            case OBJ_CLOSURE:
+                return call(AS_CLOSURE(callee), argCount);
             case OBJ_NATIVE: {
                 // if the object being called is a native function -> invoke the C-Function right there
                 NativeFn native = AS_NATIVE(callee);
@@ -180,7 +180,7 @@ static InterpretResult run() {
     (frame->ip += 2, \
     (uint16_t)((frame->ip[-2] << 8) | frame->ip[-1]))
 // macro-READ_CONSTANT: reads the next byte from the bytecoat, treats it number as index and looks it up in our constant-pool
-#define READ_CONSTANT() (frame->function->chunk.constants.values[READ_BYTE()])
+#define READ_CONSTANT() (frame->closure->function->chunk.constants.values[READ_BYTE()])
 // macro reads one-byte from the chunk, reats it as idex into the constants-table -> gets that string
 #define READ_STRING() AS_STRING(READ_CONSTANT())
 // macro-Enables all Arithmetic Functions (since only difference is the sign +-/* for the most part) - is this preprocessor abuse?!?
@@ -210,7 +210,7 @@ static InterpretResult run() {
             }
             printf("\n");
             // show the disassembled/interpreted instruction
-            disassembleInstruction(&frame->function->chunk, (int)(frame->ip - frame->function->chunk.code));
+            disassembleInstruction(&frame->closure->function->chunk, (int)(frame->ip - frame->closure->function->chunk.code));
         #endif
 
         // first byte of each instruction is opcode so we decode/dispatch it:
@@ -332,6 +332,12 @@ static InterpretResult run() {
                 frame = &vm.frames[vm.frameCount - 1];  // there will be a new frame on the CallFrame stack for the called function, that we update
                 break;
             }
+            case OP_CLOSURE: {                           
+                ObjFunction* function = AS_FUNCTION(READ_CONSTANT());   // load the compiled function from the const-table
+                ObjClosure* closure = newClosure(function);             // -> wrap it in ObjClosure
+                push(OBJ_VAL(closure));                                 // -> and push it to the stack
+                break;
+            }
             // OP_RETURN - when a function returns a value that value will be currently on the top of the stack
             // - so we can pop that value, then dispose of the whole functions StackFrame
             case OP_RETURN: {
@@ -364,7 +370,10 @@ InterpretResult interpret(const char* source) {
     if (function == NULL) return INTERPRET_COMPILE_ERROR;   // NULL means we hit some kind of Compile-Error(that Compiler already reported)
 
     push(OBJ_VAL(function));                                // store the funcion on the stack
-    call(function, 0);                                                // initializes the toplevel Stack-Frame
+    ObjClosure* closure = newClosure(function);
+    pop();
+    push(OBJ_VAL(closure));
+    call(closure, 0);                                        // initializes the toplevel Stack-Frame
 
     return run();
 }

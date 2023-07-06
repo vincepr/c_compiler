@@ -671,7 +671,7 @@ static void block() {
     consume(TOKEN_RIGHT_BRACE, "Expect '}' after block.");      // Brackets must be closed again.
 }
 
-//
+// helper for statement() - compiles a function "fun x() {print"hello"}"
 static void function(FunctionType type) {
     Compiler compiler;
     initCompiler(&compiler, type);                              // we set a new Compiler that compiles (only) this function
@@ -694,7 +694,7 @@ static void function(FunctionType type) {
     block();        // the function body, in a {}-block
 
     ObjFunction* function = endCompiler();                      // the Compiler for this function has finished -> we get the Function-Object from it
-    emitBytes(OP_CONSTANT, makeConstant(OBJ_VAL(function)));
+    emitBytes(OP_CLOSURE, makeConstant(OBJ_VAL(function)));     // the closure wraps our function
 }
 
 // helper for declaration() - parses a Function declaration: ex: "fun doStuff() {...}"

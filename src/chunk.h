@@ -43,7 +43,8 @@ typedef enum {
     OP_JUMP,            // always jumps: used to skipp execution of the else case (if..else...)
     OP_JUMP_IF_FALSE,   // used to skipp execution of the statement, for ex:  "if(expr) statement"
     OP_LOOP,            // unconditionally jumps back to the 16-bit offset that follows in 2 8bit chunks afterwards
-    OP_CALL,            // 
+    OP_CALL,            // a function call
+    OP_CLOSURE,         // like OP_CONSTANT but we wrap it in an Closure
     OP_PRINT,           // print expression. like "print x+8;"  -> with x="hello" -> "hello8"
     OP_RETURN,          // return from the current function
 } OpCode;

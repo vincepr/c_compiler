@@ -16,9 +16,9 @@
 
 // A CallFrame represents a single ongoing function call. (not returned yet)
 typedef struct {
-    ObjFunction* function;          // A pointer to the function beeing called, we us it to lookup constants etc.
+    ObjClosure* closure;            // A pointer to the function beeing called -> we reslove it to its ObjFunction then look that up in our constants-table
     uint8_t* ip;                    // INSTRUCTION POINTER - pointer to the the current instruction-nr were working on in the chunk
-                                    //   the 'return address' before the function was called. This is actually the adress of this's CallFrames recent state, when it itself calls a new Function
+    //                                   the 'return address' before the function was called. This is actually the adress of this's CallFrames recent state, when it itself calls a new Function
     Value* slots;                   // points into the VM's value stack at the first slot that this funcion can use
 } CallFrame;
 

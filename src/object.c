@@ -18,6 +18,13 @@ static Obj* allocateObject(size_t size, ObjType type) {
     return object;
 }
 
+// helper for ALLOCATE_OBJ macro- allocates a new ClosureObject that wraps the ObjFunction we put in
+ObjClosure* newClosure(ObjFunction* function) {
+    ObjClosure* closure = ALLOCATE_OBJ(ObjClosure, OBJ_CLOSURE);
+    closure->function = function;
+    return closure;
+}
+
 // helper for ALLOCATE_OBJ macro - allocates a new Function and initializes its fields.
 ObjFunction* newFunction() {
     ObjFunction* function = ALLOCATE_OBJ(ObjFunction, OBJ_FUNCTION);
@@ -93,6 +100,9 @@ static void printFunction(ObjFunction* function) {
 // helper for printValue() - print functionality for heap allocated datastructures
 void printObject(Value value) {
     switch (OBJ_TYPE(value)) {
+        case OBJ_CLOSURE:
+            printFunction(AS_CLOSURE(value)->function); // bascially we just print the underlying ObjFunction
+            break;
         case OBJ_FUNCTION:
             printFunction(AS_FUNCTION(value));
             break;

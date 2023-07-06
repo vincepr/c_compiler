@@ -30,6 +30,10 @@ void* reallocate(void* pointer, size_t oldSize, size_t newSize) {
 // heler for freeObjects() - frees a single object (node of the linked list)
 static void freeObject(Obj* object) {
     switch (object->type) {
+        case OBJ_CLOSURE: {
+            FREE(ObjClosure, object);   // we free only the ObjClosure NOT the ObjFunction
+            break;                      // because the closure doesnt own the function (GC will do that)
+        }
         case OBJ_FUNCTION: {
             ObjFunction* function = (ObjFunction*)object;
             freeChunk(&function->chunk);
