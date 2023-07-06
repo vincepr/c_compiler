@@ -25,6 +25,8 @@ typedef enum {
     OP_GET_GLOBAL,      // read current global val  and push it on stack
     OP_DEFINE_GLOBAL,   // define a global variable (initialize it)
     OP_SET_GLOBAL,      // writes to existing global variable
+    OP_GET_UPVALUE,     // get the captured outer-scoped variable
+    OP_SET_UPVALUE,     // capture the variable (of an outer scope) we use in this function
 
     // euality and comparioson operators ( since  a<=b == !(a>b) these 3 are enough to cover all 6)
     OP_EQUAL,
@@ -43,7 +45,9 @@ typedef enum {
     OP_JUMP,            // always jumps: used to skipp execution of the else case (if..else...)
     OP_JUMP_IF_FALSE,   // used to skipp execution of the statement, for ex:  "if(expr) statement"
     OP_LOOP,            // unconditionally jumps back to the 16-bit offset that follows in 2 8bit chunks afterwards
-    OP_CALL,            // 
+    OP_CALL,            // a function call
+    OP_CLOSURE,         // each OP_CLOSURE is followed by the series of bytes that specify the upvalues the ObjClosure should own.
+    OP_CLOSE_UPVALUE,   // (when local goes out of scope and an upvalue still needs it) it takes ownership of it (the value on the stack)
     OP_PRINT,           // print expression. like "print x+8;"  -> with x="hello" -> "hello8"
     OP_RETURN,          // return from the current function
 } OpCode;

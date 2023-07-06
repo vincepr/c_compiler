@@ -5,14 +5,21 @@ fun doSomething() {
     }
     print x;
 }
-doSomething();
+//doSomething();
 
-
-
-// testing stack trance:
-fun a() { b(); }
-fun b() { c(); }
-fun c() {
-    c("too", "many");
+fun outer() {
+  var x = "outside";
+  fun inner() {
+    print x;
+  }
+  inner();
 }
-a();
+outer(); // should print outside
+
+// // testing stack trance:
+// fun a() { b(); }
+// fun b() { c(); }
+// fun c() {
+//     c("too", "many");
+// }
+// a();

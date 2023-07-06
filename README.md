@@ -124,5 +124,52 @@ The following Stack Windows (startIdx -> endIdx on the Stack, given from how man
 We do recursive descent during parsing, but at runtime the VM's bytecode dispatch loop is completely flat.
 So returning some function is as easy, as returning from the end of the functions body.
 
-## Native Functions
-- like `return`
+### Closure implementation
+Goal is to use the stack for local variables, for all its benefits. The Problem is, a inner function needs access to all local scopes of functions/scopes that encompass it.
+
+With our stack based approach we need to implement quite some extra logic to make them available properly.
+
+#### Closure Objects
+- The VM represents functions at runtime using `ObjFunction`. Those are created **only** during compilation.
+    - At runtime the VM loads the function object from a constant table and binds it to a name
+
+This no longer is enough to make closures work:
+```lox
+fun closureFactory(value) {
+    fun closure() {
+        print value;
+    }
+    return closure
+}
+
+var x1 = closureFactory("bob");
+var x2 = closureFactory("ross");
+
+x2();   // should print -> ross
+x1();   // should print -> bob
+```
+- In the above example we need some runtime representation for a closure, that captures the local variables surrounding the function as they exist when the function declaration is executed (not when compiled)
+
+- We wrap every function in an Closure Object: `ObjClosure`. Our VM never touches Functions at runtime, only the wrapper Closures.
+
+#### Upvalues
+An upvalue refers to a local variable enclosing function. Every closure maintains an array of upvalues, one for each surrounding local variable (that the closure uses).
+- It points back into the stack, where the variable captured lives.
+- When a function declaration is first executed, the VM creates the array of upvalues and captures the surrounding local variables (it needs)
+
+```lox
+var x = 9;
+fun doThings() {
+    print x;
+}
+```
+- here the struct in memory should be an array that points to the place in memory the x=9 is stored in.
+
+##### Closed Upvalues
+A feature of closures is, that they hold onto vairables as long as needed. Even after the function itself has returned.
+- ObjUpvalue will store the closed over variables on the heap.
+- As long as the variable is on the stack, there may be code that still needs it there. So once the local variable goes out of scope, we can move that value to the heap
+
+The `OP_CLOSE_UPVALUE` bytecode takes ownership of a local variable, that is leaving scope. By storing it on the heap.
+
+At runtime the VM stores a list of all upvalues that capture a particular local variable that way. Because otherwise 2 closures pointing/capturing the same variable would not be possible. `ObjUpvalue* openUpvalues;` in the VM struct.

@@ -16,9 +16,9 @@
 
 // A CallFrame represents a single ongoing function call. (not returned yet)
 typedef struct {
-    ObjFunction* function;          // A pointer to the function beeing called, we us it to lookup constants etc.
+    ObjClosure* closure;            // A pointer to the function beeing called -> we reslove it to its ObjFunction then look that up in our constants-table
     uint8_t* ip;                    // INSTRUCTION POINTER - pointer to the the current instruction-nr were working on in the chunk
-                                    //   the 'return address' before the function was called. This is actually the adress of this's CallFrames recent state, when it itself calls a new Function
+    //                                   the 'return address' before the function was called. This is actually the adress of this's CallFrames recent state, when it itself calls a new Function
     Value* slots;                   // points into the VM's value stack at the first slot that this funcion can use
 } CallFrame;
 
@@ -32,6 +32,7 @@ typedef struct {
     Value* stackTop;                // pointer to top of the stack(lastElement + 1) is first to be popped and we add 'above it' when push()
     Table globals;                  // HashMap (key: identifiers, value=global values)
     Table strings;                  // to enable string-interning we store all active-string variables in this table
+    ObjUpvalue* openUpvalues;       // 'linked-list' of Upvalues that currently hold a local-variable they enclosed (that already went out of scope -> now needs to be stored on heap directly)
     Obj* objects;                   // head of the linked list of all objects (strings, instances etc) -> useful for keeping track of active Objects -> GarbageCollection
 } VM;
 

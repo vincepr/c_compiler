@@ -78,7 +78,14 @@ typedef struct {
 typedef struct {
     Token name;
     int depth;
+    bool isCaptured;            // take notice when we need to enclose it when leaving scope (Upvalue took reference to it)
 } Local;
+
+// We use Upvalues to resolve in Closures captured outer Variables and reslove them to the memory where the actual x=1 is stored.
+typedef struct {
+    uint8_t index;              // stores which local slot the upvalue is capturing
+    bool isLocal;               // isLocal=true -> is a localVariable || isLocal=false -> its another upvalue were chaining together
+} Upvalue;
 
 // Compiler needs to differentiate between 2 states, top level and while in a function-body.
 typedef enum {
@@ -94,6 +101,7 @@ typedef struct Compiler {
 
     Local locals[UINT8_COUNT];  // Flat arrays of all locals that are in scope during this exact point in the compilation.
     int localCount;             // current count
+    Upvalue upvalues[UINT8_COUNT];  // array that stores Upvalues (we use them to link enclosed variables in Closures to the actual memory used)
     int scopeDepth;             // how many {} deep are we
 } Compiler;
 
@@ -230,7 +238,11 @@ static void endScope() {
     // remove all Local-Variables that went out of scope:
     while (current->localCount > 0 &&
             current->locals[current->localCount - 1].depth > current->scopeDepth) {
-        emitByte(OP_POP);
+        if (current->locals[current->localCount -1].isCaptured) {
+            emitByte(OP_CLOSE_UPVALUE);         // if a upvalue closed over the value it takes ownership of it
+        } else {
+            emitByte(OP_POP);                   // if not we can remove it forever
+        }
         current->localCount--;
     }
 
@@ -268,6 +280,7 @@ static void initCompiler(Compiler* compiler, FunctionType type) {
     // - name "" so no one else can write to it (with how our maps work)
     Local* local = &current->locals[current->localCount++];
     local->depth = 0;
+    local->isCaptured = false;
     local->name.start = "";
     local->name.length = 0;
 }
@@ -353,6 +366,45 @@ static int resolveLocal(Compiler* compiler, Token* name) {
     return -1;          // -1 is our custom signal, that it is not found -> globals will get checked for it now!
 }
 
+// adds a new upvalue (used to resolve Closure-captured variables) to the upvalue-array
+static int addUpvalue(Compiler* compiler, uint8_t index, bool isLocal) {
+    int upvalueCount = compiler->function->upvalueCount;
+
+    // check we find matching Upvalue we reuse it and return it's index
+    for (int i=0; i<upvalueCount; i++) {
+        Upvalue* upvalue = &compiler->upvalues[i];
+        if (upvalue->index == index && upvalue->isLocal == isLocal) {
+            return i;
+        }
+    }
+    if (upvalueCount == UINT8_COUNT) {
+        error("Too many closure variables in function.");
+        return 0;
+    }
+    // otherwise we add it at the end of the upvalue-array:
+    compiler->upvalues[upvalueCount].isLocal = isLocal;
+    compiler->upvalues[upvalueCount].index = index;
+    return compiler->function->upvalueCount++;
+}
+
+// after failing to reslove a local variable this gets called
+// - and will start looking trough the Upvalues
+static int resolveUpvalue(Compiler* compiler, Token* name) {
+    if (compiler->enclosing == NULL) return -1;                 // its global scope
+    int local = resolveLocal(compiler->enclosing, name);
+    if (local != -1) {
+        compiler->enclosing->locals[local].isCaptured = true;   // we note in the local-variable that an upvalue referenced it
+        return addUpvalue(compiler, (uint8_t)local, true);
+    }
+    // it can recursively chain Upvalue->Upvalue->Upvalue->local x=1
+    int upvalue = resolveUpvalue(compiler->enclosing, name);
+    if (upvalue != -1) {
+        return addUpvalue(compiler, (uint8_t)upvalue, false);
+    }
+    return -1;
+}
+
+
 // helper - Adds Local variable to our Compiler-Struct that keeps track of active local-variables on the stack.
 static void addLocal(Token name) {
     if (current->localCount ==UINT8_COUNT) {
@@ -362,6 +414,7 @@ static void addLocal(Token name) {
     Local* local = &current->locals[current->localCount++];     // initialize the next available local(next element in array)
     local->name = name;                                         // stores variables Identity
     local->depth = -1;                                          // -1 WE USE to signal an UNITIALIZED VARIABLE
+    local->isCaptured = false;
 }
 
 // helper for parseVariable() - take The Identifiert and pass it down
@@ -529,6 +582,9 @@ static void namedVariable(Token name, bool canAssign) {
     if (arg != -1) {
         getOp = OP_GET_LOCAL;               // "... x + 99;""
         setOp = OP_SET_LOCAL;               // "x = 123;";
+    } else if((arg = resolveUpvalue(current, &name)) != -1) {   // check outer-'local'-scopes
+        getOp = OP_GET_UPVALUE;
+        setOp = OP_SET_UPVALUE;
     } else {
         arg = identifierConstant(&name);    // get the idx to the value in globals-table
         getOp = OP_GET_GLOBAL;              // this will get global from table and push() it
@@ -671,7 +727,7 @@ static void block() {
     consume(TOKEN_RIGHT_BRACE, "Expect '}' after block.");      // Brackets must be closed again.
 }
 
-//
+// helper for statement() - compiles a function "fun x() {print"hello"}"
 static void function(FunctionType type) {
     Compiler compiler;
     initCompiler(&compiler, type);                              // we set a new Compiler that compiles (only) this function
@@ -694,7 +750,12 @@ static void function(FunctionType type) {
     block();        // the function body, in a {}-block
 
     ObjFunction* function = endCompiler();                      // the Compiler for this function has finished -> we get the Function-Object from it
-    emitBytes(OP_CONSTANT, makeConstant(OBJ_VAL(function)));
+    emitBytes(OP_CLOSURE, makeConstant(OBJ_VAL(function)));     // the closure wraps our function
+    // we emit instructions to resolve the Closure-captured variables to the actual point in memory where the underlying data is stored.
+    for (int i=0; i<function->upvalueCount; i++) {
+        emitByte(compiler.upvalues[i].isLocal ? 1 : 0);
+        emitByte(compiler.upvalues[i].index);
+    }
 }
 
 // helper for declaration() - parses a Function declaration: ex: "fun doStuff() {...}"

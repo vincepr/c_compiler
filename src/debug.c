@@ -1,5 +1,7 @@
 #include <stdio.h>
+
 #include "debug.h"
+#include "object.h"
 #include "value.h"
 
 // dis-assemles ALL the instructions in the entire chunk.
@@ -86,6 +88,10 @@ int disassembleInstruction(Chunk* chunk, int offset) {
             return simpleInstruction("OP_DEFINE_GLOBAL", offset);
         case OP_SET_GLOBAL:
             return constantInstruction("OP_SET_GLOBAL", chunk, offset);
+        case OP_GET_UPVALUE:
+            return byteInstruction("OP_GET_UPVALUE", chunk, offset);
+        case OP_SET_UPVALUE:
+            return byteInstruction("OP_SET_UPVALUE", chunk, offset);
         // Binary Operators - Comparisons:
         case OP_EQUAL:
             return simpleInstruction("OP_EQUAL", offset);
@@ -117,6 +123,24 @@ int disassembleInstruction(Chunk* chunk, int offset) {
             return simpleInstruction("OP_PRINT", offset);
         case OP_CALL:
             return byteInstruction("OP_CALL", chunk, offset);
+        case OP_CLOSURE: {
+            offset++;
+            uint8_t constant = chunk->code[offset++];
+            printf("%-16s %4d ", "OP_CLOSURE", constant);
+            printValue(chunk->constants.values[constant]);
+            printf("\n");
+
+            // OP_CLOSURE instruction is a pair of operands (isLocal and then the index) -> so we have to print them out in pairs:
+            ObjFunction* function = AS_FUNCTION(chunk->constants.values[constant]);
+            for (int j=0; j<function->upvalueCount; j++) {
+                int isLocal = chunk->code[offset++];
+                int index = chunk->code[offset++];
+                printf("%04d      |                     %s %d\n",offset - 2, isLocal ? "local" : "upvalue", index);
+            }
+            return offset;
+        }
+        case OP_CLOSE_UPVALUE:
+            return simpleInstruction("OP_CLOSE_UPVALUE", offset);
         case OP_RETURN:
             return simpleInstruction("OP_RETURN", offset);
         default:
