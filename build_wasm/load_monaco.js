@@ -205,6 +205,21 @@ fun outer() {
   inner();
 }
 outer();    // closure captured "outer" and should print that
+
+fun doFn() {
+  var x = 10;
+  fun innerFn() {
+    print x;
+    x = x * x;
+  }
+  return innerFn;
+}
+  
+var closure = doFn()
+closure();    // 10
+closure();    // 100
+closure();    // 10000
+  
 `,
     },
 
