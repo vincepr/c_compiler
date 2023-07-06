@@ -1,7 +1,7 @@
 # Codealong for crafting interpreters - the clox Variant in c
 The book Crafting Interpreters by Robert Nystrom as a guide, the goal is to dip my toes into writing a bytecode-compiler/vm.
 
-
+- Link to a wasm-build of the interpreter running in a browser: https://vincepr.github.io/c_compiler/
 ## Notes arround implementation details (mostly for my later self)
 ### A Value Stack Manipulator - The VM's Stack
 - the jlox interpreter accomplished by recursively traversing(postorder traversal) the AST.
