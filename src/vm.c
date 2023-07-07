@@ -232,16 +232,18 @@ static InterpretResult run() {
     for(;;) {
         // support for the Debug-Flag to enable printing out diagnostics:
         #ifdef DEBUG_TRACE_EXECUTION
-            // loop over stack and show its contents:
-            printf("          ");
-            for (Value* slot = vm.stack; slot < vm.stackTop; slot++) {
-                printf("[ ");
-                printValue(*slot);
-                printf(" ]");
+            if (FLAG_TRACE_EXECUTION) {
+                // loop over stack and show its contents:
+                printf("          ");
+                for (Value* slot = vm.stack; slot < vm.stackTop; slot++) {
+                    printf("[ ");
+                    printValue(*slot);
+                    printf(" ]");
+                }
+                printf("\n");
+                // show the disassembled/interpreted instruction
+                disassembleInstruction(&frame->closure->function->chunk, (int)(frame->ip - frame->closure->function->chunk.code));
             }
-            printf("\n");
-            // show the disassembled/interpreted instruction
-            disassembleInstruction(&frame->closure->function->chunk, (int)(frame->ip - frame->closure->function->chunk.code));
         #endif
 
         // first byte of each instruction is opcode so we decode/dispatch it:

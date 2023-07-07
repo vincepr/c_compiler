@@ -310,10 +310,12 @@ static ObjFunction* endCompiler() {
 
     // Flag that enables dumping out chunks once the compiler finishes
     #ifdef DEBUG_PRINT_CODE
+    if (FLAG_PRINT_CODE) {
         if (!parser.hadError) {
             // user define functions have a name, the toplevel one is NULL:
             disassembleChunk(currentChunk(), function->name != NULL ? function->name->chars : "<script>");
         }
+    }
     #endif
 
     current = current->enclosing;               // put the this one's enclosing/'parent'-compiler as the current, when we close the this recent one
