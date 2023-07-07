@@ -15,7 +15,7 @@ var Module = {
     return function(text) {
       if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
 
-      console.error(text);
+      //console.error(text);
       if (element) {
         element.value += text + "\n";
         element.scrollTop = element.scrollHeight; // focus on bottom
@@ -33,7 +33,7 @@ var Module = {
       //text = text.replace(/</g, "&lt;");
       //text = text.replace(/>/g, "&gt;");
       //text = text.replace('\n', '<br>', 'g');
-      console.log(text);
+      //console.log(text);
       if (element) {
         element.value += text + "\n";
         element.scrollTop = element.scrollHeight; // focus on bottom

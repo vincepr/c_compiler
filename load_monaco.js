@@ -259,13 +259,20 @@ document.getElementById("btnerror").addEventListener("click", () => {
 });
 
 document.getElementById("btncompile").addEventListener("click", () => {
+    // read text-sourcecode:
     let currentText = editor.getValue();
     document.getElementById('output').value="";
+    // read out flags:
+    let isBytecode = document.getElementById('bytecode').checked ==true;  // savety against undfefined by ==true
+    let isTrace = document.getElementById('trace').checked ==true;
+    let isGC = document.getElementById('gc').checked ==true;
+    
 
     const result = Module.ccall(
         "runCompiler", // name of C function
-        null, // return type
-        ["string"], // argument types
-        [currentText] // arguments
+        "int", // return type
+        ["string", "bool", "bool", "bool"], // argument types
+        [currentText, isBytecode, isTrace, isGC] // arguments
     );
+    console.log("Return = "+ result);
 });
