@@ -190,4 +190,15 @@ Originates from Lisp. 2 Phases. Is a **tracing garbage collector**. (vs referenc
 - **Marking:** start at roots and graph traverse all reachable objects. Each time we visit an object we mark it. (so we can stop if we hit again)
 - **Sweeping:** now go trough all unmarked ojects and free them.
 
+### Tricolor abstraction
+As the Collector walks the grap of objects we have to make sure it doesnt get stuck or skips anything.
+- **White**: we have not reached the object at all.
+- **Gray**: during marking when we first reach an object. BUT we have not checked (or checked all paths) if it further links to other Objects
+- **Black**: we have marked all the object it references. (the GC-Algorithm is done with this node)
 
+Now a simple alorithm emerges:
+1. Start all nodes white.
+2. find all roots and mark them gray.
+3. repeat while there are still gray nodes:
+    1. pick a gray object. Turn any white objects that it holds reference to gray.
+    2. mark the object from previous step black.

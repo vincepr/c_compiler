@@ -66,7 +66,10 @@ static void defineNative(const char* name, NativeFn function) {
 
 void initVM() {
     resetStack();
-    vm.objects = NULL;      // reset linked list of all active objects
+    vm.objects = NULL;      // reset linked list of all active object
+    vm.grayCount = 0;       // init the gray-Stack we use in our GC-Algorithm:
+    vm.grayCapacity = 0;
+    vm.grayStack = NULL;
     initTable(&vm.globals); // setup the HashTable for global variables
     initTable(&vm.strings); // setup the HashTable for used strings
 

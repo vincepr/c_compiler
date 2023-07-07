@@ -36,6 +36,7 @@ void* reallocate(void* pointer, size_t oldSize, size_t newSize) {
 // For GC - marks Objects as having some reference to it (so it does not get GC'd)
 void markObject(Obj* object) {
     if (object == NULL) return;
+    if (object->isMarked) return;       // already fully visited this node
     #ifdef DEBUG_LOG_GC                 // Log GC-Event
     if (FLAG_LOG_GC) { 
         printf("%p mark ", (void*)object);
@@ -44,12 +45,62 @@ void markObject(Obj* object) {
     }
     #endif
     object->isMarked = true;
+    // We selfmange this Stack to keep track of gray(already found) nodes
+    if (vm.grayCapacity < vm.grayCount +1) {
+        vm.grayCapacity = GROW_CAPACITY(vm.grayCapacity);
+        // Note how it calls realloc directly (and not reallocate()-wrapper since we dont want to mix into GC):
+        vm.grayStack = (Obj**)realloc(vm.grayStack, sizeof(Obj*) * vm.grayCapacity);
+        if (vm.grayStack == NULL) exit(1);  // our grayStack ran out of memory -> we cant Continue so we crash-'gracefully'
+    }
+    vm.grayStack[vm.grayCount++] = object;
 }
 
 // For GC - we check if it is actually a heap allocated Obj (stack values like numbers, booleans need no GC)
 // if so we pass it down to markObj
 void markValue(Value value) {
     if (IS_OBJ(value)) markObject(AS_OBJ(value));
+}
+
+// helper for blackenObject - Functions have a table full of Locals etc. that we need to trace
+static void markArray(ValueArray* array) {
+    for (int i=0; i<array->count; i++) {
+        markValue(array->values[i]);
+    }
+}
+
+// helper for traceReferences() - traverse a single objects references (and mark those/gray them)
+static void blackenObject(Obj* object) {
+    #ifdef DEBUG_LOG_GC                                     // Log the GC-Event
+    if (FLAG_LOG_GC) {
+        printf("%p blacken ", (void*)object);
+        printValue(OBJ_VAL(object));
+        printf("\n");
+    }
+    #endif
+
+    switch (object->type) {
+        case OBJ_CLOSURE: {
+            ObjClosure* closure = (ObjClosure*)object;
+            markObject((Obj*)closure->function);            // the wrapped function
+            for (int i=0; i<closure->upvalueCount; i++) {   // and all the upvalues
+                markObject((Obj*)closure->upvalues[i]);
+            }
+            break;
+        }
+        case OBJ_FUNCTION: {
+            ObjFunction* function = (ObjFunction*)object;
+            markObject((Obj*)function->name);
+            markArray(&function->chunk.constants);          // Functions have a table full of Locals etc
+            break;
+        }
+        case OBJ_UPVALUE:
+            markValue(((ObjUpvalue*)object)->closed);
+            break;
+        // contain no outgoing refernces:
+        case OBJ_NATIVE:
+        case OBJ_STRING:
+            break;
+    }
 }
 
 // infos for --> realloc(void *ptr, size_t size) <--
@@ -59,7 +110,7 @@ void markValue(Value value) {
     // return value: this function returns a pointer to the newly allocated memory, or NULL if the request fails.
 
 
-// heler for freeObjects() - frees a single object (node of the linked list)
+// helper for freeObjects() - frees a single object (node of the linked list)
 static void freeObject(Obj* object) {
     #ifdef DEBUG_LOG_GC                 // log GC-Event
     if (FLAG_LOG_GC){
@@ -105,6 +156,7 @@ void collectGarbage() {
     #endif
 
     markRoots();            // starts GC by finding & marking all roots(directly reachable objects by VM)
+    traceReferences();      // walk trough our grayStack
 
     #ifdef DEBUG_LOG_GC
     if (FLAG_LOG_GC){
@@ -113,7 +165,7 @@ void collectGarbage() {
     #endif
 }
 
-// walk our linked-list of active objects and free each from memory.
+// called when freeVm() shuts our programm down - walk our linked-list of active objects and free each from memory.
 void freeObjects() {
     Obj* object = vm.objects;
     while (object != NULL) {
@@ -121,6 +173,7 @@ void freeObjects() {
         freeObject(object);
         object = next;
     }
+    free(vm.grayStack);
 }
 
 // starts GC by finding & marking all roots(directly reachable objects by VM)
@@ -141,5 +194,15 @@ static void markRoots() {
     markTable(&vm.globals);
     // if GC starts while were still compiling -> we need to GC the compiler-structs aswell
     markCompilerRoots();
+}
 
+// while grayStack isnt empty keep going:
+//      1. pick a gray object. Turn any white objects that it holds reference to gray.
+//      2. mark the object from previous step black.
+
+static void traceReferences() {
+    while (vm.grayCount > 0) {
+        Obj* object = vm.grayStack[--vm.grayCount];
+        blackenObject(object);          // mark the object black
+    }
 }
