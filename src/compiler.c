@@ -4,6 +4,7 @@
 
 #include "common.h"
 #include "compiler.h"
+#include "memory.h"
 #include "scanner.h"
 
 #ifdef DEBUG_PRINT_CODE
@@ -975,4 +976,14 @@ ObjFunction* compile(const char* source) {
     }
     ObjFunction* function = endCompiler();      // Calls and Functions call-end-compiler
     return parser.hadError ? NULL : function;   //  if we encountered compile-time-errors we return NULL, else return the ObjFunction with the bytecode
+}
+
+// used for GC - if GC starts while were still compiling -> we need to GC the compiler-structs aswell
+// - so we walk all those and to mark every Obj still referenced
+void markCompilerRoots() {
+    Compiler* compiler = current;
+    while (compiler != NULL) {
+        markObject((Obj*)compiler->function);
+        compiler = compiler->enclosing;
+    }
 }

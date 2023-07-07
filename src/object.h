@@ -43,7 +43,8 @@ typedef enum {
 // The Obj that gets allocated on the stack:
 struct Obj {
     ObjType type;       // tag-type (is the following data a string, a function ....)
-    struct Obj* next;   // linked list-ish to next Object. This is used to keep track on active heap -> GarbageColleciton
+    bool isMarked;      // used for GC. (Objs that someone else holds reference to get marked -> not deleted while GC)
+    struct Obj* next;   // linked list-ish to next Object. This is used to keep track on active heap -> used for GC
 };
 
 // Each Function needs its own Chunk (Callstack, etc...)

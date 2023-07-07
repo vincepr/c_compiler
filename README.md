@@ -186,6 +186,8 @@ These are the values that still live and need to stay in memory. Any other value
 - Free all objects not in that Set (Our Hashmap we can 'abuse' as HashSet).
 
 ### Mark-Sweep Garbage Collection
-Originates from Lisp. 2 Phases:
-- Marking:
+Originates from Lisp. 2 Phases. Is a **tracing garbage collector**. (vs reference counting)
+- **Marking:** start at roots and graph traverse all reachable objects. Each time we visit an object we mark it. (so we can stop if we hit again)
+- **Sweeping:** now go trough all unmarked ojects and free them.
+
 

@@ -156,3 +156,13 @@ ObjString* tableFindString(Table* table, const char* chars, int length, uint32_t
         index = (index + 1 ) % table->capacity;
     }
 }
+
+// used for GC - walks all the global variables in use and marks everything on heap that gets referenced.
+// - we also walk all the key strings since GC collects those aswell
+void markTable(Table* table) {
+    for (int i=0; i<table->capacity; i++) {
+        Entry* entry = &table->entries[i];
+        markObject((Obj*)entry->key);
+        markValue(entry->value);
+    }
+}
