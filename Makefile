@@ -54,3 +54,9 @@ web:
 # to remove all artifacts/binary
 clean:
 	rm -rf $(BINARY) *.o
+	rm build_wasm/*.html
+	rm build_wasm/*.js
+	rm build_wasm/*.css
+	rm build_wasm/*.wasm
+
+	
