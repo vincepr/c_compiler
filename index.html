@@ -31,7 +31,7 @@
           <button class="button" id="btnfib">fib.lox</button>
           <button class="button" id="btnclojure">closure.lox</button>
           <button class="button" id="btnerror">error.lox</button>
-          <button class="button green" onclick="location.href='http://www.github.com/vincepr/c_compiler'" type="button">on Github</button>
+          <button class="button green" type="button" onClick="parent.open('https://www.github.com/vincepr/c_compiler')">on Github</button>
       </nav>
       <nav class="nav-right">
           <label class="switch">bytecode <input type="checkbox"></label>
@@ -46,7 +46,7 @@
           <!-- Monaco Code Editor takes control over this div! -->
         </div>
         <div class="column right" style="background-color:#bbb;">
-          <textarea class="emscripten" id="output" type="text" autocorrect="off" style="margin-left:0; width: 100%; height: 100%; resize: none;background-color:#bbb;">some text</textarea>
+          <textarea class="emscripten" id="output" type="text" spellcheck="false" style="margin-left:0; width: 100%; height: 100%; resize: none;background-color:#bbb;">some text</textarea>
         </div>
     </div>
 
