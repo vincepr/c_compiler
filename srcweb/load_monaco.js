@@ -168,7 +168,7 @@ const allfiles = {
     "hello.lox": {
         name: "hello.lox",
         language: "lox",
-        theme: "ace",
+        theme: "vs-dark",
         minimap: { enabled: false },
         automaticLayout: true,
         value: `//you can leave out () with print: \n
