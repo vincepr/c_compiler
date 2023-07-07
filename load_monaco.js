@@ -266,13 +266,25 @@ document.getElementById("btncompile").addEventListener("click", () => {
     let isBytecode = document.getElementById('bytecode').checked ==true;  // savety against undfefined by ==true
     let isTrace = document.getElementById('trace').checked ==true;
     let isGC = document.getElementById('gc').checked ==true;
-    
 
+        
+    progressElement.hidden = false;
+    spinnerElement.hidden = false;
+    // we have to wait for the hidden to get updated before we call the compile function
+    // 34ms > 1frame on 30fps. thats as low as i'm willing to support
+    const myTimeout = setTimeout(()=>compileCall({currentText:currentText, isBytecode:isBytecode, isTrace:isTrace, isGC:isGC}), 34);
+});
+
+function compileCall({currentText:currentText, isBytecode:isBytecode, isTrace:isTrace, isGC:isGC}) {
     const result = Module.ccall(
         "runCompiler", // name of C function
         "int", // return type
         ["string", "bool", "bool", "bool"], // argument types
         [currentText, isBytecode, isTrace, isGC] // arguments
-    );
-    console.log("Return = "+ result);
-});
+    )
+    // remove the spinner
+    progressElement.hidden = true;
+    spinnerElement.hidden = true;
+    //console.log("Return = "+ result);
+    //return result;        // were not checking if we error'ed anyway
+}
