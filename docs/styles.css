@@ -4,9 +4,13 @@ html, body {
     font-weight: 300;
     height: 100%;
     margin: 0;
-    /* overflow: hidden;  */
 }
-
+/* html, body {
+    height: 100%;width: 100%;margin: 0;
+    background-color: blueviolet;
+    overflow: hidden; 
+} 
+*/
 .nav-box{
     width: 100%;
     display: flex;
@@ -108,40 +112,3 @@ html, body {
     }
 }
   
-
-/* Emscripten - Load-Spinner */
-.emscripten { padding-right: 0; margin-left: auto; margin-right: auto; display: block; }
-textarea.emscripten { font-family: monospace; width: 80%; margin-left:0px;}
-div.emscripten { text-align: center; }
-div.emscripten_border { border: 1px solid black; }
-.spinner {
-  height: 50px;
-  width: 50px;
-  margin: 0px auto;
-  -webkit-animation: rotation .8s linear infinite;
-  -moz-animation: rotation .8s linear infinite;
-  -o-animation: rotation .8s linear infinite;
-  animation: rotation 0.8s linear infinite;
-  border-left: 10px solid rgb(0,150,240);
-  border-right: 10px solid rgb(0,150,240);
-  border-bottom: 10px solid rgb(0,150,240);
-  border-top: 10px solid rgb(100,0,200);
-  border-radius: 100%;
-  background-color: rgb(200,100,250);
-}
-@-webkit-keyframes rotation {
-  from {-webkit-transform: rotate(0deg);}
-  to {-webkit-transform: rotate(360deg);}
-}
-@-moz-keyframes rotation {
-  from {-moz-transform: rotate(0deg);}
-  to {-moz-transform: rotate(360deg);}
-}
-@-o-keyframes rotation {
-  from {-o-transform: rotate(0deg);}
-  to {-o-transform: rotate(360deg);}
-}
-@keyframes rotation {
-  from {transform: rotate(0deg);}
-  to {transform: rotate(360deg);}
-}
