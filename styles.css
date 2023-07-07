@@ -1,32 +1,34 @@
 @import url(https://fonts.googleapis.com/css?family=Dosis:200,300,400,500,600,700,800);
 html, body {
-    font-family: "Dosis";
-    font-weight: 300;
-    height: 100%;
-    margin: 0;
-    /* overflow: hidden;  */
+  font-family: "Dosis";
+  font-weight: 300;
+  height: 100%;
+  margin: 0;
+  /* overflow: hidden;  */
 }
 
 .nav-box{
-    width: 100%;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    justify-content: space-between;
-    background-color: #f1f3f5;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  background-color: #f1f3f5;
+  padding-left: 1rem;
+  padding-right: 1rem;
 }
 .nav-left {
-    text-align: left;
-    padding: 10px 0px;
-    font-size: 1rem;
+  text-align: left;
+  padding: 10px 0px;
+  font-size: 1rem;
 }
 .nav-right {
-    display: flex;
-    flex-direction: row;
-    flex-wrap:nowrap;
-    text-align: right;
-    padding: 10px 0px;
-    font-size: 1rem;
+  display: flex;
+  flex-direction: row;
+  flex-wrap:nowrap;
+  text-align: right;
+  padding: 10px 0px;
+  font-size: 1rem;
 }
 
 
@@ -70,9 +72,9 @@ html, body {
 /* Create two unequal columns that floats next to each other */
 /* Create two unequal columns that floats next to each other */
 .column {
-    float: left;
-    height: 300px; /* Should be removed. Only for demonstration */
-    height: 100%;
+  float: left;
+  height: 300px; /* Should be removed. Only for demonstration */
+  height: 100%;
 }
   
 .left {
@@ -81,31 +83,32 @@ html, body {
 }
   
 .right {
-    width: 40%;
-    height: 100%;
+  width: 40%;
+  height: 100%;
 }
   
 /* Clear floats after the columns */
 .row {
-    height: 90%;
+  height: 90%;
+  padding: 10px;
 }
 .row:after {
-    content: "";
-    display: table;
-    clear: both;
+  content: "";
+  display: table;
+  clear: both;
 }
 
   
 /* Responsive layout - makes the two columns stack on top of each other instead of next to each other */
 @media screen and (max-width: 900px) {
-    .left {
-        width: 100%;
-        height: 70%
-    }
-    .right {
-        width: 100%;
-        height: 40%
-    }
+  .left {
+    width: 100%;
+    height: 70%
+  }
+  .right {
+    width: 100%;
+    height: 40%
+  }
 }
   
 
