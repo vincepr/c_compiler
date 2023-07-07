@@ -24,19 +24,31 @@
     <div class="emscripten">
       <progress value="0" max="100" id="progress" hidden=1></progress>  
     </div>
-    <hr/>
-    <div>
-      <button id="btnhello">hello.lox</button>
-      <button id="btnfib">fib.lox</button>
-      <button id="btnclojure">closure.lox</button>
-      <button id="btnerror">error.lox</button>
-      <button id="btncompile">COMPILE AND RUN</button>
-    </div>    
-    <hr/>
-    <div id="container" style="width: 60%; height: 60%; border: 1px solid grey"></div>
-    <hr>
-    <textarea class="emscripten" id="output" style="margin-left:0; width: 60%; height: 30%; resize: none;">some text</textarea>
-    <hr/>
+
+    <div class="nav-box">
+      <nav class="nav-left">
+          <button class="button" id="btnhello">hello.lox</button>
+          <button class="button" id="btnfib">fix.lox</button>
+          <button class="button" id="btnclojure">Button3</button>
+          <button class="button" id="btnerror">Button4</button>
+          <button class="button green" >on Github</button>
+      </nav>
+      <nav class="nav-right">
+          <label class="switch">bytecode <input type="checkbox"></label>
+          <label class="switch">trace <input type="checkbox"></label>
+          <label class="switch">log GC <input type="checkbox"></label>
+          <button class="button green">Run ▶</button>
+      </nav>
+    </div>
+
+    <div class="row">
+        <div class="column left" id="container">
+          <!-- Monaco Code Editor takes control over this div! -->
+        </div>
+        <div class="column right" style="background-color:#bbb;">
+          <textarea class="emscripten" id="output" type="text" autocorrect="off" style="margin-left:0; width: 100%; height: 100%; resize: none;background-color:#bbb;">some text</textarea>
+        </div>
+    </div>
 
     
     <script src="load_emscripten.js" type='text/javascript'></script>
