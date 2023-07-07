@@ -8,14 +8,13 @@ html, body {
 }
 
 .nav-box{
-  width: 100%;
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
   justify-content: space-between;
   background-color: #f1f3f5;
-  padding-left: 1rem;
-  padding-right: 1rem;
+  padding-left: 10px;
+  padding-right: 10px;
 }
 .nav-left {
   text-align: left;
@@ -30,7 +29,6 @@ html, body {
   padding: 10px 0px;
   font-size: 1rem;
 }
-
 
 
 /* BUTTON STYLING*/
@@ -67,6 +65,7 @@ html, body {
 .green {
 	background-color: #1fa3ec;
 }
+
 
 /*TEXTEDITOR & OUTPUT*/
 /* Create two unequal columns that floats next to each other */
