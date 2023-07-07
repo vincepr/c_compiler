@@ -173,3 +173,19 @@ A feature of closures is, that they hold onto vairables as long as needed. Even 
 The `OP_CLOSE_UPVALUE` bytecode takes ownership of a local variable, that is leaving scope. By storing it on the heap.
 
 At runtime the VM stores a list of all upvalues that capture a particular local variable that way. Because otherwise 2 closures pointing/capturing the same variable would not be possible. `ObjUpvalue* openUpvalues;` in the VM struct.
+
+## GC - Garbage Collection
+### Defining reachability
+- All roots are reachable. (roots are any object that the VM can reach directly, ex. global or variable on the stack)
+- Any object referred to from a reachable object is itself reachable. (ex. some root points to some obj on the heap)
+
+These are the values that still live and need to stay in memory. Any other value can be GC'd.
+
+### Rules for our GC
+- starting with the roots, traverse trough object references to find the full set of unreachable objects.
+- Free all objects not in that Set (Our Hashmap we can 'abuse' as HashSet).
+
+### Mark-Sweep Garbage Collection
+Originates from Lisp. 2 Phases:
+- Marking:
+
