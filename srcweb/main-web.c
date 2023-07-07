@@ -33,7 +33,7 @@ int runCompiler(char* sourceCode, bool isBytecode, bool isTrace, bool isGc) {
     // we pass down optional-flags set in frontend:
     #ifdef DEBUG_PRINT_CODE
     FLAG_PRINT_CODE = isBytecode;
-    if (FLAG_PRINT_CODE ) printf("FLAG_PRINT_MODE is ON \n");
+    if (FLAG_PRINT_CODE ) printf("FLAG_PRINT_BYTECODE is ON \n");
     #endif
     #ifdef DEBUG_TRACE_EXECUTION
     FLAG_TRACE_EXECUTION = isTrace;
@@ -41,7 +41,7 @@ int runCompiler(char* sourceCode, bool isBytecode, bool isTrace, bool isGc) {
     #endif
     #ifdef DEBUG_PRINT_GARBAGE_COLLECTION
     FLAG_PRINT_GARBAGE_COLLECTION = isGc;
-    if (FLAG_PRINT_GARBAGE_COLLECTION ) printf("FLAG_TRACE_EXECUTION is ON \n");
+    if (FLAG_PRINT_GARBAGE_COLLECTION ) printf("FLAG_SHOW_GARBAGE_COLLECTION is ON \n");
     #endif
 
 
