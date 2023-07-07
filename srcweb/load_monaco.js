@@ -169,6 +169,7 @@ const allfiles = {
         name: "hello.lox",
         language: "lox",
         theme: "ace",
+        minimap: { enabled: false },
         value: `//you can leave out () with print: \n
 for (var i=0; i<10; i=i+1){
   print "Bob Ross";
@@ -180,6 +181,7 @@ for (var i=0; i<10; i=i+1){
         name: "fib.lox",
         language: "lox",
         theme: "ace",
+        minimap: { enabled: false },
         value: `// calculate a fibonacci-nr and return the time it took in seconds:\n
 fun fib(n) {
   if (n < 2) return n;
@@ -195,6 +197,7 @@ print clock() - start;`,
         name: "clojure.lox",
         language: "lox",
         theme: "vs",
+        minimap: { enabled: false },
         value: `// when closures are implemented this should print out outer:\n
 var x = "global";
 fun outer() {
