@@ -121,7 +121,12 @@ label {
 
 /* Emscripten - Load-Spinner */
 .emscripten { padding-right: 0; margin-left: auto; margin-right: auto; display: block; }
-textarea.emscripten { font-family: monospace; width: 80%; margin-left:0px; background-color: #f1f3f5;}
+textarea.emscripten { 
+  font-family: monospace;
+  width: 80%;
+  margin-left:0px;
+  background-color: #f1f3f5;
+}
 div.emscripten { text-align: center; }
 div.emscripten_border { border: 1px solid black; }
 .spinner {
