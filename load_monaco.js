@@ -268,7 +268,7 @@ document.getElementById("btncompile").addEventListener("click", () => {
     let isGC = document.getElementById('gc').checked ==true;
 
         
-    progressElement.hidden = false;
+    //progressElement.hidden = false;
     spinnerElement.hidden = false;
     // we have to wait for the hidden to get updated before we call the compile function
     // 34ms > 1frame on 30fps. thats as low as i'm willing to support
@@ -283,7 +283,7 @@ function compileCall({currentText:currentText, isBytecode:isBytecode, isTrace:is
         [currentText, isBytecode, isTrace, isGC] // arguments
     )
     // remove the spinner
-    progressElement.hidden = true;
+    //progressElement.hidden = true;
     spinnerElement.hidden = true;
     //console.log("Return = "+ result);
     //return result;        // were not checking if we error'ed anyway

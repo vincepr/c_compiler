@@ -120,6 +120,18 @@ label {
 
 
 /* Emscripten - Load-Spinner */
+#status {
+  color: rgb(222, 56, 56);
+}
+#spinner {
+  z-index: 1;
+  position: absolute;
+  margin-left: auto;
+  margin-right: auto;
+  left: 0;
+  right: 0;
+  text-align: center;
+}
 .emscripten { padding-right: 0; margin-left: auto; margin-right: auto; display: block; }
 textarea.emscripten { 
   font-family: monospace;
@@ -137,12 +149,12 @@ div.emscripten_border { border: 1px solid black; }
   -moz-animation: rotation .8s linear infinite;
   -o-animation: rotation .8s linear infinite;
   animation: rotation 0.8s linear infinite;
-  border-left: 10px solid rgb(0,150,240);
-  border-right: 10px solid rgb(0,150,240);
-  border-bottom: 10px solid rgb(0,150,240);
-  border-top: 10px solid rgb(100,0,200);
+  border-left: 10px solid rgb(32, 240, 0);
+  border-right: 10px solid rgb(32, 240, 0);
+  border-bottom: 10px solid rgb(32, 240, 0);
+  border-top: 10px solid rgb(11, 98, 7);
   border-radius: 100%;
-  background-color: rgb(200,100,250);
+  background-color: rgb(85, 121, 76);
 }
 @-webkit-keyframes rotation {
   from {-webkit-transform: rotate(0deg);}
