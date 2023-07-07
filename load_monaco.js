@@ -170,6 +170,7 @@ const allfiles = {
         language: "lox",
         theme: "ace",
         minimap: { enabled: false },
+        automaticLayout: true,
         value: `//you can leave out () with print: \n
 for (var i=0; i<10; i=i+1){
   print "Bob Ross";
