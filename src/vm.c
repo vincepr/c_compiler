@@ -66,7 +66,12 @@ static void defineNative(const char* name, NativeFn function) {
 
 void initVM() {
     resetStack();
-    vm.objects = NULL;      // reset linked list of all active objects
+    vm.objects = NULL;      // reset linked list of all active object
+    vm.bytesAllocated = 0;
+    vm.nextGC = 1024 * 1024;// the first GC will get triggered when Heap gets bigger than this value
+    vm.grayCount = 0;       // init the gray-Stack we use in our GC-Algorithm:
+    vm.grayCapacity = 0;
+    vm.grayStack = NULL;
     initTable(&vm.globals); // setup the HashTable for global variables
     initTable(&vm.strings); // setup the HashTable for used strings
 
@@ -186,8 +191,8 @@ static bool isFalsey(Value value) {
 // - allocate char-array for the result (with calculated length)
 // - copy into our result first a, then b, then the Nullterminator:'\0'
 static void concatenate() {
-    ObjString* b = AS_STRING(pop());
-    ObjString* a = AS_STRING(pop());
+    ObjString* b = AS_STRING(peek(0));  // we read and temporarily it but leave it on the stack
+    ObjString* a = AS_STRING(peek(1));  // to make sure GC can find it
 
     int length = a->length + b->length;
     char* chars = ALLOCATE(char, length + 1);
@@ -196,6 +201,8 @@ static void concatenate() {
     chars[length] = '\0';
 
     ObjString* result = takeString(chars, length);
+    pop();                              // we pop the 2 string objects from the stack
+    pop();                              // that we only left there for GC safety
     push(OBJ_VAL(result));
 }
 

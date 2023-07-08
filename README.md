@@ -173,3 +173,46 @@ A feature of closures is, that they hold onto vairables as long as needed. Even 
 The `OP_CLOSE_UPVALUE` bytecode takes ownership of a local variable, that is leaving scope. By storing it on the heap.
 
 At runtime the VM stores a list of all upvalues that capture a particular local variable that way. Because otherwise 2 closures pointing/capturing the same variable would not be possible. `ObjUpvalue* openUpvalues;` in the VM struct.
+
+## GC - Garbage Collection
+### Defining reachability
+- All roots are reachable. (roots are any object that the VM can reach directly, ex. global or variable on the stack)
+- Any object referred to from a reachable object is itself reachable. (ex. some root points to some obj on the heap)
+
+These are the values that still live and need to stay in memory. Any other value can be GC'd.
+
+### Rules for our GC
+- starting with the roots, traverse trough object references to find the full set of unreachable objects.
+- Free all objects not in that Set (Our Hashmap we can 'abuse' as HashSet).
+
+### Mark-Sweep Garbage Collection
+Originates from Lisp. 2 Phases. Is a **tracing garbage collector**. (vs reference counting)
+- **Marking:** start at roots and graph traverse all reachable objects. Each time we visit an object we mark it. (so we can stop if we hit again)
+- **Sweeping:** now go trough all unmarked ojects and free them.
+
+### Tricolor abstraction
+As the Collector walks the grap of objects we have to make sure it doesnt get stuck or skips anything.
+- **White**: we have not reached the object at all.
+- **Gray**: during marking when we first reach an object. BUT we have not checked (or checked all paths) if it further links to other Objects
+- **Black**: we have marked all the object it references. (the GC-Algorithm is done with this node)
+
+Now a simple alorithm emerges:
+1. Start all nodes white.
+2. find all roots and mark them gray.
+3. repeat while there are still gray nodes:
+    1. pick a gray object. Turn any white objects that it holds reference to gray.
+    2. mark the object from previous step black.
+
+### Weak references and string pool
+A **weak reference** is a reference that does not protect the referenced object from collection by the GC. We have to handle our string pool this way. The string pool does not get treated as source of roots. 
+
+Removing references to unreachable strings, we do handle specially in `tableRemoveWhite()`, after the mark phase completed (but before `sweep()`).
+
+### How often to GC
+- optional debug flag: `DEBUG_STRESS_GC` will trigger GC at every possible step (for debugging GC problems)
+- Throughput: throughput 90% means we spend 90% of the time running the programm and 10% on GC overhead.
+- Latency: largest continous time a GC-cycle takes. 
+
+clox's gc-collection frequency strategy: **Self-adjusting heap**:
+
+- GC collector frequency automatically adjusts based on the live size of the heap. We track the toal number of bytes of managed memory the VM has allocated. When it goes above a threshold we trigger GC. After GC we note the current size and set the next threshold.

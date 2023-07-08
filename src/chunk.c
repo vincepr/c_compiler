@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include "chunk.h"
 #include "memory.h"
+#include "vm.h"
 
 // initialize a new Chunk. with Default size 0 /empty
 void initChunk(Chunk* chunk) {
@@ -35,7 +36,9 @@ void writeChunk(Chunk* chunk, uint8_t byte, int line) {
 
 // convenient function to add a new constant to the constants-pool
 int addConstant(Chunk* chunk, Value value) {
+    push(value);                        // push it to the stack to make it save from GC removing it
     writeValueArray(&chunk->constants, value);
+    pop();                              // we only pushed it on the stack for GC savety so we pop it again
     return chunk->constants.count - 1;  // returns idx to current last element
 }
 

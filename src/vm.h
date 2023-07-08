@@ -26,14 +26,18 @@ typedef struct {
 typedef struct {
     CallFrame frames[FRAMES_MAX];   // array of CallFrames - The 'call stack' holds reference to all our functions, that havent returned yet. (currently active on the top)
     int frameCount;                 // active instances of CallFrames 
-    //Chunk* chunk;                 // A chunk resembles a Stack of our bytecode instructions that we compile
-    //uint8_t* ip;                  // 
     Value stack[STACK_MAX];         // Stack that holds all currently 'in memory' Values
     Value* stackTop;                // pointer to top of the stack(lastElement + 1) is first to be popped and we add 'above it' when push()
     Table globals;                  // HashMap (key: identifiers, value=global values)
     Table strings;                  // to enable string-interning we store all active-string variables in this table
     ObjUpvalue* openUpvalues;       // 'linked-list' of Upvalues that currently hold a local-variable they enclosed (that already went out of scope -> now needs to be stored on heap directly)
     Obj* objects;                   // head of the linked list of all objects (strings, instances etc) -> useful for keeping track of active Objects -> GarbageCollection
+    // For Garbage-Collection:
+    size_t bytesAllocated;          // To keep track of when GC happens we track current Heap-Size and
+    size_t nextGC;                  // -> when (at what threshold reached) the next GC should get triggered 
+    int grayCount;
+    int grayCapacity;
+    Obj** grayStack;                // array to keep track of gray-nodes (already visited) but not finished(=black-nodes)
 } VM;
 
 // The VM runs the chunk and responds with a value from this enum:

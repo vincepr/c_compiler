@@ -21,12 +21,15 @@
 #ifdef DEBUG_PRINT_CODE
 bool FLAG_PRINT_CODE = false;
 #endif
+
 #ifdef DEBUG_TRACE_EXECUTION
 bool FLAG_TRACE_EXECUTION = false;
 #endif
-#ifdef DEBUG_PRINT_GARBAGE_COLLECTION
-bool FLAG_PRINT_GARBAGE_COLLECTION = false;
+
+#ifdef DEBUG_LOG_GC
+bool FLAG_LOG_GC = false;
 #endif
+
 
 EXTERN EMSCRIPTEN_KEEPALIVE 
 int runCompiler(char* sourceCode, bool isBytecode, bool isTrace, bool isGc) {
@@ -39,15 +42,12 @@ int runCompiler(char* sourceCode, bool isBytecode, bool isTrace, bool isGc) {
     FLAG_TRACE_EXECUTION = isTrace;
     if (FLAG_TRACE_EXECUTION ) printf("FLAG_TRACE_EXECUTION is ON \n");
     #endif
-    #ifdef DEBUG_PRINT_GARBAGE_COLLECTION
-    FLAG_PRINT_GARBAGE_COLLECTION = isGc;
-    if (FLAG_PRINT_GARBAGE_COLLECTION ) printf("FLAG_SHOW_GARBAGE_COLLECTION is ON \n");
+    #ifdef DEBUG_LOG_GC
+    FLAG_LOG_GC = isGc;
+    if (FLAG_LOG_GC ) printf("FLAG_LOG_GC is ON \n");
     #endif
 
-
-    //printf("%s + hello!", str);
-    //printf("MyFunction Called\n");
-    // entry point for our custom javascript
+    
     printf(" -- Compiling code: --\n\n");
 
     // ido the compiling:

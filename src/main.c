@@ -12,12 +12,15 @@
 #ifdef DEBUG_PRINT_CODE
 bool FLAG_PRINT_CODE = true;
 #endif
+
 #ifdef DEBUG_TRACE_EXECUTION
 bool FLAG_TRACE_EXECUTION = true;
 #endif
-#ifdef DEBUG_PRINT_GARBAGE_COLLECTION
-bool FLAG_PRINT_GARBAGE_COLLECTION = true;
+
+#ifdef DEBUG_LOG_GC
+bool FLAG_LOG_GC = true;
 #endif
+
 
 // usual repl behavior, read a line as input then interpret it
 static void runRepl() {
