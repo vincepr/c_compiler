@@ -9,10 +9,6 @@
 #include "../src/debug.h"
 #include "../src/vm.h"
 
-//#undef DEBUG_PRINT_CODE         // comment this out: to enable debug printing
-//#undef DEBUG_TRACE_EXECUTION    // comment this out: to enable trace-execution
-//#undef DEBUG_LOG_GC             // comment this out: to enable loging of GC steps
-#undef DEBUG_STRESS_GC          // comment this out: to enable GC every step
 
 // we define needed Flags:
 #ifdef DEBUG_PRINT_CODE
