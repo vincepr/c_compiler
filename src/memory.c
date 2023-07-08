@@ -19,6 +19,11 @@
     //      Non-Zero    0               Free allocation.
     //      Non-Zero    new<oldSize     Shrink existing allocation.
     //      Non-Zero    new>oldSize     Grow existing allocation.
+//infos for --> realloc(void *ptr, size_t size) <--
+    // ptr: is the pointer to a memory block previously allocated with malloc/calloc/realloc to be reallocated
+        // if it is NULL, a new block is allocated and a pointer to it is returned to by the funciton
+    // size: is the new size for the memory block in bytes
+    // return value: this function returns a pointer to the newly allocated memory, or NULL if the request fails.
 void* reallocate(void* pointer, size_t oldSize, size_t newSize) {
     vm.bytesAllocated += newSize - oldSize;
     if (newSize > oldSize) {
@@ -109,13 +114,6 @@ static void blackenObject(Obj* object) {
     }
 }
 
-// infos for --> realloc(void *ptr, size_t size) <--
-    // ptr: is the pointer to a memory block previously allocated with malloc/calloc/realloc to be reallocated
-        // if it is NULL, a new block is allocated and a pointer to it is returned to by the funciton
-    // size: is the new size for the memory block in bytes
-    // return value: this function returns a pointer to the newly allocated memory, or NULL if the request fails.
-
-
 // helper for freeObjects() - frees a single object (node of the linked list)
 static void freeObject(Obj* object) {
     #ifdef DEBUG_LOG_GC                 // log GC-Event
@@ -151,40 +149,6 @@ static void freeObject(Obj* object) {
             FREE(ObjUpvalue, object);   // ObjUpvalue does not own variable -> only free the reference (GC handles rest)
             break;
     }
-}
-
-// starts our garbage collecting process
-void collectGarbage() {
-    #ifdef DEBUG_LOG_GC
-    if (FLAG_LOG_GC){
-        printf("-- GC begins\n");
-    }
-    size_t before = vm.bytesAllocated;
-    #endif
-
-    markRoots();                        // starts GC by finding & marking all roots(directly reachable objects by VM)
-    traceReferences();                  // walk trough our grayStack will no more grays left (-> we visited everything)
-    tableRemoveWhite(&vm.strings);      // we have to specially handle the weak-reference stringpool.
-    sweep();                            // now we can cleanup everything not marked
-    vm.nextGC = vm.bytesAllocated * GC_HEAP_GROW_FACTOR;    // threshold when next GC gets triggered.
-
-    #ifdef DEBUG_LOG_GC
-    if (FLAG_LOG_GC){
-        printf("-- GC has ended\n");
-        printf("   collected %zu bytes (from %zu to %zu) next at %zu\n", before - vm.bytesAllocated, before, vm.bytesAllocated, vm.nextGC);
-    }
-    #endif
-}
-
-// called when freeVm() shuts our programm down - walk our linked-list of active objects and free each from memory.
-void freeObjects() {
-    Obj* object = vm.objects;
-    while (object != NULL) {
-        Obj* next = object->next;
-        freeObject(object);
-        object = next;
-    }
-    free(vm.grayStack);
 }
 
 // helper for collectGarbage() - starts GC by finding & marking all roots(directly reachable objects by VM)
@@ -241,4 +205,38 @@ static void sweep() {
             freeObject(unreached);
         }
     }
+}
+
+// starts our garbage collecting process
+void collectGarbage() {
+    #ifdef DEBUG_LOG_GC
+    if (FLAG_LOG_GC){
+        printf("-- GC begins\n");
+    }
+    size_t before = vm.bytesAllocated;
+    #endif
+
+    markRoots();                        // starts GC by finding & marking all roots(directly reachable objects by VM)
+    traceReferences();                  // walk trough our grayStack will no more grays left (-> we visited everything)
+    tableRemoveWhite(&vm.strings);      // we have to specially handle the weak-reference stringpool.
+    sweep();                            // now we can cleanup everything not marked
+    vm.nextGC = vm.bytesAllocated * GC_HEAP_GROW_FACTOR;    // threshold when next GC gets triggered.
+
+    #ifdef DEBUG_LOG_GC
+    if (FLAG_LOG_GC){
+        printf("-- GC has ended\n");
+        printf("   collected %zu bytes (from %zu to %zu) next at %zu\n", before - vm.bytesAllocated, before, vm.bytesAllocated, vm.nextGC);
+    }
+    #endif
+}
+
+// called when freeVm() shuts our programm down - walk our linked-list of active objects and free each from memory.
+void freeObjects() {
+    Obj* object = vm.objects;
+    while (object != NULL) {
+        Obj* next = object->next;
+        freeObject(object);
+        object = next;
+    }
+    free(vm.grayStack);
 }
