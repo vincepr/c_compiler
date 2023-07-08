@@ -50,6 +50,10 @@ typedef enum {
     OP_CLOSE_UPVALUE,   // (when local goes out of scope and an upvalue still needs it) it takes ownership of it (the value on the stack)
     OP_PRINT,           // print expression. like "print x+8;"  -> with x="hello" -> "hello8"
     OP_RETURN,          // return from the current function
+    // classes:
+    OP_GET_PROPERTY,    // gets a field of class-instance ex:"print Peaches.isTasty" -> prints true
+    OP_SET_PROPERTY,    // sets a field of class-instance  ex: "Preaches.isTasty = false" sets isTasty field
+    OP_CLASS,           // creates Runtime class-object is followed by idx for name-table to class-name-identifier
 } OpCode;
 
 // holds the instructions (dynamic-array of bytes)

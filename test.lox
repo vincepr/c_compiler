@@ -1,3 +1,5 @@
+// just a file to dump some lox code into were testing while interpreter is build
+
 fun doSomething() {
     var x = 0;
     while (x<10) {
@@ -14,12 +16,36 @@ fun outer() {
   }
   inner();
 }
-outer(); // should print outside
+//outer(); // should print outside
 
-// // testing stack trance:
-// fun a() { b(); }
-// fun b() { c(); }
-// fun c() {
-//     c("too", "many");
-// }
-// a();
+
+
+// testing stack trance:
+fun a() { b(); }
+fun b() { c(); }
+fun c() {
+  c("too", "many"); // this only 'breaks' at runtime
+}
+// a();         // will produce a full stacktrace with the error in c()
+
+
+
+
+
+
+
+
+// some test code for classes:
+class Brioche {
+
+}
+
+print Brioche;    // the class -> prints "Brioche"
+print Brioche();  // a instance of the class Brioche -> prints "Brioche instance"
+
+class Pair {}
+
+var pair = Pair();
+pair.first = 1;
+//pair.second = 2;
+//print pair.first + pair.second; // 3.
