@@ -2,3 +2,8 @@
 .vscode/*
 binary.out
 *.o
+
+build_wasm/*.html
+build_wasm/*.js
+build_wasm/*.css
+build_wasm/*.wasm
