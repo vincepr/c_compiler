@@ -7,23 +7,17 @@
 #include "debug.h"
 #include "vm.h"
 
-#undef DEBUG_PRINT_CODE         // comment this out: to enable debug printing
-#undef DEBUG_TRACE_EXECUTION    // comment this out: to enable trace-execution
-#undef DEBUG_LOG_GC             // comment this out: to enable loging of GC steps
-#undef DEBUG_STRESS_GC          // comment this out: to enable GC every step
-
-
 // we define needed Flags: ( we could create flags from main(argv[]) from those) 
 #ifdef DEBUG_PRINT_CODE
-bool FLAG_PRINT_CODE = true;
+bool FLAG_PRINT_CODE = false;
 #endif
 
 #ifdef DEBUG_TRACE_EXECUTION
-bool FLAG_TRACE_EXECUTION = true;
+bool FLAG_TRACE_EXECUTION = false;
 #endif
 
 #ifdef DEBUG_LOG_GC
-bool FLAG_LOG_GC = true;
+bool FLAG_LOG_GC = false;
 #endif
 
 
