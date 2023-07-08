@@ -9,13 +9,10 @@
 #include "../src/debug.h"
 #include "../src/vm.h"
 
-// emscripten saveguard for copiling as cpp
-#ifdef __cplusplus
-#define EXTERN extern "C"
-#else
-#define EXTERN
-#endif
-
+//#undef DEBUG_PRINT_CODE         // comment this out: to enable debug printing
+//#undef DEBUG_TRACE_EXECUTION    // comment this out: to enable trace-execution
+//#undef DEBUG_LOG_GC             // comment this out: to enable loging of GC steps
+#undef DEBUG_STRESS_GC          // comment this out: to enable GC every step
 
 // we define needed Flags:
 #ifdef DEBUG_PRINT_CODE
@@ -31,7 +28,7 @@ bool FLAG_LOG_GC = false;
 #endif
 
 
-EXTERN EMSCRIPTEN_KEEPALIVE 
+EMSCRIPTEN_KEEPALIVE 
 int runCompiler(char* sourceCode, bool isBytecode, bool isTrace, bool isGc) {
     // we pass down optional-flags set in frontend:
     #ifdef DEBUG_PRINT_CODE
