@@ -65,9 +65,11 @@ static ObjString* allocateString(char* chars, int length, uint32_t hash) {
     string->length = length;
     string->chars = chars;
     string->hash = hash;
+    push(OBJ_VAL(string));      // we only push it to the stack in case a GC happens next step
     // insert our String into the stringpool-HashTable:
     // - we use it more as a HashSet (we ONLY care about values so we just NIL the value)
-    tableSet(&vm.strings, string, NIL_VAL);     
+    tableSet(&vm.strings, string, NIL_VAL);
+    pop();                      // we remove our savety push from the stack
     return string;
 }
 

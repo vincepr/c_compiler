@@ -46,7 +46,7 @@ void markObject(Obj* object) {
     #ifdef DEBUG_LOG_GC                 // Log GC-Event
     if (FLAG_LOG_GC) { 
         printf("%p mark ", (void*)object);
-        printfValue(OBJ_VAL(object));
+        printValue(OBJ_VAL(object));
         printf("\n");
     }
     #endif

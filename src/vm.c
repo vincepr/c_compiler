@@ -191,8 +191,8 @@ static bool isFalsey(Value value) {
 // - allocate char-array for the result (with calculated length)
 // - copy into our result first a, then b, then the Nullterminator:'\0'
 static void concatenate() {
-    ObjString* b = AS_STRING(pop());
-    ObjString* a = AS_STRING(pop());
+    ObjString* b = AS_STRING(peek(0));  // we read and temporarily it but leave it on the stack
+    ObjString* a = AS_STRING(peek(1));  // to make sure GC can find it
 
     int length = a->length + b->length;
     char* chars = ALLOCATE(char, length + 1);
@@ -201,6 +201,8 @@ static void concatenate() {
     chars[length] = '\0';
 
     ObjString* result = takeString(chars, length);
+    pop();                              // we pop the 2 string objects from the stack
+    pop();                              // that we only left there for GC safety
     push(OBJ_VAL(result));
 }
 
