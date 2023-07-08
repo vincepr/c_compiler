@@ -27,7 +27,7 @@ bool FLAG_TRACE_EXECUTION = false;
 #endif
 
 #ifdef DEBUG_LOG_GC
-extern bool FLAG_LOG_GC = false;
+bool FLAG_LOG_GC = false;
 #endif
 
 
