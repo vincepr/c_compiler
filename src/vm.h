@@ -33,6 +33,8 @@ typedef struct {
     ObjUpvalue* openUpvalues;       // 'linked-list' of Upvalues that currently hold a local-variable they enclosed (that already went out of scope -> now needs to be stored on heap directly)
     Obj* objects;                   // head of the linked list of all objects (strings, instances etc) -> useful for keeping track of active Objects -> GarbageCollection
     // For Garbage-Collection:
+    size_t bytesAllocated;          // To keep track of when GC happens we track current Heap-Size and
+    size_t nextGC;                  // -> when (at what threshold reached) the next GC should get triggered 
     int grayCount;
     int grayCapacity;
     Obj** grayStack;                // array to keep track of gray-nodes (already visited) but not finished(=black-nodes)

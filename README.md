@@ -207,3 +207,12 @@ Now a simple alorithm emerges:
 A **weak reference** is a reference that does not protect the referenced object from collection by the GC. We have to handle our string pool this way. The string pool does not get treated as source of roots. 
 
 Removing references to unreachable strings, we do handle specially in `tableRemoveWhite()`, after the mark phase completed (but before `sweep()`).
+
+### How often to GC
+- optional debug flag: `DEBUG_STRESS_GC` will trigger GC at every possible step (for debugging GC problems)
+- Throughput: throughput 90% means we spend 90% of the time running the programm and 10% on GC overhead.
+- Latency: largest continous time a GC-cycle takes. 
+
+clox's gc-collection frequency strategy: **Self-adjusting heap**:
+
+- GC collector frequency automatically adjusts based on the live size of the heap. We track the toal number of bytes of managed memory the VM has allocated. When it goes above a threshold we trigger GC. After GC we note the current size and set the next threshold.

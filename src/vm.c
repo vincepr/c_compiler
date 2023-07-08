@@ -67,6 +67,8 @@ static void defineNative(const char* name, NativeFn function) {
 void initVM() {
     resetStack();
     vm.objects = NULL;      // reset linked list of all active object
+    vm.bytesAllocated = 0;
+    vm.nextGC = 1024 * 1024;// the first GC will get triggered when Heap gets bigger than this value
     vm.grayCount = 0;       // init the gray-Stack we use in our GC-Algorithm:
     vm.grayCapacity = 0;
     vm.grayStack = NULL;

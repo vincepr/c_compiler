@@ -10,6 +10,8 @@
 #include "debug.h"
 #endif
 
+#define GC_HEAP_GROW_FACTOR 2           // double threshold when next GC gets triggered each time.
+
 //  The single function used for all dynamic memory management in clox 
 //  (this is neccessary for the Garbage Collector)
     // if   -oldSize-   -newSize-       -then do Operation:-
@@ -18,10 +20,14 @@
     //      Non-Zero    new<oldSize     Shrink existing allocation.
     //      Non-Zero    new>oldSize     Grow existing allocation.
 void* reallocate(void* pointer, size_t oldSize, size_t newSize) {
+    vm.bytesAllocated += newSize - oldSize;
     if (newSize > oldSize) {
-        #ifdef DEBUG_STRESS_GC      // this FLAG -> GC at every possible time
+        #ifdef DEBUG_STRESS_GC          // this FLAG -> GC at every possible time
         collectGarbage();
         #endif
+        if (vm.bytesAllocated > vm.nextGC) {    
+            collectGarbage();           // GC only triggers if the threshold(nextGC) gets exceded
+        }
     }
     if (newSize == 0) {
         free(pointer);
@@ -153,16 +159,19 @@ void collectGarbage() {
     if (FLAG_LOG_GC){
         printf("-- GC begins\n");
     }
+    size_t before = vm.bytesAllocated;
     #endif
 
     markRoots();                        // starts GC by finding & marking all roots(directly reachable objects by VM)
     traceReferences();                  // walk trough our grayStack will no more grays left (-> we visited everything)
     tableRemoveWhite(&vm.strings);      // we have to specially handle the weak-reference stringpool.
     sweep();                            // now we can cleanup everything not marked
+    vm.nextGC = vm.bytesAllocated * GC_HEAP_GROW_FACTOR;    // threshold when next GC gets triggered.
 
     #ifdef DEBUG_LOG_GC
     if (FLAG_LOG_GC){
         printf("-- GC has ended\n");
+        printf("   collected %zu bytes (from %zu to %zu) next at %zu\n", before - vm.bytesAllocated, before, vm.bytesAllocated, vm.nextGC);
     }
     #endif
 }
