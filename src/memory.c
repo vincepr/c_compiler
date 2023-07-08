@@ -155,8 +155,10 @@ void collectGarbage() {
     }
     #endif
 
-    markRoots();            // starts GC by finding & marking all roots(directly reachable objects by VM)
-    traceReferences();      // walk trough our grayStack
+    markRoots();                        // starts GC by finding & marking all roots(directly reachable objects by VM)
+    traceReferences();                  // walk trough our grayStack will no more grays left (-> we visited everything)
+    tableRemoveWhite(&vm.strings);      // we have to specially handle the weak-reference stringpool.
+    sweep();                            // now we can cleanup everything not marked
 
     #ifdef DEBUG_LOG_GC
     if (FLAG_LOG_GC){
@@ -176,7 +178,7 @@ void freeObjects() {
     free(vm.grayStack);
 }
 
-// starts GC by finding & marking all roots(directly reachable objects by VM)
+// helper for collectGarbage() - starts GC by finding & marking all roots(directly reachable objects by VM)
 static void markRoots() {
     // walk all the local variables on the stack:
     for (Value* slot = vm.stack; slot < vm.stackTop; slot++) {
@@ -196,7 +198,7 @@ static void markRoots() {
     markCompilerRoots();
 }
 
-// while grayStack isnt empty keep going:
+// helper for collectGarbage() - while grayStack isnt empty keep going:
 //      1. pick a gray object. Turn any white objects that it holds reference to gray.
 //      2. mark the object from previous step black.
 
@@ -204,5 +206,30 @@ static void traceReferences() {
     while (vm.grayCount > 0) {
         Obj* object = vm.grayStack[--vm.grayCount];
         blackenObject(object);          // mark the object black
+    }
+}
+
+// helper for collectGarbage() - after marking process has finished, this cleans up everything without a mark
+// - walks linked-list of every object in the heap, checking their marked bits
+static void sweep() {
+    Obj* previous = NULL;
+    Obj* object = vm.objects;
+    while (object != NULL) {
+        if (object->isMarked) {
+            // has mark -> skipp it
+            object->isMarked = false;   // reset state for next GC-cycle
+            previous = object;
+            object = object->next;
+        } else {
+            // has NO mark -> free it after looking up next obj. We also connect linked-list from previous->next.
+            Obj* unreached = object;
+            object = object->next;
+            if (previous != NULL) {
+                previous->next = object;
+            } else {
+                vm.objects = object;
+            }
+            freeObject(unreached);
+        }
     }
 }

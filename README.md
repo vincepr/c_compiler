@@ -202,3 +202,8 @@ Now a simple alorithm emerges:
 3. repeat while there are still gray nodes:
     1. pick a gray object. Turn any white objects that it holds reference to gray.
     2. mark the object from previous step black.
+
+### Weak references and string pool
+A **weak reference** is a reference that does not protect the referenced object from collection by the GC. We have to handle our string pool this way. The string pool does not get treated as source of roots. 
+
+Removing references to unreachable strings, we do handle specially in `tableRemoveWhite()`, after the mark phase completed (but before `sweep()`).

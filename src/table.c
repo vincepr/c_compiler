@@ -157,6 +157,19 @@ ObjString* tableFindString(Table* table, const char* chars, int length, uint32_t
     }
 }
 
+// helper for collectGarbage() - we have to specially handle the weak-reference stringpool in our GC
+// - the string-table only uses the key (functions as a HashSet) 
+// -> so we can check if the key string object's mark is not set
+// -> its a white object that gets GC'd this cycle -> we remove it from string-table aswell
+void tableRemoveWhite(Table* table) {
+    for (int i=0; i<table->capacity; i++) {
+        Entry* entry = &table->entries[i];
+        if (entry->key != NULL && !entry->key->obj.isMarked) {
+            tableDelete(table, entry->key);
+        }
+    }
+}
+
 // used for GC - walks all the global variables in use and marks everything on heap that gets referenced.
 // - we also walk all the key strings since GC collects those aswell
 void markTable(Table* table) {
