@@ -76,4 +76,7 @@ fun incrementClosure() {
 var a = incrementClosure();
 var b = incrementClosure();
 a();
-a();
+a();  // this captures the same inc as the above
+b();  // this captures another inc
+b();  // same inc as above
+b();  // same inc as above

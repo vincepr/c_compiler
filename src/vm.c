@@ -168,8 +168,15 @@ static ObjUpvalue* captureUpvalue(Value* local) {
     if (upvalue != NULL && upvalue->location == local)  {
         return upvalue;             // or return reference if local is already captured
     }
-    ObjUpvalue* createUpvalue = newUpvalue(local);  // allocates the new upvalue
-    return createUpvalue;
+    ObjUpvalue* createdUpvalue = newUpvalue(local);  // allocates the new upvalue
+    // otherwise we create a new upvalue for our local slot and insert it into the list at the right locaton:
+    createdUpvalue->next = upvalue;
+    if (prevUpvalue == NULL) {
+        vm.openUpvalues = createdUpvalue;   // we hit end of list -> we insert at head of list
+    } else {
+        prevUpvalue->next = createdUpvalue; // we insert between the previous node and next
+    }
+    return createdUpvalue;
 }
 
 // when a function returns local-vars will close -> need to be captured if used in Upvalue
