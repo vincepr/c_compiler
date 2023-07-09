@@ -90,6 +90,11 @@ static void blackenObject(Obj* object) {
     #endif
 
     switch (object->type) {
+        case OBJ_CLASS: {
+            ObjClass* aClass = (ObjClass*)object;
+            markObject((Obj*)aClass->name);                 // the class struct itself
+            break;
+        }
         case OBJ_CLOSURE: {
             ObjClosure* closure = (ObjClosure*)object;
             markObject((Obj*)closure->function);            // the wrapped function
@@ -102,6 +107,12 @@ static void blackenObject(Obj* object) {
             ObjFunction* function = (ObjFunction*)object;
             markObject((Obj*)function->name);
             markArray(&function->chunk.constants);          // Functions have a table full of Locals etc
+            break;
+        }
+        case OBJ_INSTANCE: {
+            ObjInstance* instance = (ObjInstance*)object;
+            markObject((Obj*)instance->pClass);
+            markTable(&instance->fields);                   // Instances have a table of variables/fields it owns
             break;
         }
         case OBJ_UPVALUE:
@@ -123,6 +134,10 @@ static void freeObject(Obj* object) {
     #endif
 
     switch (object->type) {
+        case OBJ_CLASS: {
+            FREE(ObjClass, object);
+            break;
+        }
         case OBJ_CLOSURE: {
             ObjClosure* closure = (ObjClosure*)object;
             FREE_ARRAY(ObjUpvalue*, closure->upvalues, closure->upvalueCount);
@@ -133,6 +148,12 @@ static void freeObject(Obj* object) {
             ObjFunction* function = (ObjFunction*)object;
             freeChunk(&function->chunk);
             FREE(ObjFunction, object);  // functions have to free their own stack
+            break;
+        }
+        case OBJ_INSTANCE: {
+            ObjInstance* instance = (ObjInstance*)object;
+            freeTable(&instance->fields);// each instance has a table for fields of variables it owns 
+            FREE(ObjInstance, object);
             break;
         }
         case OBJ_NATIVE: {

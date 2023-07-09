@@ -131,6 +131,12 @@ static bool callValue(Value callee, int argCount) {
         switch(OBJ_TYPE(callee)) {
         // since lox is a dynamic language, we need to check types calling a Function/Method at runtime-type. 
         // - to block: "a_string"(); or "var x = 123; x()" 
+            case OBJ_CLASS: {
+                // To instance a Class we reuse callValue - instead of 'new SomeClass' we do 'SomeClass()'
+                ObjClass* pClass = AS_CLASS(callee);
+                vm.stackTop[-argCount -1] = OBJ_VAL(newInstance(pClass));   
+                return true;
+            }
             case OBJ_CLOSURE:
                 return call(AS_CLOSURE(callee), argCount);
             case OBJ_NATIVE: {
@@ -399,15 +405,50 @@ static InterpretResult run() {
                 }
                 break;
             }
-            case OP_CLOSE_UPVALUE:                                      // we have to hoist a local-variable to the heap (because of closure)
+            case OP_CLOSE_UPVALUE:              // we have to hoist a local-variable to the heap (because of closure)
                 closeUpvalues(vm.stackTop -1);
                 pop();
                 break;
+            case OP_GET_PROPERTY: {             // expression to the left of dot has already executed (instance on stack)
+                // we have to check against non-instances calling this: 'var x = true; print x.fakeField;'
+                if (!IS_INSTANCE(peek(0))) {
+                    runtimeError("Only instances have properties.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                ObjInstance* instance = AS_INSTANCE(peek(0));
+                ObjString* name = READ_STRING();
+                Value value;
+                //                              we read the field name from name-lookuptable:
+                if (tableGet(&instance->fields, name, &value)) {
+                    pop();                      // if variable exists we pop it
+                    push(value);                // and push the value of the variable
+                    break;
+                }
+                //                              if field doesnt exists we runtime error:
+                runtimeError("Undefined property '%s'.", name->chars);
+                return INTERPRET_RUNTIME_ERROR;
+            }
+            case OP_SET_PROPERTY: {
+                // we have to check against non-instances calling this: 'var x=false; var x.y = true;'
+                if (!IS_INSTANCE(peek(1))) {
+                    runtimeError("Only instances have fields.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                // when called Stack top looks like this -> instance | value to be stored | ... 
+                ObjInstance* instance = AS_INSTANCE(peek(1));       // get the field name
+                // store the value on top of the stack into instance field table
+                tableSet(&instance->fields, READ_STRING(), peek(0));
+                Value value = pop();
+                pop();
+                push(value);    // here basically leave top element on stack but remove the one one below that
+                break;          // this is done because a setter is itself an expression
+            }
+            
             // OP_RETURN - when a function returns a value that value will be currently on the top of the stack
             // - so we can pop that value, then dispose of the whole functions StackFrame
             case OP_RETURN: {
                 Value result = pop();
-                closeUpvalues(frame->slots);        // when a function returns local-vars will close -> need to be captured if used in Upvalue
+                closeUpvalues(frame->slots);    // when a function returns local-vars will close -> need to be captured if used in Upvalue
                 vm.frameCount--;
                 if(vm.frameCount == 0) {
                     // if we reached the last CallFrame it means we finished executing the top-level code -> the program is done.
@@ -418,8 +459,12 @@ static InterpretResult run() {
                 push(result);   // we push that result of the finished function back on the stack. (one level lower)
                 frame = &vm.frames[vm.frameCount - 1];
                 break;
-
-            }
+            }   
+            // creates Runtime class-object is followed by idx for name-table to class-name-identifier
+            // - it just loads string for that class and pass that to newClass()
+            case OP_CLASS:
+                push(OBJ_VAL(newClass(READ_STRING())));
+                break;
         }
     }
 // we only need our macros in run() so we scope them explicity to only be available here:

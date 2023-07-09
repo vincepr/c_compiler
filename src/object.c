@@ -27,6 +27,13 @@ static Obj* allocateObject(size_t size, ObjType type) {
     return object;
 }
 
+// helper for ALLOCATE_OBJ macro - constructor for a new Class Object
+ObjClass* newClass(ObjString* name) {
+    ObjClass* aClass = ALLOCATE_OBJ(ObjClass, OBJ_CLASS);
+    aClass->name = name; 
+    return aClass;
+}
+
 // helper for ALLOCATE_OBJ macro- allocates a new ClosureObject that wraps the ObjFunction we put in
 ObjClosure* newClosure(ObjFunction* function) {
     // allocate our Arrays that hold Upvalues in use by this closure:
@@ -52,7 +59,15 @@ ObjFunction* newFunction() {
     return function;
 }
 
-// 
+// helper for ALLOCATE_OBJ macro - allocates instance (runtime) of a class - we pass in the 'parent'Class we build off
+ObjInstance* newInstance(ObjClass* pClass) {
+    ObjInstance* instance = ALLOCATE_OBJ(ObjInstance, OBJ_INSTANCE);
+    instance->pClass = pClass;
+    initTable(&instance->fields);
+    return instance;
+}
+
+// helper for ALLOCATE_OBJ macro - allocates a Native Function (C-Function wrapped and made accessible in lox)
 ObjNative* newNative(NativeFn function) {
     ObjNative* native = ALLOCATE_OBJ(ObjNative, OBJ_NATIVE);
     native->function = function;
@@ -129,11 +144,17 @@ static void printFunction(ObjFunction* function) {
 // helper for printValue() - print functionality for heap allocated datastructures
 void printObject(Value value) {
     switch (OBJ_TYPE(value)) {
+        case OBJ_CLASS:
+            printf("%s", AS_CLASS(value)->name->chars);
+            break;
         case OBJ_CLOSURE:
             printFunction(AS_CLOSURE(value)->function); // bascially we just print the underlying ObjFunction
             break;
         case OBJ_FUNCTION:
             printFunction(AS_FUNCTION(value));
+            break;
+        case OBJ_INSTANCE:
+            printf("%s instance", AS_INSTANCE(value)->pClass->name->chars);
             break;
         case OBJ_NATIVE:
             printf("<native fn>");
