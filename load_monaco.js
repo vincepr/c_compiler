@@ -183,8 +183,9 @@ print pair.first + pair.second; // prints 3.
     "fib.lox": {
         name: "fib.lox",
         language: "lox",
-        theme: "ace",
+        theme: "vs",
         minimap: { enabled: false },
+        automaticLayout: true,
         value: `// calculate a fibonacci-nr and return the time it took in seconds:\n
 fun fib(n) {
   if (n < 2) return n;
@@ -199,8 +200,9 @@ print clock() - start;`,
     "closure.lox": {
         name: "closure.lox",
         language: "lox",
-        theme: "vs",
+        theme: "ace",
         minimap: { enabled: false },
+        automaticLayout: true,
         value: `// when closures are implemented this should print out outer:\n
 var x = "global";
 fun outer() {
@@ -212,20 +214,23 @@ fun outer() {
 }
 outer();    // closure captured "outer" and should print that
 
-// closures here can capture the same outer variable inc.
+
+// closures here can capture the same outer variable inc.\n
 fun incrementClosure() {
-  var inc = 99;
-  fun inner() {
-    inc = inc +10;
-    print inc;
+  var counter = 100;
+  fun increment() {
+    counter = counter +10;
+    print counter;
   }
-  return inner;
+  return increment;
 }
 var a = incrementClosure();
 var b = incrementClosure();
-a();
-a();
-b();
+a();  // 110
+a();  // 120 this captures the same counter as the above
+b();  // 110 this closes over its own counter (compared to a)
+b();  // 120 same inc as above
+b();  // 130 same inc as above
 `,
     },
 
@@ -233,6 +238,8 @@ b();
         name: "error.lox",
         language: "lox",
         theme: "vs-dark",
+        minimap: { enabled: false },
+        automaticLayout: true,
         value: `// For loops - (;;) would be infinite loop \n
 for (var i=0; i<10; i=i+1){
   print "for-loop:";

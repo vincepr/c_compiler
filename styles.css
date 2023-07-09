@@ -32,6 +32,7 @@ html, body {
 }
 
 label {
+  display:flex;
   text-align: justify;
   justify-content: center;
   justify-self: center;
@@ -84,8 +85,8 @@ label {
 }
   
 .left {
-    width: 60%;
-    height: 100%;
+  width: 60%;
+  height: 100%;
 }
   
 .right {
@@ -133,7 +134,9 @@ label {
   text-align: center;
 }
 .emscripten { padding-right: 0; margin-left: auto; margin-right: auto; display: block; }
-textarea.emscripten { 
+textarea.emscripten {
+  border: none;
+  padding:0;
   font-family: monospace;
   width: 80%;
   margin-left:0px;
