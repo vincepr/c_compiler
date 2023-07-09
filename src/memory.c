@@ -202,6 +202,8 @@ static void markRoots() {
     markTable(&vm.globals);
     // if GC starts while were still compiling -> we need to GC the compiler-structs aswell
     markCompilerRoots();
+    // we need this for quick lookups to "init()" - so this always stays a root
+    markObject((Obj*)vm.initString);
 }
 
 // helper for collectGarbage() - while grayStack isnt empty keep going:

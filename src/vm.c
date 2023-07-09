@@ -74,7 +74,9 @@ void initVM() {
     vm.grayStack = NULL;
     initTable(&vm.globals); // setup the HashTable for global variables
     initTable(&vm.strings); // setup the HashTable for used strings
-
+    // to make lookup for "init()" we define this ObjString(string-interning):
+    vm.initString = NULL;   // zero the field out to avoid GC reading undefined before copyString("init")
+    vm.initString = copyString("init", 4);  
     // init Native Functions:
     defineNative("clock", clockNative);
 }
@@ -82,6 +84,7 @@ void initVM() {
 void freeVM() {
     freeTable(&vm.globals);
     freeTable(&vm.strings);
+    vm.initString = NULL;   // manually clear the pointer
     freeObjects();          // when free the vm, we need to free all objects in the linked-list of objects.
 }
 
@@ -139,7 +142,15 @@ static bool callValue(Value callee, int argCount) {
             case OBJ_CLASS: {
                 // To instance a Class we reuse callValue - instead of 'new SomeClass' we do 'SomeClass()'
                 ObjClass* pClass = AS_CLASS(callee);
-                vm.stackTop[-argCount -1] = OBJ_VAL(newInstance(pClass));   
+                vm.stackTop[-argCount -1] = OBJ_VAL(newInstance(pClass));
+                // automatically call init on new instances: class Brunch{ init(food, count){}} \n Brunch("coffee", 2)
+                Value initializer;
+                if (tableGet(&pClass->methods, vm.initString, &initializer)) {
+                    return call(AS_CLOSURE(initializer), argCount);     // this will make sure number of arguments match (like any fn call)
+                } else if (argCount != 0) {
+                    runtimeError("Expected 0 arguments but got %d.");   // if no init() -> cant pass in not 0 arguments in NewClass(1,2)
+                    return false;
+                }
                 return true;
             }
             case OBJ_CLOSURE:

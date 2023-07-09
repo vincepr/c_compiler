@@ -30,6 +30,8 @@ typedef struct {
     Value* stackTop;                // pointer to top of the stack(lastElement + 1) is first to be popped and we add 'above it' when push()
     Table globals;                  // HashMap (key: identifiers, value=global values)
     Table strings;                  // to enable string-interning we store all active-string variables in this table
+    
+    ObjString* initString;          // for class-initializier init()
     ObjUpvalue* openUpvalues;       // 'linked-list' of Upvalues that currently hold a local-variable they enclosed (that already went out of scope -> now needs to be stored on heap directly)
     Obj* objects;                   // head of the linked list of all objects (strings, instances etc) -> useful for keeping track of active Objects -> GarbageCollection
     // For Garbage-Collection:
