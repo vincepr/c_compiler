@@ -165,16 +165,18 @@ monaco.languages.setMonarchTokensProvider("lox",
 
 // String that stores our 'preview'-files
 const allfiles = {
-    "hello.lox": {
-        name: "hello.lox",
+    "class.lox": {
+        name: "class.lox",
         language: "lox",
         theme: "ace",
         minimap: { enabled: false },
         automaticLayout: true,
-        value: `//you can leave out () with print: \n
-for (var i=0; i<10; i=i+1){
-  print "Bob Ross";
-}
+        value: `// The Basics about classes \n
+class Pair {}
+var pair = Pair();  // Classes get instanciated with ClassName()
+pair.first = 1;
+pair.second = 2;
+print pair.first + pair.second; // prints 3.
 `,
     },
 
@@ -194,8 +196,8 @@ print fib(31);
 print clock() - start;`,
     },
 
-    "clojure.lox": {
-        name: "clojure.lox",
+    "closure.lox": {
+        name: "closure.lox",
         language: "lox",
         theme: "vs",
         minimap: { enabled: false },
@@ -209,6 +211,21 @@ fun outer() {
   inner();
 }
 outer();    // closure captured "outer" and should print that
+
+// closures here can capture the same outer variable inc.
+fun incrementClosure() {
+  var inc = 99;
+  fun inner() {
+    inc = inc +10;
+    print inc;
+  }
+  return inner;
+}
+var a = incrementClosure();
+var b = incrementClosure();
+a();
+a();
+b();
 `,
     },
 
@@ -216,19 +233,30 @@ outer();    // closure captured "outer" and should print that
         name: "error.lox",
         language: "lox",
         theme: "vs-dark",
-        value: `// this should error out to show the stack-trace:\n
+        value: `// For loops - (;;) would be infinite loop \n
+for (var i=0; i<10; i=i+1){
+  print "for-loop:";
+  while (i<5) {
+    print i;
+    i = i+1;
+  }
+  print i;
+}
+
+// this should error out to show the stack-trace:
 fun a() { b(); }
 fun b() { c(); }
 fun c() {
-  c("too", "many");
+  c("too", "many"); // this call has too many arguments
 }
-a();`,
+a();    // this will produce some stack-trance, with the above error
+`,
     },
 }
 
 
 // set the monaco-editor-window:
-var activeFile = "hello.lox"
+var activeFile = "closure.lox"
 var editor = monaco.editor.create(document.getElementById('container'), allfiles[activeFile]);
 
 
@@ -242,16 +270,16 @@ function changeOpenFile(filename) {
     //editor.getModel().setValue('some value')
 }
 
-document.getElementById("btnhello").addEventListener("click", () => {
-    changeOpenFile("hello.lox");
+document.getElementById("btnclass").addEventListener("click", () => {
+    changeOpenFile("class.lox");
 });
 
 document.getElementById("btnfib").addEventListener("click", () => {
     changeOpenFile("fib.lox");
 });
 
-document.getElementById("btnclojure").addEventListener("click", () => {
-    changeOpenFile("clojure.lox");
+document.getElementById("btnclosure").addEventListener("click", () => {
+    changeOpenFile("closure.lox");
 });
 
 document.getElementById("btnerror").addEventListener("click", () => {
