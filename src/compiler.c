@@ -90,9 +90,10 @@ typedef struct {
 
 // Compiler needs to differentiate between 2 states, top level and while in a function-body.
 typedef enum {
-    TYPE_FUNCTION,              // in a Function Body
+    TYPE_FUNCTION,              // normal function - returns implicit nil if no return
+    TYPE_INITIALIZER,           // init() - the method that gets called when creating new instances MUST always return an INSTANCE
     TYPE_METHOD,                // classes in lox can hold methods
-    TYPE_SCRIPT                 // Top level
+    TYPE_SCRIPT                 // Top level (so we can differentiate it from local scope)
 } FunctionType;
 
 // we need this struct to keep track of the current scope and all local variables of that scope
@@ -237,8 +238,13 @@ static int emitJump(uint8_t instruction) {
 
 // helper for endCompiler() - function returns explicit (a value) or implicit by reaching } -> it returns nil
 static void emitReturn() {
-    emitByte(OP_NIL);       
-    emitByte(OP_RETURN);    // temporaly  - write the OP_RETURN Byte to our Chunk 
+    if (current->type == TYPE_INITIALIZER) {
+        emitBytes(OP_GET_LOCAL, 0);     // init() always must return a new instance of the class.
+        // So we push the zero slot -> that we know contains the instance when handling methods.
+    } else {
+        emitByte(OP_NIL);               // normal functions return implicit nil
+    }
+    emitByte(OP_RETURN);                // temporaly  - write the OP_RETURN Byte to our Chunk 
 }
 
 // helper - we call this function when we exit a new local scope with "}"...
@@ -806,6 +812,9 @@ static void method() {
     // OP_METHOD needs: a objClosure (that function() pushes on the stack)
     // it will connect that function as a method to the class aboce it on the stack
     FunctionType type = TYPE_METHOD;
+    if (parser.previous.length == 4 && memcmp(parser.previous.start, "init", 4)==0) {
+        type = TYPE_INITIALIZER;    // most functions return implicit nil. BUT init() MUST return ALWAYS an INSTANCE!
+    }
     function(type);
     emitBytes(OP_METHOD, constant);
 }
@@ -944,6 +953,9 @@ static void returnStatement() {
     if (match(TOKEN_SEMICOLON)) {
         emitReturn();                       // return; (-> implicit NIL from emitReturn())
     } else {
+        if(current->type == TYPE_INITIALIZER) {
+            error("Can't return a value from an initializer.");
+        }
         expression();                       // return expr;
         consume(TOKEN_SEMICOLON, "Expect ';' after return value.");
         emitByte(OP_RETURN);
