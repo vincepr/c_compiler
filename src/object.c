@@ -30,7 +30,8 @@ static Obj* allocateObject(size_t size, ObjType type) {
 // helper for ALLOCATE_OBJ macro - constructor for a new Class Object
 ObjClass* newClass(ObjString* name) {
     ObjClass* aClass = ALLOCATE_OBJ(ObjClass, OBJ_CLASS);
-    aClass->name = name; 
+    aClass->name = name;
+    initTable(&aClass->methods);
     return aClass;
 }
 

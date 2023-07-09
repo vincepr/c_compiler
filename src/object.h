@@ -99,6 +99,7 @@ typedef struct {
 typedef struct {
     Obj obj;
     ObjString* name;            // pointer to our unique identifier/name (ex.: "class Fish {...}")
+    Table methods;              // keeps Track of Methods this class includes
 } ObjClass;
 
 // at compile time instances of objects get created (with 'new' keyword OR when a method is called)

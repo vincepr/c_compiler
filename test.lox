@@ -75,8 +75,21 @@ fun incrementClosure() {
 }
 var a = incrementClosure();
 var b = incrementClosure();
-a();
-a();  // this captures the same inc as the above
-b();  // this captures another inc
-b();  // same inc as above
-b();  // same inc as above
+//a();
+//a();  // this captures the same inc as the above
+//b();  // this captures another inc
+//b();  // same inc as above
+//b();  // same inc as above
+
+
+class Person {
+  sayName() {
+    print this.name;
+  }
+}
+
+var jane = Person();
+jane.name = "Jane";
+
+var method = jane.sayName;
+method(); // ?

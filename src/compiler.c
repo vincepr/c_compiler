@@ -773,17 +773,35 @@ static void function(FunctionType type) {
     }
 }
 
+// helper for classDeclaration() - parses a method inside a class body:
+static void method() {
+    consume(TOKEN_IDENTIFIER, "Expect method name.");
+    uint8_t constant = identifierConstant(&parser.previous);
+    // OP_METHOD needs: a objClosure (that function() pushes on the stack)
+    // it will connect that function as a method to the class aboce it on the stack
+    FunctionType type = TYPE_FUNCTION;
+    function(type);
+    emitBytes(OP_METHOD, constant);
+}
+
 // helper for declaration() - parses a class declaration: ex: "class Boats {var passengers = 10;}"
 static void classDeclaration() {
     consume(TOKEN_IDENTIFIER, "Expect class name!");
+    Token className = parser.previous;
     uint8_t nameConstant = identifierConstant(&parser.previous);
     declareVariable();                  // add our name ex. "Boats" to our string-lookup-table
 
     emitBytes(OP_CLASS, nameConstant);  // instruction to create Class Object at runtime
     defineVariable(nameConstant);       // OP_CLASS takes index of nametable to class-name
 
+    namedVariable(className, false);    // method needs the class identifier-name above it on the stack:
     consume(TOKEN_LEFT_BRACE, "Expect '{' before class body!");
+    // we check for method-declaration/initialisation, ex: getname():  "class Bob { getName() { return "Bob";}}""
+    while (!check(TOKEN_RIGHT_BRACE) && !check(TOKEN_EOF)) {
+        method();
+    }
     consume(TOKEN_RIGHT_BRACE, "Expect '}' after class body!");
+    emitByte(OP_POP);                   // we only pushed the class identifer-name for method() so we pop it after
 }
 
 // helper for declaration() - parses a Function declaration: ex: "fun doStuff() {...}"

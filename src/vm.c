@@ -192,6 +192,15 @@ static void closeUpvalues(Value* last) {
     }
 }
 
+// Connects a method (closure on stack) to its class at runtime
+// - the method closure is on top of the stack, below it the class we bind it to
+static void defineMethod(ObjString* name) {
+    Value method = peek(0);                         // read method from stack
+    ObjClass* pClass = AS_CLASS(peek(1));           // read its parent Class
+    tableSet(&pClass->methods, name, method);       // write the closure in the method table of class
+    pop();                                          // we dont need closure name on the stack anymore
+}
+
 // we handle what Values may be evaluated as a boolean.
 // - nil and false are falsey.
 // - every other value behaves like true.
@@ -471,6 +480,9 @@ static InterpretResult run() {
             // - it just loads string for that class and pass that to newClass()
             case OP_CLASS:
                 push(OBJ_VAL(newClass(READ_STRING())));
+                break;
+            case OP_METHOD:
+                defineMethod(READ_STRING());
                 break;
         }
     }
