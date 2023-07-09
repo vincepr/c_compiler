@@ -89,7 +89,7 @@ class Scone {
 }
 
 var scone = Scone();
-scone.topping("berries", "cream");
+scone.topping("berries", "cream");  // prints out: scone with beries and cream
 
 
 class Person {
@@ -102,4 +102,5 @@ var jane = Person();
 jane.name = "Jane";
 
 var method = jane.sayName;
-method(); // ?
+method(); // prints out: Jane
+

@@ -107,10 +107,17 @@ typedef struct Compiler {
     int scopeDepth;             // how many {} deep are we
 } Compiler;
 
+// we need knowledge (at compile time) about nearest enclosing class. this struct provides that
+typedef struct ClassCompiler {
+    struct ClassCompiler* enclosing;    // linked list of nested Compiler structs. (lox supports a class in a method in a class...)
+} ClassCompiler;
+
 // global Parser instance we can pass arround
 Parser parser;
 // global Compiler instance - used to keep track where on the stack local variables are currently
 Compiler* current = NULL;
+// global ClassCompiler Instance - we need knowledge (at compile time) about nearest enclosing class. this provides
+ClassCompiler* currentClass = NULL;
 
 // emits the chunk we compiled our bytecode-instructions to. (so basically all instructions we just 'compiled')
 static Chunk* currentChunk() {
@@ -632,6 +639,10 @@ static void variable(bool canAssign) {
 // parsing function for this keyword - used in bound-methods to access class-fields variables.
 // - we treat this as a lexically scoped local variable. (that needs not initialization)
 static void this_(bool canAssign) {
+    if (currentClass == NULL) {
+        error("Can't use 'this' outside of a class.");   // cant use this at top level
+        return;
+    }
     variable(false);    // assigning to this is not possible (this = 12) so we pass canAssign=false
     // variable() treats "this" as if it were the variable identifier
 }
@@ -809,6 +820,10 @@ static void classDeclaration() {
     emitBytes(OP_CLASS, nameConstant);  // instruction to create Class Object at runtime
     defineVariable(nameConstant);       // OP_CLASS takes index of nametable to class-name
 
+    ClassCompiler classCompiler;            // When the compiler begins to compile a class it pushes a new
+    classCompiler.enclosing = currentClass; // classCompiler to that implicit linked stack (head is global)
+    currentClass = &classCompiler;
+
     namedVariable(className, false);    // method needs the class identifier-name above it on the stack:
     consume(TOKEN_LEFT_BRACE, "Expect '{' before class body!");
     // we check for method-declaration/initialisation, ex: getname():  "class Bob { getName() { return "Bob";}}""
@@ -817,6 +832,7 @@ static void classDeclaration() {
     }
     consume(TOKEN_RIGHT_BRACE, "Expect '}' after class body!");
     emitByte(OP_POP);                   // we only pushed the class identifer-name for method() so we pop it after
+    currentClass = currentClass->enclosing; // when were done we remove that from the implicit linked stack
 }
 
 // helper for declaration() - parses a Function declaration: ex: "fun doStuff() {...}"
