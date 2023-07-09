@@ -194,6 +194,7 @@ fun fib(n) {
 
 var start = clock();
 print fib(31);
+print "time spent running in seconds:";
 print clock() - start;`,
     },
 
