@@ -131,6 +131,10 @@ static bool callValue(Value callee, int argCount) {
         switch(OBJ_TYPE(callee)) {
         // since lox is a dynamic language, we need to check types calling a Function/Method at runtime-type. 
         // - to block: "a_string"(); or "var x = 123; x()" 
+            case OBJ_BOUND_METHOD: {
+                ObjBoundMethod* bound = AS_BOUND_METHOD(callee);
+                return call(bound->method, argCount);   // we unwrap the method from the Boundmethod and call it
+            }
             case OBJ_CLASS: {
                 // To instance a Class we reuse callValue - instead of 'new SomeClass' we do 'SomeClass()'
                 ObjClass* pClass = AS_CLASS(callee);
@@ -148,11 +152,27 @@ static bool callValue(Value callee, int argCount) {
                 return true;
             }
             default:
-                break;  // Non-callable object type tried to call ex.: "just string"()
+                break;          // Non-callable object type tried to call ex.: "just string"()
         }
     }
     runtimeError("Can only call functions and classes.");
     return false;
+}
+
+// helper for run() case OP_GET_PROPERTY - 
+// 1. check for method with given name in pClass's method table (if not runtime-Error)
+// 2. take the method and wrap it together with the Instance(pop() from stack)
+// 3. last we push the ObjBoundMethod on the stack
+static bool bindMethod(ObjClass* pClass, ObjString* name) {
+    Value method;
+    if (!tableGet(&pClass->methods, name, &method)) {
+        runtimeError("Undefined property '%s'.", name->chars);
+        return false;
+    }
+    ObjBoundMethod* bound = newBoundMethod(peek(0), AS_CLOSURE(method));
+    pop();                      // pop the Instance from the stack
+    push(OBJ_VAL(bound));
+    return true;
 }
 
 // creates a new Upvalue for captured local variable:
@@ -440,9 +460,12 @@ static InterpretResult run() {
                     push(value);                // and push the value of the variable
                     break;
                 }
-                //                              if field doesnt exists we runtime error:
-                runtimeError("Undefined property '%s'.", name->chars);
-                return INTERPRET_RUNTIME_ERROR;
+                // next we check if its a method instead, if neither we runtime error:
+                if (!bindMethod(instance->pClass, name)) {
+                    //runtimeError("Undefined property '%s'.", name->chars);
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                break;
             }
             case OP_SET_PROPERTY: {
                 // we have to check against non-instances calling this: 'var x=false; var x.y = true;'

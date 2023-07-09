@@ -82,6 +82,16 @@ var b = incrementClosure();
 //b();  // same inc as above
 
 
+class Scone {
+  topping(first, second) {
+    print "scone with " + first + " and " + second;
+  }
+}
+
+var scone = Scone();
+scone.topping("berries", "cream");
+
+
 class Person {
   sayName() {
     print this.name;
