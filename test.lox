@@ -49,3 +49,31 @@ var pair = Pair();
 pair.first = 1;
 pair.second = 2;
 print pair.first + pair.second; // prints 3.
+
+
+// closures bug hunting:
+// when closures are implemented this should print out outer:
+
+var x = "global";
+fun outer() {
+  var x = "outer";
+  fun inner() {
+    print x;
+  }
+  inner();
+}
+outer();    // closure captured "outer" and should print that
+
+// closures here can capture the same outer variable inc.
+fun incrementClosure() {
+  var inc = 99;
+  fun inner() {
+    inc = inc +10;
+    print inc;
+  }
+  return inner;
+}
+var a = incrementClosure();
+var b = incrementClosure();
+a();
+a();
