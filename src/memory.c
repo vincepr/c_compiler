@@ -90,6 +90,12 @@ static void blackenObject(Obj* object) {
     #endif
 
     switch (object->type) {
+        case OBJ_BOUND_METHOD: {
+            ObjBoundMethod* bound = (ObjBoundMethod*)object;
+            markValue(bound->receiver);
+            markObject((Obj*)bound->method);
+            break;
+        }
         case OBJ_CLASS: {
             ObjClass* aClass = (ObjClass*)object;
             markObject((Obj*)aClass->name);                 // the class struct itself
@@ -135,6 +141,9 @@ static void freeObject(Obj* object) {
     #endif
 
     switch (object->type) {
+        case OBJ_BOUND_METHOD:
+            FREE(ObjBoundMethod, object);
+            break;
         case OBJ_CLASS: {
             ObjClass* thisClass = (ObjClass*)object;
             freeTable(&thisClass->methods); // each Class holds reference to included Methods
