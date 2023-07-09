@@ -170,7 +170,9 @@ const allfiles = {
         language: "lox",
         theme: "ace",
         minimap: { enabled: false },
-        automaticLayout: true,
+        automaticLayout: true,          // resizes every 100ms or so if window-size changes
+        wordWrap: 'on',
+        scrollBeyondLastLine: false,
         value: `// The Basics about classes \n
 class Pair {}
 var pair = Pair();  // Classes get instanciated with ClassName()
@@ -185,7 +187,9 @@ print pair.first + pair.second; // prints 3.
         language: "lox",
         theme: "vs",
         minimap: { enabled: false },
-        automaticLayout: true,
+        automaticLayout: true,          // resizes every 100ms or so if window-size changes
+        wordWrap: 'on',
+        scrollBeyondLastLine: false,
         value: `// calculate a fibonacci-nr and return the time it took in seconds:\n
 fun fib(n) {
   if (n < 2) return n;
@@ -205,6 +209,7 @@ print clock() - start;`,
         minimap: { enabled: false },
         automaticLayout: true,          // resizes every 100ms or so if window-size changes
         wordWrap: 'on',
+        scrollBeyondLastLine: false,
         value: `// when closures are implemented this should print out outer:\n
 var x = "global";
 fun outer() {
@@ -241,7 +246,9 @@ b();  // 130 same inc as above
         language: "lox",
         theme: "vs-dark",
         minimap: { enabled: false },
-        automaticLayout: true,
+        automaticLayout: true,          // resizes every 100ms or so if window-size changes
+        wordWrap: 'on',
+        scrollBeyondLastLine: false,
         value: `// For loops - (;;) would be infinite loop \n
 for (var i=0; i<10; i=i+1){
   print "for-loop:";
