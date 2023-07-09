@@ -45,7 +45,7 @@ test: build
 
 # build the wasm-build:
 web: 
-	emcc  $(WEBFILES) -o build_wasm/index.html --shell-file srcweb/shell_minimal.html -s NO_EXIT_RUNTIME=1 -s "EXPORTED_RUNTIME_METHODS=['ccall']"
+	emcc  $(WEBFILES) -o build_wasm/index.html --shell-file srcweb/shell_minimal.html -s NO_EXIT_RUNTIME=1 -s "EXPORTED_RUNTIME_METHODS=['ccall']" -O3
 	cp srcweb/load_emscripten.js build_wasm/load_emscripten.js
 	cp srcweb/load_monaco.js build_wasm/load_monaco.js
 	cp srcweb/styles.css build_wasm/styles.css
