@@ -133,6 +133,7 @@ static bool callValue(Value callee, int argCount) {
         // - to block: "a_string"(); or "var x = 123; x()" 
             case OBJ_BOUND_METHOD: {
                 ObjBoundMethod* bound = AS_BOUND_METHOD(callee);
+                vm.stackTop[-argCount -1] = bound->receiver;    // the zero slot in the new callframe, we write our receiver in that slot
                 return call(bound->method, argCount);   // we unwrap the method from the Boundmethod and call it
             }
             case OBJ_CLASS: {

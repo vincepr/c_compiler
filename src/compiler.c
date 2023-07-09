@@ -91,6 +91,7 @@ typedef struct {
 // Compiler needs to differentiate between 2 states, top level and while in a function-body.
 typedef enum {
     TYPE_FUNCTION,              // in a Function Body
+    TYPE_METHOD,                // classes in lox can hold methods
     TYPE_SCRIPT                 // Top level
 } FunctionType;
 
@@ -282,8 +283,15 @@ static void initCompiler(Compiler* compiler, FunctionType type) {
     Local* local = &current->locals[current->localCount++];
     local->depth = 0;
     local->isCaptured = false;
-    local->name.start = "";
-    local->name.length = 0;
+
+    // compiler sets stack slot zero - Used for special purpose
+    if (type != TYPE_FUNCTION) {
+        local->name.start = "this";         // were dealing with a method -> this slot holds the this keyword
+        local->name.length = 4;             // 
+    } else {
+        local->name.start = "";             // for function calls this slot ends up holding
+        local->name.length = 0;             // the function called later on
+    }
 }
 
 // emits the Instrucitons to add one constant to our Cunk (like in var x=3.65 -> we would add const 3.65)
@@ -621,6 +629,13 @@ static void variable(bool canAssign) {
     namedVariable(parser.previous, canAssign);
 }
 
+// parsing function for this keyword - used in bound-methods to access class-fields variables.
+// - we treat this as a lexically scoped local variable. (that needs not initialization)
+static void this_(bool canAssign) {
+    variable(false);    // assigning to this is not possible (this = 12) so we pass canAssign=false
+    // variable() treats "this" as if it were the variable identifier
+}
+
 // parsing function for an unary negation (-10 or !true)
 static void unary(bool _canAssign) {
     TokenType operatorType = parser.previous.type;      // we need to differentiate between ! and -
@@ -679,7 +694,7 @@ ParseRule rules[] = {
     [TOKEN_PRINT]         = {NULL,        NULL,      PREC_NONE},
     [TOKEN_RETURN]        = {NULL,        NULL,      PREC_NONE},
     [TOKEN_SUPER]         = {NULL,        NULL,      PREC_NONE},
-    [TOKEN_THIS]          = {NULL,        NULL,      PREC_NONE},
+    [TOKEN_THIS]          = {this_,       NULL,      PREC_NONE},
     [TOKEN_TRUE]          = {literal,     NULL,      PREC_NONE},
     [TOKEN_VAR]           = {NULL,        NULL,      PREC_NONE},
     [TOKEN_WHILE]         = {NULL,        NULL,      PREC_NONE},
@@ -779,7 +794,7 @@ static void method() {
     uint8_t constant = identifierConstant(&parser.previous);
     // OP_METHOD needs: a objClosure (that function() pushes on the stack)
     // it will connect that function as a method to the class aboce it on the stack
-    FunctionType type = TYPE_FUNCTION;
+    FunctionType type = TYPE_METHOD;
     function(type);
     emitBytes(OP_METHOD, constant);
 }
