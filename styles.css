@@ -121,9 +121,7 @@ label {
 
 
 /* Emscripten - Load-Spinner */
-#status {
-  color: rgb(222, 56, 56);
-}
+
 #spinner {
   z-index: 1;
   position: absolute;
