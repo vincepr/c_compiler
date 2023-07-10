@@ -190,6 +190,8 @@ print pair.first + pair.second; // prints 3.
         automaticLayout: true,          // resizes every 100ms or so if window-size changes
         wordWrap: 'on',
         scrollBeyondLastLine: false,
+        "bracketPairColorization.enabled": true,
+        autoClosingBrackets: true,
         value: `// calculate a fibonacci-nr and return the time it took in seconds:\n
 fun fib(n) {
   if (n < 2) return n;
