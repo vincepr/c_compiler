@@ -164,37 +164,17 @@ monaco.languages.setMonarchTokensProvider("lox",
 
 
 // String that stores our 'preview'-files
-const allfiles = {
-    "class.lox": {
-        name: "class.lox",
-        language: "lox",
-        theme: "ace",
-        minimap: { enabled: false },
-        automaticLayout: true,          // resizes every 100ms or so if window-size changes
-        wordWrap: 'on',
-        scrollBeyondLastLine: false,
-        "bracketPairColorization.enabled": true,
-        autoClosingBrackets: true,
-        value: `// The Basics about classes \n
+const allvalues = {
+    class_lox:  `// The Basics about classes \n
 class Pair {}
 var pair = Pair();  // Classes get instanciated with ClassName()
 pair.first = 1;
 pair.second = 2;
 print pair.first + pair.second; // prints 3.
 `,
-    },
 
-    "fib.lox": {
-        name: "fib.lox",
-        language: "lox",
-        theme: "vs",
-        minimap: { enabled: false },
-        automaticLayout: true,          // resizes every 100ms or so if window-size changes
-        wordWrap: 'on',
-        scrollBeyondLastLine: false,
-        "bracketPairColorization.enabled": true,
-        autoClosingBrackets: true,
-        value: `// calculate a fibonacci-nr and return the time it took in seconds:\n
+
+    fib_lox: `// calculate a fibonacci-nr and return the time it took in seconds:\n
 fun fib(n) {
   if (n < 2) return n;
   return fib(n - 2) + fib(n - 1);
@@ -204,19 +184,9 @@ var start = clock();
 print fib(31);
 print "time spent running in seconds:";
 print clock() - start;`,
-    },
 
-    "closure.lox": {
-        name: "closure.lox",
-        language: "lox",
-        theme: "ace",
-        minimap: { enabled: false },
-        automaticLayout: true,          // resizes every 100ms or so if window-size changes
-        wordWrap: 'on',
-        scrollBeyondLastLine: false,
-        "bracketPairColorization.enabled": true,
-        autoClosingBrackets: true,
-        value: `// when closures are implemented this should print out outer:\n
+
+    closure_lox:  `// when closures are implemented this should print out outer:\n
 var x = "global";
 fun outer() {
   var x = "outer";
@@ -245,19 +215,8 @@ b();  // 110 this closes over its own counter (compared to a)
 b();  // 120 same inc as above
 b();  // 130 same inc as above
 `,
-    },
 
-    "error.lox": {
-        name: "error.lox",
-        language: "lox",
-        theme: "vs-dark",
-        minimap: { enabled: false },
-        automaticLayout: true,          // resizes every 100ms or so if window-size changes
-        wordWrap: 'on',
-        scrollBeyondLastLine: false,
-        "bracketPairColorization.enabled": true,
-        autoClosingBrackets: true,
-        value: `// For loops - (;;) would be infinite loop \n
+    error_lox: `// For loops - (;;) would be infinite loop \n
 for (var i=0; i<10; i=i+1){
   print "for-loop:";
   while (i<5) {
@@ -275,42 +234,50 @@ fun c() {
 }
 a();    // this will produce some stack-trance, with the above error
 `,
-    },
 }
 
 
 // set the monaco-editor-window:
-var activeFile = "closure.lox"
-var config = {
-    
+var activeFile = "closure_lox"
+let config_monaco = {
+    name: "closure.lox",
+    language: "lox",
+    theme: "ace",
+    minimap: { enabled: false },
+    automaticLayout: true,          // resizes every 100ms or so if window-size changes
+    wordWrap: 'on',
+    scrollBeyondLastLine: false,
+    autoClosingBrackets: true,
+    "bracketPairColorization.enabled": true,
+    value: allvalues[activeFile],
 }
-var editor = monaco.editor.create(document.getElementById('container'), allfiles[activeFile]);
+var editor = monaco.editor.create(document.getElementById('container'), config_monaco);
 
 
 // Add the event listeners (onClick events)
 
 
 function changeOpenFile(filename) {
-    allfiles[activeFile].value = editor.getValue();     // persist change to 'file'-tab
+    allvalues[activeFile] = editor.getValue();     // persist change to 'file'-tab
     activeFile = filename;                              // set new active tab
     editor.setValue(allfiles[filename].value);          // open clicked tab to editor
     //editor.getModel().setValue('some value')
 }
 
 document.getElementById("btnclass").addEventListener("click", () => {
-    changeOpenFile("class.lox");
+    changeOpenFile("class_lox");
 });
 
 document.getElementById("btnfib").addEventListener("click", () => {
-    changeOpenFile("fib.lox");
+    changeOpenFile("fib_lox");
 });
 
 document.getElementById("btnclosure").addEventListener("click", () => {
-    changeOpenFile("closure.lox");
+    changeOpenFile("closure_lox");
 });
 
 document.getElementById("btnerror").addEventListener("click", () => {
-    changeOpenFile("error.lox");
+    changeOpenFile("error_lox");
 });
 
 document.getElementById("btncompile").addEventListener("click", () => {
