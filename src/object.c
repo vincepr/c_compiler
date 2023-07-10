@@ -147,7 +147,7 @@ static void printFunction(ObjFunction* function) {
         printf("<script>");
         return;
     }
-    printf("<fn %s", function->name->chars);    // for other functions we just print out the name
+    printf("<fn %s>", function->name->chars);    // for other functions we just print out the name
 }
 
 // helper for printValue() - print functionality for heap allocated datastructures

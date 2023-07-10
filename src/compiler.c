@@ -651,12 +651,12 @@ static Token syntheticToken(const char* text) {
 // parsing function for super-method calls - ex. "var method = super.someInheritedMethod;"
 static void super_(bool canAssign) {
     if (currentClass == NULL) {
-        error("Can't use 'super' outside of a classs.");
+        error("Can't use 'super' outside of a class.");
     } else if(!currentClass->hasSuperclass) {
         error("Can't use 'super' in a class with no superclass.");
     }
 
-    consume(TOKEN_DOT, "Expect '.' after 'super' keyword.");
+    consume(TOKEN_DOT, "Expect '.' after 'super'.");
     consume(TOKEN_IDENTIFIER, "Expect superclass method name.");
     uint8_t name = identifierConstant(&parser.previous);    // last token was the identifier so we read that out
 
@@ -879,7 +879,7 @@ static void classDeclaration() {
         consume(TOKEN_IDENTIFIER, "Expect superclass name.");   // first we consume the identifier '(ex Pet)
         variable(false);                                        // takes previous token as variable reference-> pushes superclass on stack
         if (identifiersEqual(&className, &parser.previous)) {
-            error("A class can't inherit from itself");
+            error("A class can't inherit from itself.");
         }
         beginScope();                                       // handle Superclass calls. first we create a local scope. (needed when 2 classes share the same scope)            
         addLocal(syntheticToken("super"));                  // then we 'reserve' a local variable calls "super" by pushing that on the stack
@@ -914,7 +914,7 @@ static void funDeclaration() {
 
 // helper for declaration() - initial declaration of variables
 static void varDeclaration() {
-    uint8_t global = parseVariable("Expect variable name-");
+    uint8_t global = parseVariable("Expect variable name.");
 
     if (match(TOKEN_EQUAL)) {
         expression();       // pops initial value on the stack

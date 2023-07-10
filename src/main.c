@@ -78,8 +78,6 @@ static void runFile(const char* path) {
 }
 
 int main(int argc, const char* argv[]) {
-		printf("Compiler Running:\n");
-
 		// initialize our VM:
 		initVM();
 
