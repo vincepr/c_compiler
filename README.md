@@ -221,7 +221,8 @@ clox's gc-collection frequency strategy: **Self-adjusting heap**:
 ### Superinstruction - a set of Instruction gets replaced by a special optimized one
 Previously, every time a Method is called, the `BoundMethod` struct is created by the bytecode instruction and then consumed. So for 10 method calls 10 allocations for that struct happen. the next bytecode instruction then consumes that BoundMethod.
 
-Idea is that we can at compile time instead emit a new special instruction that performs an optimized method call: `OP_INVOKE`
+Idea is that we can at compile time instead emit a new special instruction that performs an optimized method call: `OP_INVOKE`.
+- Similar we use `OP_SUPER_INVOKE` for a fast shortcut thant `OP_GET_SUPER` followed by `OP_CALL` so we can squeze out an expensive lookup by reordering our stack a bit.
 
 
 

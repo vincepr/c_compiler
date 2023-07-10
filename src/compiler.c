@@ -661,8 +661,18 @@ static void super_(bool canAssign) {
     uint8_t name = identifierConstant(&parser.previous);    // last token was the identifier so we read that out
 
     namedVariable(syntheticToken("this"), false);
-    namedVariable(syntheticToken("super"), false);
-    emitBytes(OP_GET_SUPER, name);      // OP_GET_SUPER expects superclass on top of stack and below the receiver.
+    //
+    if (match(TOKEN_LEFT_PAREN)) {
+        // to speed up method calls (That use super) we introduce a custom OP_SUPER_INVOKE
+        uint8_t argCount = argumentList();
+        namedVariable(syntheticToken("super"), false);
+        emitBytes(OP_SUPER_INVOKE, name);
+        emitByte(argCount);
+    } else {
+        // and fail back to the slow away (that can reslove var = fncall()) else
+        namedVariable(syntheticToken("super"), false);
+        emitBytes(OP_GET_SUPER, name);      // OP_GET_SUPER expects superclass on top of stack and below the receiver.
+    }
 }
 
 // parsing function for resolving variables to their current value at runtime

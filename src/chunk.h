@@ -57,6 +57,7 @@ typedef enum {
     OP_CLASS,           // creates Runtime class-object is followed by idx for name-table to class-name-identifier
     OP_INHERIT,         // superclass is on the stack -> we wire the current one to it so it inherits all fields and methods
     OP_GET_SUPER,       // OP_GET_SUPER expects superclass on top of stack and below the receiver.
+    OP_SUPER_INVOKE,    // combines OP_GET_SUPER and OP_CLASS - to speedup by doing less lookups
     OP_METHOD,          // above on stack expects function name, then Closure of the method -> connects those
 } OpCode;
 

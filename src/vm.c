@@ -576,6 +576,17 @@ static InterpretResult run() {
                 }
                 break;
             }
+            case OP_SUPER_INVOKE: {
+                // the optimized way to invoke a super method (replace OP_GET_SUPER lookup and following OP_CALL)
+                ObjString* method = READ_STRING();
+                int argCount = READ_BYTE();
+                ObjClass* superclass = AS_CLASS(pop());
+                if (!invokeFromClass(superclass, method, argCount)) {
+                    return INTERPRET_RUNTIME_ERROR; // if method is not found we abort
+                }
+                frame = &vm.frames[vm.frameCount - 1];
+                break;
+            }
             case OP_METHOD:
                 defineMethod(READ_STRING());
                 break;
