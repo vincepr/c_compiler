@@ -41,4 +41,3 @@ int addConstant(Chunk* chunk, Value value) {
     pop();                              // we only pushed it on the stack for GC savety so we pop it again
     return chunk->constants.count - 1;  // returns idx to current last element
 }
-
