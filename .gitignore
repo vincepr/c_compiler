@@ -6,4 +6,4 @@ binary.out
 build_wasm/*.html
 build_wasm/*.js
 build_wasm/*.css
-build_wasm/*.wasm
+#build_wasm/*.wasm
