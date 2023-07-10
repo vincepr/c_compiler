@@ -3,7 +3,6 @@
 const allvalues = {
     class_lox:  `// The Basics about classes 
 
-
 class Person {
   // only methods can be declared here (no fields)
   init(name) {
@@ -39,7 +38,8 @@ print p2.checksum;`,
 
 
 
-    fib_lox: `// calculate a fibonacci-nr and return the time it took in seconds:\n
+    fib_lox: `// calculate a fibonacci-nr and return the time it took in seconds:
+
 fun fib(n) {
   if (n < 2) return n;
   return fib(n - 2) + fib(n - 1);
@@ -53,7 +53,8 @@ print clock() - start;`,
 
 
 
-    closure_lox:  `// when closures are implemented this should print out outer:\n
+    closure_lox:  `// when closures are implemented this should print out outer:
+
 var x = "global";
 fun outer() {
   var x = "outer";
@@ -86,7 +87,7 @@ b();  // 130 same inc as above
 
 
 
-    error_lox: `// For loops - (;;) would be infinite loop 
+    error_lox: `
 
 // // you can comment out whole lines with double slash
 // for (var i=0; i<10; i=i+1){

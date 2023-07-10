@@ -49,37 +49,10 @@ int runCompiler(char* sourceCode, bool isBytecode, bool isTrace, bool isGc) {
 	free(sourceCode);
     // free the VM
     freeVM();
+
+    // we return our status, this way the frontend could react if we hit an ERROR;
     if (result == INTERPRET_COMPILE_ERROR) return 65;   // return/exit with 65 -> compitle error
 	if (result == INTERPRET_RUNTIME_ERROR) return 70;   // return/exit with 70 -> runtime  error
     return 0;                                           // return/exit with 0  -> success
 }
-
-/*
-compiled via:
-emcc main-web.c src/chunk.c src/memory.c src/debug.c src/value.c src/vm.c src/compiler.c src/scanner.c src/object.c src/table.c -o build_wasm/compiler.html -sEXPORTED_FUNCTIONS=_compileSourceCode -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
-
-in js:
-compileSourceCode = Module.cwrap('compileSourceCode', 'string', ['string'])
-compileSourceCode("hello")
-
-*/
-
-
-// // other entrypoint than repl, but from a file.
-// static void runFile(const char* sourceCode) {
-//     printf("Compiler Running:\n");
-
-//     // initialize our VM:
-//     initVM();
-
-// 	InterpretResult result = interpret(sourceCode);
-// 	free(sourceCode);
-
-// 	if (result == INTERPRET_COMPILE_ERROR) exit(65);
-// 	if (result == INTERPRET_RUNTIME_ERROR) exit(70);
-
-//     // free the VM
-//     freeVM();
-// }
-
 
