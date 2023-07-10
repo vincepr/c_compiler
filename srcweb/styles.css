@@ -97,6 +97,7 @@ label {
   
 /* Clear floats after the columns */
 .row {
+  box-sizing: border-box;
   height: 90%;
   padding: 10px;
 }
