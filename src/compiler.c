@@ -914,7 +914,7 @@ static void funDeclaration() {
 
 // helper for declaration() - initial declaration of variables
 static void varDeclaration() {
-    uint8_t global = parseVariable("Expect variable name-");
+    uint8_t global = parseVariable("Expect variable name.");
 
     if (match(TOKEN_EQUAL)) {
         expression();       // pops initial value on the stack
