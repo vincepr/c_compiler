@@ -191,7 +191,7 @@ static bool invoke(ObjString* name, int argCount) {
         return false;
     }
     ObjInstance* instance = AS_INSTANCE(receiver);
-
+    // fields get priority and shadow over methods -> so we look up a field first. (and fields can hold closures of functions and thus get called)
     Value value;
     if (tableGet(&instance->fields, name, &value)) {
         vm.stackTop[-argCount - 1] = value;
