@@ -879,7 +879,7 @@ static void classDeclaration() {
         consume(TOKEN_IDENTIFIER, "Expect superclass name.");   // first we consume the identifier '(ex Pet)
         variable(false);                                        // takes previous token as variable reference-> pushes superclass on stack
         if (identifiersEqual(&className, &parser.previous)) {
-            error("A class can't inherit from itself");
+            error("A class can't inherit from itself.");
         }
         beginScope();                                       // handle Superclass calls. first we create a local scope. (needed when 2 classes share the same scope)            
         addLocal(syntheticToken("super"));                  // then we 'reserve' a local variable calls "super" by pushing that on the stack
