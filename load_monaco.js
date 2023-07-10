@@ -243,12 +243,12 @@ let config_monaco = {
     name: "closure.lox",
     language: "lox",
     theme: "ace",
+    autoClosingBrackets: true,      // not working! TODO: test if language implementation has to define those TODO: didnt it work with premade theme?
     minimap: { enabled: false },
     automaticLayout: true,          // resizes every 100ms or so if window-size changes
     wordWrap: 'on',
     scrollBeyondLastLine: false,
-    autoClosingBrackets: true,
-    "bracketPairColorization.enabled": true,
+    //"bracketPairColorization.enabled": true,
     value: allvalues[activeFile],
 }
 var editor = monaco.editor.create(document.getElementById('container'), config_monaco);
