@@ -651,7 +651,7 @@ static Token syntheticToken(const char* text) {
 // parsing function for super-method calls - ex. "var method = super.someInheritedMethod;"
 static void super_(bool canAssign) {
     if (currentClass == NULL) {
-        error("Can't use 'super' outside of a classs.");
+        error("Can't use 'super' outside of a class.");
     } else if(!currentClass->hasSuperclass) {
         error("Can't use 'super' in a class with no superclass.");
     }
