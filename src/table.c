@@ -29,7 +29,7 @@ void freeTable(Table* table) {
 // Tombstone-strategy:
 //  - while probing we keep going on hitting tombstones {key:NULL, value:TRUE}
 static Entry* findEntry(Entry* entries, int capacity, ObjString* key) {
-    uint32_t index = key->hash % capacity;      // since we dont have enough memory to map each value directly we fold our scope like this
+    uint32_t index = key->hash & (capacity - 1);// since we dont have enough memory to map each value directly we fold our scope like this
     Entry* tombstone = NULL;                    // we store the Tombstones we hit while probing
 
     for (;;) {
@@ -44,7 +44,7 @@ static Entry* findEntry(Entry* entries, int capacity, ObjString* key) {
             return entry;                       //<- we found the key
         }
 
-        index = (index + 1) % capacity;         //<- modulo wraps arround if we reach the end of our capacity
+        index = (index + 1) & (capacity -1);    //<- modulo wraps arround if we reach the end of our capacity
     }
 }
 
@@ -143,7 +143,7 @@ void tableAddAll(Table* from, Table* to) {
 ObjString* tableFindString(Table* table, const char* chars, int length, uint32_t hash) {
     if (table->count == 0) return NULL;
 
-    uint32_t index = hash % table->capacity;
+    uint32_t index = hash & (table->capacity - 1);      // modulo for 2pow
     for (;;) {
         Entry* entry = &table->entries[index];
         if(entry->key == NULL) {
@@ -153,7 +153,7 @@ ObjString* tableFindString(Table* table, const char* chars, int length, uint32_t
                     memcmp(entry->key->chars, chars, length) == 0) {
             return entry->key;
         }
-        index = (index + 1 ) % table->capacity;
+        index = (index + 1) & (table->capacity - 1);    // modulo with 2pow
     }
 }
 

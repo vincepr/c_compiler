@@ -3,7 +3,6 @@
 const allvalues = {
     class_lox:  `// The Basics about classes 
 
-
 class Person {
   // only methods can be declared here (no fields)
   init(name) {
@@ -39,7 +38,8 @@ print p2.checksum;`,
 
 
 
-    fib_lox: `// calculate a fibonacci-nr and return the time it took in seconds:\n
+    fib_lox: `// calculate a fibonacci-nr and return the time it took in seconds:
+
 fun fib(n) {
   if (n < 2) return n;
   return fib(n - 2) + fib(n - 1);
@@ -53,7 +53,8 @@ print clock() - start;`,
 
 
 
-    closure_lox:  `// when closures are implemented this should print out outer:\n
+    closure_lox:  `// when closures are implemented this should print out outer:
+
 var x = "global";
 fun outer() {
   var x = "outer";
@@ -86,15 +87,31 @@ b();  // 130 same inc as above
 
 
 
-    error_lox: `// For loops - (;;) would be infinite loop \n
-for (var i=0; i<10; i=i+1){
-  print "for-loop:";
-  while (i<5) {
-    print i;
-    i = i+1;
-  }
-  print i;
+    error_lox: `
+
+// // you can comment out whole lines with double slash
+// for (var i=0; i<10; i=i+1){
+//   print "for-loop:";
+//   while (i<5) {
+//     print i;
+//     i = i+1;
+//   }
+//   print i;
+// }
+
+// lox uses dynamically typed variables:
+var someValue = true;
+someValue = 1234;
+someValue = someValue + 5000 * (-55 /3);
+print -1 * someValue;   // prints 90432.7
+
+// and the usal comparisons and equality operators work:
+var isTrue = 1 != 2;
+if (!isTrue) print 99 > 1;
+else {
+  print "this is the happy path;
 }
+
 
 // this should error out to show the stack-trace:
 fun a() { b(); }
@@ -103,6 +120,9 @@ fun c() {
   c("too", "many"); // this call has too many arguments
 }
 a();    // this will produce some stack-trance, with the above error
+
+// since this is a runttime error the code above this will execute.
+// for a runtime error try removing a ';' or forget to close a bracket.
 `,
 };
 
