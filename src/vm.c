@@ -417,7 +417,8 @@ static InterpretResult run() {
                     double a = AS_NUMBER(pop());
                     push(NUMBER_VAL(a + b));
                 } else {
-                    runtimeError("Operands must be two numbers or two strings.");
+                    runtimeError("Operands must be two numbers or two strings.");   //TODO: io really want string + nr -> "string123"
+                    return INTERPRET_RUNTIME_ERROR;
                 }
                 break;
             }
