@@ -260,7 +260,7 @@ var editor = monaco.editor.create(document.getElementById('container'), config_m
 function changeOpenFile(filename) {
     allvalues[activeFile] = editor.getValue();     // persist change to 'file'-tab
     activeFile = filename;                              // set new active tab
-    editor.setValue(allfiles[filename].value);          // open clicked tab to editor
+    editor.setValue(allvalues[filename]);          // open clicked tab to editor
     //editor.getModel().setValue('some value')
 }
 
