@@ -562,6 +562,10 @@ static void dot(bool canAssign) {
     if(canAssign && match(TOKEN_EQUAL)) {
         expression();
         emitBytes(OP_SET_PROPERTY, name);    // "Preaches.isTasty = false" sets isTasty field
+    } else if (match(TOKEN_LEFT_PAREN))  {
+        uint8_t argCount = argumentList();
+        emitBytes(OP_INVOKE, name);         // Method calls get its own OP-Code for optimisation
+        emitByte(argCount);
     } else {
         emitBytes(OP_GET_PROPERTY, name);   // "print Peaches.isTasty" -> prints true
     }

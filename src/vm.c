@@ -171,6 +171,36 @@ static bool callValue(Value callee, int argCount) {
     return false;
 }
 
+// helper for invoke() - combines logic for OP_GET_PROPERTY and OP_CALL, but with less lookups/stack ready -> faster
+// - lookup method by name in method-table. (error if not found)
+// - take the moethods closure and push a call to in on the CallFrame stack. (receiver and method arguments are already there)
+static bool invokeFromClass(ObjClass* pClass, ObjString* name, int argCount) {
+    Value method;
+    if (!tableGet(&pClass->methods, name, &method)) {
+        runtimeError("Undefined property '%s'.", name->chars);
+        return false;
+    }
+    return call(AS_CLOSURE(method), argCount);
+}
+
+// helper for run() - read receiver Instance from stack and pass that down to invokeFromClass
+static bool invoke(ObjString* name, int argCount) {
+    Value receiver = peek(argCount);                // read receiver from the stack (its below arguments on the stack)
+    if (!IS_INSTANCE(receiver)) {
+        runtimeError("Only instances have methods.");
+        return false;
+    }
+    ObjInstance* instance = AS_INSTANCE(receiver);
+
+    Value value;
+    if (tableGet(&instance->fields, name, &value)) {
+        vm.stackTop[-argCount - 1] = value;
+        return callValue(value, argCount);
+    }
+
+    return invokeFromClass(instance->pClass, name, argCount);
+}
+
 // helper for run() case OP_GET_PROPERTY - 
 // 1. check for method with given name in pClass's method table (if not runtime-Error)
 // 2. take the method and wrap it together with the Instance(pop() from stack)
@@ -434,6 +464,15 @@ static InterpretResult run() {
                     return INTERPRET_RUNTIME_ERROR;     // if callValue() -> false we know a runtime error happened
                 }
                 frame = &vm.frames[vm.frameCount - 1];  // there will be a new frame on the CallFrame stack for the called function, that we update
+                break;
+            }
+            case OP_INVOKE: {               // Method calls got their special Invoke OpCode to make those lookups faster
+                ObjString* method = READ_STRING();
+                int argCount = READ_BYTE();
+                if (!invoke(method, argCount)) {
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                frame = &vm.frames[vm.frameCount - 1];
                 break;
             }
             case OP_CLOSURE: {                           
