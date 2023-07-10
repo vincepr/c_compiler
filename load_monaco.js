@@ -173,6 +173,8 @@ const allfiles = {
         automaticLayout: true,          // resizes every 100ms or so if window-size changes
         wordWrap: 'on',
         scrollBeyondLastLine: false,
+        "bracketPairColorization.enabled": true,
+        autoClosingBrackets: true,
         value: `// The Basics about classes \n
 class Pair {}
 var pair = Pair();  // Classes get instanciated with ClassName()
@@ -212,6 +214,8 @@ print clock() - start;`,
         automaticLayout: true,          // resizes every 100ms or so if window-size changes
         wordWrap: 'on',
         scrollBeyondLastLine: false,
+        "bracketPairColorization.enabled": true,
+        autoClosingBrackets: true,
         value: `// when closures are implemented this should print out outer:\n
 var x = "global";
 fun outer() {
@@ -251,6 +255,8 @@ b();  // 130 same inc as above
         automaticLayout: true,          // resizes every 100ms or so if window-size changes
         wordWrap: 'on',
         scrollBeyondLastLine: false,
+        "bracketPairColorization.enabled": true,
+        autoClosingBrackets: true,
         value: `// For loops - (;;) would be infinite loop \n
 for (var i=0; i<10; i=i+1){
   print "for-loop:";
@@ -275,6 +281,9 @@ a();    // this will produce some stack-trance, with the above error
 
 // set the monaco-editor-window:
 var activeFile = "closure.lox"
+var config = {
+    
+}
 var editor = monaco.editor.create(document.getElementById('container'), allfiles[activeFile]);
 
 
