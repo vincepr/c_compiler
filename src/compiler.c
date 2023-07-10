@@ -111,6 +111,7 @@ typedef struct Compiler {
 // we need knowledge (at compile time) about nearest enclosing class. this struct provides that
 typedef struct ClassCompiler {
     struct ClassCompiler* enclosing;    // linked list of nested Compiler structs. (lox supports a class in a method in a class...)
+    bool hasSuperclass;                 // if we deal with a superclass (inherit from another class) -> we need a local scope -> we have to clean that up
 } ClassCompiler;
 
 // global Parser instance we can pass arround
@@ -639,6 +640,41 @@ static void namedVariable(Token name, bool canAssign) {
     }
 }
 
+// helper for classDeclaration() - create a token manually
+static Token syntheticToken(const char* text) {
+    Token token;
+    token.start = text;
+    token.length = (int)strlen(text);
+    return token;
+}
+
+// parsing function for super-method calls - ex. "var method = super.someInheritedMethod;"
+static void super_(bool canAssign) {
+    if (currentClass == NULL) {
+        error("Can't use 'super' outside of a classs.");
+    } else if(!currentClass->hasSuperclass) {
+        error("Can't use 'super' in a class with no superclass.");
+    }
+
+    consume(TOKEN_DOT, "Expect '.' after 'super' keyword.");
+    consume(TOKEN_IDENTIFIER, "Expect superclass method name.");
+    uint8_t name = identifierConstant(&parser.previous);    // last token was the identifier so we read that out
+
+    namedVariable(syntheticToken("this"), false);
+    //
+    if (match(TOKEN_LEFT_PAREN)) {
+        // to speed up method calls (That use super) we introduce a custom OP_SUPER_INVOKE
+        uint8_t argCount = argumentList();
+        namedVariable(syntheticToken("super"), false);
+        emitBytes(OP_SUPER_INVOKE, name);
+        emitByte(argCount);
+    } else {
+        // and fail back to the slow away (that can reslove var = fncall()) else
+        namedVariable(syntheticToken("super"), false);
+        emitBytes(OP_GET_SUPER, name);      // OP_GET_SUPER expects superclass on top of stack and below the receiver.
+    }
+}
+
 // parsing function for resolving variables to their current value at runtime
 // - the only time we allow an assignment is when parsing an assignment expression or top-level expression.
 //      the canAssign FLAG makes it's way down to this lowest precedence expression (where we need it)
@@ -714,7 +750,7 @@ ParseRule rules[] = {
     [TOKEN_OR]            = {NULL,        or_,       PREC_OR},
     [TOKEN_PRINT]         = {NULL,        NULL,      PREC_NONE},
     [TOKEN_RETURN]        = {NULL,        NULL,      PREC_NONE},
-    [TOKEN_SUPER]         = {NULL,        NULL,      PREC_NONE},
+    [TOKEN_SUPER]         = {super_,      NULL,      PREC_NONE},
     [TOKEN_THIS]          = {this_,       NULL,      PREC_NONE},
     [TOKEN_TRUE]          = {literal,     NULL,      PREC_NONE},
     [TOKEN_VAR]           = {NULL,        NULL,      PREC_NONE},
@@ -835,8 +871,23 @@ static void classDeclaration() {
 
     ClassCompiler classCompiler;            // When the compiler begins to compile a class it pushes a new
     classCompiler.enclosing = currentClass; // classCompiler to that implicit linked stack (head is global)
+    classCompiler.hasSuperclass = false;    // we assume we do not inherit (as default).
     currentClass = &classCompiler;
 
+    // next we check for inheritance: (syntax is: "class Cat < Pet {...}")
+    if (match(TOKEN_LESS)) {
+        consume(TOKEN_IDENTIFIER, "Expect superclass name.");   // first we consume the identifier '(ex Pet)
+        variable(false);                                        // takes previous token as variable reference-> pushes superclass on stack
+        if (identifiersEqual(&className, &parser.previous)) {
+            error("A class can't inherit from itself");
+        }
+        beginScope();                                       // handle Superclass calls. first we create a local scope. (needed when 2 classes share the same scope)            
+        addLocal(syntheticToken("super"));                  // then we 'reserve' a local variable calls "super" by pushing that on the stack
+        defineVariable(0);                                  // and make it a local variable
+        namedVariable(className, false);                        // then we emit our opcode for inheritance
+        emitByte(OP_INHERIT);
+        classCompiler.hasSuperclass = true;                 // we set our bool to signal we inherited -> made local scope (-> we need to cleanup that later)
+    }
     namedVariable(className, false);    // method needs the class identifier-name above it on the stack:
     consume(TOKEN_LEFT_BRACE, "Expect '{' before class body!");
     // we check for method-declaration/initialisation, ex: getname():  "class Bob { getName() { return "Bob";}}""
@@ -845,6 +896,9 @@ static void classDeclaration() {
     }
     consume(TOKEN_RIGHT_BRACE, "Expect '}' after class body!");
     emitByte(OP_POP);                   // we only pushed the class identifer-name for method() so we pop it after
+    if (classCompiler.hasSuperclass) {
+        endScope();                                         // we have to remove the scope we created when handling superclasses
+    }
     currentClass = currentClass->enclosing; // when were done we remove that from the implicit linked stack
 }
 
