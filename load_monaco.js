@@ -152,10 +152,44 @@ const makeTokensProvider = () => {
     };
 };
 
-
+const lox_lang_config = {
+    //wordPattern: /(-?\d*\.\d\w*)|([^\`\~\!\@\#\%\^\&\*\(\)\-\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\?\s]+)/g,
+    comments: {
+        lineComment: "//",
+        //blockComment: ["/*", "*/"]
+    },
+    brackets: [
+        ["{", "}"],
+        ["[", "]"],
+        ["(", ")"]
+    ],
+    surroundingPairs: [
+      { open: '{', close: '}' },
+      { open: '[', close: ']' },
+      { open: '(', close: ')' },
+      //{ open: '<', close: '>' },
+      //{ open: "'", close: "'" },
+      { open: '"', close: '"' },
+    ],
+    autoClosingPairs: [
+      { open: '{', close: '}' },
+      { open: '[', close: ']' },
+      { open: '(', close: ')' },
+      //{ open: "'", close: "'", notIn: ['string', 'comment'] },
+      { open: '"', close: '"', notIn: ['string', 'comment'] },
+    ],
+    folding: {
+        markers: {
+            start: new RegExp("^\\s*//\\s*#?region\\b"),
+            end: new RegExp("^\\s*//\\s*#?endregion\\b")
+        }
+    },
+  };
 
 // Register the new language
 monaco.languages.register({ id: "lox" });
+monaco.languages.setLanguageConfiguration('lox', lox_lang_config);
+
 
 // Register a tokens provider for the language
 monaco.languages.setMonarchTokensProvider("lox", 
