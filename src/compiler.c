@@ -90,8 +90,10 @@ typedef struct {
 
 // Compiler needs to differentiate between 2 states, top level and while in a function-body.
 typedef enum {
-    TYPE_FUNCTION,              // in a Function Body
-    TYPE_SCRIPT                 // Top level
+    TYPE_FUNCTION,              // normal function - returns implicit nil if no return
+    TYPE_INITIALIZER,           // init() - the method that gets called when creating new instances MUST always return an INSTANCE
+    TYPE_METHOD,                // classes in lox can hold methods
+    TYPE_SCRIPT                 // Top level (so we can differentiate it from local scope)
 } FunctionType;
 
 // we need this struct to keep track of the current scope and all local variables of that scope
@@ -106,10 +108,17 @@ typedef struct Compiler {
     int scopeDepth;             // how many {} deep are we
 } Compiler;
 
+// we need knowledge (at compile time) about nearest enclosing class. this struct provides that
+typedef struct ClassCompiler {
+    struct ClassCompiler* enclosing;    // linked list of nested Compiler structs. (lox supports a class in a method in a class...)
+} ClassCompiler;
+
 // global Parser instance we can pass arround
 Parser parser;
 // global Compiler instance - used to keep track where on the stack local variables are currently
 Compiler* current = NULL;
+// global ClassCompiler Instance - we need knowledge (at compile time) about nearest enclosing class. this provides
+ClassCompiler* currentClass = NULL;
 
 // emits the chunk we compiled our bytecode-instructions to. (so basically all instructions we just 'compiled')
 static Chunk* currentChunk() {
@@ -229,8 +238,13 @@ static int emitJump(uint8_t instruction) {
 
 // helper for endCompiler() - function returns explicit (a value) or implicit by reaching } -> it returns nil
 static void emitReturn() {
-    emitByte(OP_NIL);       
-    emitByte(OP_RETURN);    // temporaly  - write the OP_RETURN Byte to our Chunk 
+    if (current->type == TYPE_INITIALIZER) {
+        emitBytes(OP_GET_LOCAL, 0);     // init() always must return a new instance of the class.
+        // So we push the zero slot -> that we know contains the instance when handling methods.
+    } else {
+        emitByte(OP_NIL);               // normal functions return implicit nil
+    }
+    emitByte(OP_RETURN);                // temporaly  - write the OP_RETURN Byte to our Chunk 
 }
 
 // helper - we call this function when we exit a new local scope with "}"...
@@ -282,8 +296,15 @@ static void initCompiler(Compiler* compiler, FunctionType type) {
     Local* local = &current->locals[current->localCount++];
     local->depth = 0;
     local->isCaptured = false;
-    local->name.start = "";
-    local->name.length = 0;
+
+    // compiler sets stack slot zero - Used for special purpose
+    if (type != TYPE_FUNCTION) {
+        local->name.start = "this";         // were dealing with a method -> this slot holds the this keyword
+        local->name.length = 4;             // 
+    } else {
+        local->name.start = "";             // for function calls this slot ends up holding
+        local->name.length = 0;             // the function called later on
+    }
 }
 
 // emits the Instrucitons to add one constant to our Cunk (like in var x=3.65 -> we would add const 3.65)
@@ -541,6 +562,10 @@ static void dot(bool canAssign) {
     if(canAssign && match(TOKEN_EQUAL)) {
         expression();
         emitBytes(OP_SET_PROPERTY, name);    // "Preaches.isTasty = false" sets isTasty field
+    } else if (match(TOKEN_LEFT_PAREN))  {
+        uint8_t argCount = argumentList();
+        emitBytes(OP_INVOKE, name);         // Method calls get its own OP-Code for optimisation
+        emitByte(argCount);
     } else {
         emitBytes(OP_GET_PROPERTY, name);   // "print Peaches.isTasty" -> prints true
     }
@@ -621,6 +646,17 @@ static void variable(bool canAssign) {
     namedVariable(parser.previous, canAssign);
 }
 
+// parsing function for this keyword - used in bound-methods to access class-fields variables.
+// - we treat this as a lexically scoped local variable. (that needs not initialization)
+static void this_(bool canAssign) {
+    if (currentClass == NULL) {
+        error("Can't use 'this' outside of a class.");   // cant use this at top level
+        return;
+    }
+    variable(false);    // assigning to this is not possible (this = 12) so we pass canAssign=false
+    // variable() treats "this" as if it were the variable identifier
+}
+
 // parsing function for an unary negation (-10 or !true)
 static void unary(bool _canAssign) {
     TokenType operatorType = parser.previous.type;      // we need to differentiate between ! and -
@@ -679,7 +715,7 @@ ParseRule rules[] = {
     [TOKEN_PRINT]         = {NULL,        NULL,      PREC_NONE},
     [TOKEN_RETURN]        = {NULL,        NULL,      PREC_NONE},
     [TOKEN_SUPER]         = {NULL,        NULL,      PREC_NONE},
-    [TOKEN_THIS]          = {NULL,        NULL,      PREC_NONE},
+    [TOKEN_THIS]          = {this_,       NULL,      PREC_NONE},
     [TOKEN_TRUE]          = {literal,     NULL,      PREC_NONE},
     [TOKEN_VAR]           = {NULL,        NULL,      PREC_NONE},
     [TOKEN_WHILE]         = {NULL,        NULL,      PREC_NONE},
@@ -773,17 +809,43 @@ static void function(FunctionType type) {
     }
 }
 
+// helper for classDeclaration() - parses a method inside a class body:
+static void method() {
+    consume(TOKEN_IDENTIFIER, "Expect method name.");
+    uint8_t constant = identifierConstant(&parser.previous);
+    // OP_METHOD needs: a objClosure (that function() pushes on the stack)
+    // it will connect that function as a method to the class aboce it on the stack
+    FunctionType type = TYPE_METHOD;
+    if (parser.previous.length == 4 && memcmp(parser.previous.start, "init", 4)==0) {
+        type = TYPE_INITIALIZER;    // most functions return implicit nil. BUT init() MUST return ALWAYS an INSTANCE!
+    }
+    function(type);
+    emitBytes(OP_METHOD, constant);
+}
+
 // helper for declaration() - parses a class declaration: ex: "class Boats {var passengers = 10;}"
 static void classDeclaration() {
     consume(TOKEN_IDENTIFIER, "Expect class name!");
+    Token className = parser.previous;
     uint8_t nameConstant = identifierConstant(&parser.previous);
     declareVariable();                  // add our name ex. "Boats" to our string-lookup-table
 
     emitBytes(OP_CLASS, nameConstant);  // instruction to create Class Object at runtime
     defineVariable(nameConstant);       // OP_CLASS takes index of nametable to class-name
 
+    ClassCompiler classCompiler;            // When the compiler begins to compile a class it pushes a new
+    classCompiler.enclosing = currentClass; // classCompiler to that implicit linked stack (head is global)
+    currentClass = &classCompiler;
+
+    namedVariable(className, false);    // method needs the class identifier-name above it on the stack:
     consume(TOKEN_LEFT_BRACE, "Expect '{' before class body!");
+    // we check for method-declaration/initialisation, ex: getname():  "class Bob { getName() { return "Bob";}}""
+    while (!check(TOKEN_RIGHT_BRACE) && !check(TOKEN_EOF)) {
+        method();
+    }
     consume(TOKEN_RIGHT_BRACE, "Expect '}' after class body!");
+    emitByte(OP_POP);                   // we only pushed the class identifer-name for method() so we pop it after
+    currentClass = currentClass->enclosing; // when were done we remove that from the implicit linked stack
 }
 
 // helper for declaration() - parses a Function declaration: ex: "fun doStuff() {...}"
@@ -895,6 +957,9 @@ static void returnStatement() {
     if (match(TOKEN_SEMICOLON)) {
         emitReturn();                       // return; (-> implicit NIL from emitReturn())
     } else {
+        if(current->type == TYPE_INITIALIZER) {
+            error("Can't return a value from an initializer.");
+        }
         expression();                       // return expr;
         consume(TOKEN_SEMICOLON, "Expect ';' after return value.");
         emitByte(OP_RETURN);

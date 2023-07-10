@@ -46,6 +46,7 @@ typedef enum {
     OP_JUMP_IF_FALSE,   // used to skipp execution of the statement, for ex:  "if(expr) statement"
     OP_LOOP,            // unconditionally jumps back to the 16-bit offset that follows in 2 8bit chunks afterwards
     OP_CALL,            // a function call
+    OP_INVOKE,          // method call - get their own OpCode for optimisation (since they happen often and need to be fast)
     OP_CLOSURE,         // each OP_CLOSURE is followed by the series of bytes that specify the upvalues the ObjClosure should own.
     OP_CLOSE_UPVALUE,   // (when local goes out of scope and an upvalue still needs it) it takes ownership of it (the value on the stack)
     OP_PRINT,           // print expression. like "print x+8;"  -> with x="hello" -> "hello8"
@@ -54,6 +55,7 @@ typedef enum {
     OP_GET_PROPERTY,    // gets a field of class-instance ex:"print Peaches.isTasty" -> prints true
     OP_SET_PROPERTY,    // sets a field of class-instance  ex: "Preaches.isTasty = false" sets isTasty field
     OP_CLASS,           // creates Runtime class-object is followed by idx for name-table to class-name-identifier
+    OP_METHOD,          // above on stack expects function name, then Closure of the method -> connects those
 } OpCode;
 
 // holds the instructions (dynamic-array of bytes)

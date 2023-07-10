@@ -74,7 +74,9 @@ void initVM() {
     vm.grayStack = NULL;
     initTable(&vm.globals); // setup the HashTable for global variables
     initTable(&vm.strings); // setup the HashTable for used strings
-
+    // to make lookup for "init()" we define this ObjString(string-interning):
+    vm.initString = NULL;   // zero the field out to avoid GC reading undefined before copyString("init")
+    vm.initString = copyString("init", 4);  
     // init Native Functions:
     defineNative("clock", clockNative);
 }
@@ -82,6 +84,7 @@ void initVM() {
 void freeVM() {
     freeTable(&vm.globals);
     freeTable(&vm.strings);
+    vm.initString = NULL;   // manually clear the pointer
     freeObjects();          // when free the vm, we need to free all objects in the linked-list of objects.
 }
 
@@ -131,10 +134,23 @@ static bool callValue(Value callee, int argCount) {
         switch(OBJ_TYPE(callee)) {
         // since lox is a dynamic language, we need to check types calling a Function/Method at runtime-type. 
         // - to block: "a_string"(); or "var x = 123; x()" 
+            case OBJ_BOUND_METHOD: {
+                ObjBoundMethod* bound = AS_BOUND_METHOD(callee);
+                vm.stackTop[-argCount -1] = bound->receiver;    // the zero slot in the new callframe, we write our receiver in that slot
+                return call(bound->method, argCount);   // we unwrap the method from the Boundmethod and call it
+            }
             case OBJ_CLASS: {
                 // To instance a Class we reuse callValue - instead of 'new SomeClass' we do 'SomeClass()'
                 ObjClass* pClass = AS_CLASS(callee);
-                vm.stackTop[-argCount -1] = OBJ_VAL(newInstance(pClass));   
+                vm.stackTop[-argCount -1] = OBJ_VAL(newInstance(pClass));
+                // automatically call init on new instances: class Brunch{ init(food, count){}} \n Brunch("coffee", 2)
+                Value initializer;
+                if (tableGet(&pClass->methods, vm.initString, &initializer)) {
+                    return call(AS_CLOSURE(initializer), argCount);     // this will make sure number of arguments match (like any fn call)
+                } else if (argCount != 0) {
+                    runtimeError("Expected 0 arguments but got %d.");   // if no init() -> cant pass in not 0 arguments in NewClass(1,2)
+                    return false;
+                }
                 return true;
             }
             case OBJ_CLOSURE:
@@ -148,11 +164,57 @@ static bool callValue(Value callee, int argCount) {
                 return true;
             }
             default:
-                break;  // Non-callable object type tried to call ex.: "just string"()
+                break;          // Non-callable object type tried to call ex.: "just string"()
         }
     }
     runtimeError("Can only call functions and classes.");
     return false;
+}
+
+// helper for invoke() - combines logic for OP_GET_PROPERTY and OP_CALL, but with less lookups/stack ready -> faster
+// - lookup method by name in method-table. (error if not found)
+// - take the moethods closure and push a call to in on the CallFrame stack. (receiver and method arguments are already there)
+static bool invokeFromClass(ObjClass* pClass, ObjString* name, int argCount) {
+    Value method;
+    if (!tableGet(&pClass->methods, name, &method)) {
+        runtimeError("Undefined property '%s'.", name->chars);
+        return false;
+    }
+    return call(AS_CLOSURE(method), argCount);
+}
+
+// helper for run() - read receiver Instance from stack and pass that down to invokeFromClass
+static bool invoke(ObjString* name, int argCount) {
+    Value receiver = peek(argCount);                // read receiver from the stack (its below arguments on the stack)
+    if (!IS_INSTANCE(receiver)) {
+        runtimeError("Only instances have methods.");
+        return false;
+    }
+    ObjInstance* instance = AS_INSTANCE(receiver);
+
+    Value value;
+    if (tableGet(&instance->fields, name, &value)) {
+        vm.stackTop[-argCount - 1] = value;
+        return callValue(value, argCount);
+    }
+
+    return invokeFromClass(instance->pClass, name, argCount);
+}
+
+// helper for run() case OP_GET_PROPERTY - 
+// 1. check for method with given name in pClass's method table (if not runtime-Error)
+// 2. take the method and wrap it together with the Instance(pop() from stack)
+// 3. last we push the ObjBoundMethod on the stack
+static bool bindMethod(ObjClass* pClass, ObjString* name) {
+    Value method;
+    if (!tableGet(&pClass->methods, name, &method)) {
+        runtimeError("Undefined property '%s'.", name->chars);
+        return false;
+    }
+    ObjBoundMethod* bound = newBoundMethod(peek(0), AS_CLOSURE(method));
+    pop();                      // pop the Instance from the stack
+    push(OBJ_VAL(bound));
+    return true;
 }
 
 // creates a new Upvalue for captured local variable:
@@ -190,6 +252,15 @@ static void closeUpvalues(Value* last) {
         upvalue->location = &upvalue->closed;       // instead of pointing to where stack-variable we now point to itself->closed 
         vm.openUpvalues = upvalue->next;
     }
+}
+
+// Connects a method (closure on stack) to its class at runtime
+// - the method closure is on top of the stack, below it the class we bind it to
+static void defineMethod(ObjString* name) {
+    Value method = peek(0);                         // read method from stack
+    ObjClass* pClass = AS_CLASS(peek(1));           // read its parent Class
+    tableSet(&pClass->methods, name, method);       // write the closure in the method table of class
+    pop();                                          // we dont need closure name on the stack anymore
 }
 
 // we handle what Values may be evaluated as a boolean.
@@ -395,6 +466,15 @@ static InterpretResult run() {
                 frame = &vm.frames[vm.frameCount - 1];  // there will be a new frame on the CallFrame stack for the called function, that we update
                 break;
             }
+            case OP_INVOKE: {               // Method calls got their special Invoke OpCode to make those lookups faster
+                ObjString* method = READ_STRING();
+                int argCount = READ_BYTE();
+                if (!invoke(method, argCount)) {
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                frame = &vm.frames[vm.frameCount - 1];
+                break;
+            }
             case OP_CLOSURE: {                           
                 ObjFunction* function = AS_FUNCTION(READ_CONSTANT());   // load the compiled function from the const-table
                 ObjClosure* closure = newClosure(function);             // -> wrap it in ObjClosure
@@ -431,9 +511,12 @@ static InterpretResult run() {
                     push(value);                // and push the value of the variable
                     break;
                 }
-                //                              if field doesnt exists we runtime error:
-                runtimeError("Undefined property '%s'.", name->chars);
-                return INTERPRET_RUNTIME_ERROR;
+                // next we check if its a method instead, if neither we runtime error:
+                if (!bindMethod(instance->pClass, name)) {
+                    //runtimeError("Undefined property '%s'.", name->chars);
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                break;
             }
             case OP_SET_PROPERTY: {
                 // we have to check against non-instances calling this: 'var x=false; var x.y = true;'
@@ -471,6 +554,9 @@ static InterpretResult run() {
             // - it just loads string for that class and pass that to newClass()
             case OP_CLASS:
                 push(OBJ_VAL(newClass(READ_STRING())));
+                break;
+            case OP_METHOD:
+                defineMethod(READ_STRING());
                 break;
         }
     }

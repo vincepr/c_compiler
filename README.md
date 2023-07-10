@@ -216,3 +216,13 @@ Removing references to unreachable strings, we do handle specially in `tableRemo
 clox's gc-collection frequency strategy: **Self-adjusting heap**:
 
 - GC collector frequency automatically adjusts based on the live size of the heap. We track the toal number of bytes of managed memory the VM has allocated. When it goes above a threshold we trigger GC. After GC we note the current size and set the next threshold.
+
+## Optimisations
+### Superinstruction - a set of Instruction gets replaced by a special optimized one
+Previously, every time a Method is called, the `BoundMethod` struct is created by the bytecode instruction and then consumed. So for 10 method calls 10 allocations for that struct happen. the next bytecode instruction then consumes that BoundMethod.
+
+Idea is that we can at compile time instead emit a new special instruction that performs an optimized method call: `OP_INVOKE`
+
+
+
+

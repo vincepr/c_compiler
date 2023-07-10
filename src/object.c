@@ -27,10 +27,19 @@ static Obj* allocateObject(size_t size, ObjType type) {
     return object;
 }
 
+// helper for ALLOCATE_OBJ macro - constructor
+ObjBoundMethod* newBoundMethod(Value receiver, ObjClosure* method) {
+    ObjBoundMethod* bound = ALLOCATE_OBJ(ObjBoundMethod, OBJ_BOUND_METHOD);
+    bound->receiver = receiver;
+    bound->method = method;
+    return bound;
+}
+
 // helper for ALLOCATE_OBJ macro - constructor for a new Class Object
 ObjClass* newClass(ObjString* name) {
     ObjClass* aClass = ALLOCATE_OBJ(ObjClass, OBJ_CLASS);
-    aClass->name = name; 
+    aClass->name = name;
+    initTable(&aClass->methods);
     return aClass;
 }
 
@@ -144,6 +153,9 @@ static void printFunction(ObjFunction* function) {
 // helper for printValue() - print functionality for heap allocated datastructures
 void printObject(Value value) {
     switch (OBJ_TYPE(value)) {
+        case OBJ_BOUND_METHOD:
+            printFunction(AS_BOUND_METHOD(value)->method->function);
+            break;
         case OBJ_CLASS:
             printf("%s", AS_CLASS(value)->name->chars);
             break;
