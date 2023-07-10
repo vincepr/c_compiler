@@ -28,3 +28,6 @@ Just clone the repo, cd into it and if on linux (with gcc installed) you can jus
 
 ## The Lox Language
 For the Lox Language itself you can refer to the book: https://craftinginterpreters.com/the-lox-language.html
+
+## Notes I took while coding along the chapters:
+https://github.com/vincepr/c_compiler/docs/NOTES.md

@@ -224,6 +224,22 @@ Previously, every time a Method is called, the `BoundMethod` struct is created b
 Idea is that we can at compile time instead emit a new special instruction that performs an optimized method call: `OP_INVOKE`.
 - Similar we use `OP_SUPER_INVOKE` for a fast shortcut thant `OP_GET_SUPER` followed by `OP_CALL` so we can squeze out an expensive lookup by reordering our stack a bit.
 
+### The big baddie - the lookup in our table
+Since we need to lookup our table for each invokation, functioncall etc. a lot of time is spend in `tableGet()`. And that again mainly uses `findEntry()` to lookup entries in our HashMap.
+
+especially this one line:
+```
+uint32_t index = key->hash % capacity;
+```
+- modulo and division are about 30-50 times slower than addition, subtraction or a pointer dereferencing. So the problem is found.
 
 
+#### The solution
+Since we calculate a number modulo a power of 2, we can use that knowledge to instead do a decrement and a bitwise AND. (operations cpus love)
+
+so the above line would become:
+```
+uint32_t index = key->hash & (capacity -1);
+```
+- we can used that trick in 4 places (2 in findEntry and 2 in TableFindString)
 
