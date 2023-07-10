@@ -148,7 +148,7 @@ static bool callValue(Value callee, int argCount) {
                 if (tableGet(&pClass->methods, vm.initString, &initializer)) {
                     return call(AS_CLOSURE(initializer), argCount);     // this will make sure number of arguments match (like any fn call)
                 } else if (argCount != 0) {
-                    runtimeError("Expected 0 arguments but got %d.");   // if no init() -> cant pass in not 0 arguments in NewClass(1,2)
+                    runtimeError("Expected 0 arguments but got %d.", argCount);   // if no init() -> cant pass in not 0 arguments in NewClass(1,2)
                     return false;
                 }
                 return true;
