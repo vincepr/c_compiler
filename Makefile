@@ -50,6 +50,9 @@ web:
 	cp srcweb/*.css build_wasm/
 #	emcc $(WEBFILES) -o build_wasm/compiler.html -sEXPORTED_FUNCTIONS=_compileSourceCode -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
 
+testsuite: build
+	@ dart /home/vince/c/craftinginterpreters/tool/bin/test.dart clox --interpreter /home/vince/c/c_compiler/binary.out
+
 # to remove all artifacts/binary
 clean:
 	rm -rf $(BINARY) *.o

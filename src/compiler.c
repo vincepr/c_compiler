@@ -656,7 +656,7 @@ static void super_(bool canAssign) {
         error("Can't use 'super' in a class with no superclass.");
     }
 
-    consume(TOKEN_DOT, "Expect '.' after 'super' keyword.");
+    consume(TOKEN_DOT, "Expect '.' after 'super'.");
     consume(TOKEN_IDENTIFIER, "Expect superclass method name.");
     uint8_t name = identifierConstant(&parser.previous);    // last token was the identifier so we read that out
 
