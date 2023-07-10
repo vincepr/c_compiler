@@ -55,6 +55,8 @@ typedef enum {
     OP_GET_PROPERTY,    // gets a field of class-instance ex:"print Peaches.isTasty" -> prints true
     OP_SET_PROPERTY,    // sets a field of class-instance  ex: "Preaches.isTasty = false" sets isTasty field
     OP_CLASS,           // creates Runtime class-object is followed by idx for name-table to class-name-identifier
+    OP_INHERIT,         // superclass is on the stack -> we wire the current one to it so it inherits all fields and methods
+    OP_GET_SUPER,       // OP_GET_SUPER expects superclass on top of stack and below the receiver.
     OP_METHOD,          // above on stack expects function name, then Closure of the method -> connects those
 } OpCode;
 

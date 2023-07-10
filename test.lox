@@ -135,3 +135,28 @@ class Oops {
 
 var oops = Oops();
 oops.field();
+
+
+class Doughnut {
+  cook() {
+    print "Dunk in the fryer.";
+    this.finish("sprinkles");
+  }
+
+  finish(ingredient) {
+    print "Finish with " + ingredient;
+  }
+}
+
+class Cruller < Doughnut {
+  finish(ingredient) {
+    // No sprinkles, always icing.
+    super.finish("icing");
+  }
+}
+// base class:
+var food1 = Doughnut();
+food1.cook();
+// and the one that overwrites finish method:
+var food2 = Cruller();
+food2.cook();

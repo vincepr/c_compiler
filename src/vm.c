@@ -555,6 +555,27 @@ static InterpretResult run() {
             case OP_CLASS:
                 push(OBJ_VAL(newClass(READ_STRING())));
                 break;
+            case OP_INHERIT: {
+                Value superclass = peek(1);                 // 2nd on the stack
+                if (!IS_CLASS(superclass)) {
+                    runtimeError("Can only inherit from another class.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                ObjClass* subclass = AS_CLASS(peek(0));     // top on the stack
+                tableAddAll(&AS_CLASS(superclass)->methods, &subclass->methods);    // copy method table -> inherit methods
+                pop();
+                break;
+            }
+            case OP_GET_SUPER: {
+                // we resolve using the function and the pop'd superclass from top of stack
+                // bindMethod skips over any overriding methods in any of the subclasses between that superclass and the owner
+                ObjString* name = READ_STRING();
+                ObjClass* superclass = AS_CLASS(pop());
+                if (!bindMethod(superclass, name)) {
+                    return INTERPRET_RUNTIME_ERROR;         // can only methods from superclass
+                }
+                break;
+            }
             case OP_METHOD:
                 defineMethod(READ_STRING());
                 break;
