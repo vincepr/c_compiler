@@ -22,6 +22,20 @@ static Value clockNative(int argCount, Value* args) {
 
 /* CUSTOM Native functions added on top of default lox implementation: */ 
 
+// ads get length function to arrays (and maybe strings)
+static Value lengthNative(int argCount, Value* args) {
+    if (argCount == 1 && IS_ARRAY(args[0])) {
+        ObjArray* array = AS_ARRAY(args[0]);
+        int count = arrayGetLength(array);
+        return NUMBER_VAL((double)count);
+    } else if (argCount == 1 && IS_STRING(args[0])) {
+        // TODO: handle get string length
+    } else {
+
+        // TODO: handle runtime error (can only get length from array and string)
+    }
+}
+
 // ads push functionality to array: - "push(someArr, "insert this str"); "
 static Value arrPushNative(int argCount, Value* args) {
     if (argCount != 2 || !IS_ARRAY(args[0])) {
@@ -118,6 +132,7 @@ void initVM() {
     defineNative("clock", clockNative);
     defineNative("push", arrPushNative);
     defineNative("delete", arrDeleteNative);
+    defineNative("len", lengthNative);
 }
 
 void freeVM() {

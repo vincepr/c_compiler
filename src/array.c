@@ -33,3 +33,7 @@ void arrayDeleteFrom(ObjArray* array, int index) {
 bool arrayIsValidIndex(ObjArray* array, int index) {
     return (index >= 0 || index < array->count);
 }
+
+int arrayGetLength(ObjArray* array) {
+    return array->count;
+}

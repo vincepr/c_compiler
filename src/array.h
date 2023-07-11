@@ -9,5 +9,6 @@ void arrayWriteTo(ObjArray* array, int index, Value value);
 Value arrayReadFromIdx (ObjArray* array, int index); 
 void arrayDeleteFrom(ObjArray* array, int index);
 bool arrayIsValidIndex(ObjArray* array, int index);
+int arrayGetLength(ObjArray* array);
 
 #endif
