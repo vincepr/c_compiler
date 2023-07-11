@@ -645,6 +645,8 @@ static InterpretResult run() {
             case OP_METHOD:
                 defineMethod(READ_STRING());
                 break;
+            
+            /* CUSTOM OpCommands implemented ontop of the default lox */
             case OP_ARRAY_BUILD:{
                 // stack at start: [item1, item2 ... itemN, count]top -> at end: [array]
                 // takes operand of items and count = Nr. of values on the stack that fill the array

@@ -1,186 +1,199 @@
-// just a file to dump some lox code into were testing while interpreter is build
+// // just a file to dump some lox code into were testing while interpreter is build
 
-fun doSomething() {
-    var x = 0;
-    while (x<10) {
-        x = x + 1;
-    }
-    print x;
-}
-//doSomething();
+// fun doSomething() {
+//     var x = 0;
+//     while (x<10) {
+//         x = x + 1;
+//     }
+//     print x;
+// }
+// //doSomething();
 
-fun outer() {
-  var x = "outside";
-  fun inner() {
-    print x;
-  }
-  inner();
-}
-//outer(); // should print outside
-
-
-
-// testing stack trance:
-fun a() { b(); }
-fun b() { c(); }
-fun c() {
-  c("too", "many"); // this only 'breaks' at runtime
-}
-// a();         // will produce a full stacktrace with the error in c()
+// fun outer() {
+//   var x = "outside";
+//   fun inner() {
+//     print x;
+//   }
+//   inner();
+// }
+// //outer(); // should print outside
 
 
+
+// // testing stack trance:
+// fun a() { b(); }
+// fun b() { c(); }
+// fun c() {
+//   c("too", "many"); // this only 'breaks' at runtime
+// }
+// // a();         // will produce a full stacktrace with the error in c()
 
 
 
 
 
 
-// some test code for classes:
-class Brioche {
-
-}
-
-print Brioche;    // the class -> prints "Brioche"
-print Brioche();  // a instance of the class Brioche -> prints "Brioche instance"
-
-class Pair {}
-
-var pair = Pair();
-pair.first = 1;
-pair.second = 2;
-print pair.first + pair.second; // prints 3.
 
 
-// closures bug hunting:
-// when closures are implemented this should print out outer:
+// // some test code for classes:
+// class Brioche {
 
-var x = "global";
-fun outer() {
-  var x = "outer";
-  fun inner() {
-    print x;
-  }
-  inner();
-}
-outer();    // closure captured "outer" and should print that
+// }
 
-// closures here can capture the same outer variable inc.
-fun incrementClosure() {
-  var inc = 50;
-  fun inner() {
-    inc = inc +10;
-    print inc;
-  }
-  return inner;
-}
-var a = incrementClosure();
-var b = incrementClosure();
-//a();
-//a();  // this captures the same inc as the above
-//b();  // this captures another inc
-//b();  // same inc as above
-//b();  // same inc as above
+// print Brioche;    // the class -> prints "Brioche"
+// print Brioche();  // a instance of the class Brioche -> prints "Brioche instance"
+
+// class Pair {}
+
+// var pair = Pair();
+// pair.first = 1;
+// pair.second = 2;
+// print pair.first + pair.second; // prints 3.
 
 
-class Scone {
-  topping(first, second) {
-    print "scone with " + first + " and " + second;
-  }
-}
+// // closures bug hunting:
+// // when closures are implemented this should print out outer:
 
-var scone = Scone();
-scone.topping("berries", "cream");  // prints out: scone with beries and cream
+// var x = "global";
+// fun outer() {
+//   var x = "outer";
+//   fun inner() {
+//     print x;
+//   }
+//   inner();
+// }
+// outer();    // closure captured "outer" and should print that
 
-
-class Person {
-  sayName() {
-    print this.name;
-  }
-}
-
-var jane = Person();
-jane.name = "Jane";
-
-var method = jane.sayName;
-method(); // prints out: Jane
-
-
-class CoffeeMaker {
-  init(coffee) {
-    this.coffee = coffee;
-  }
-
-  brew() {
-    print "Enjoy your cup of " + this.coffee;
-
-    // No reusing the grounds!
-    this.coffee = nil;
-  }
-}
-
-var maker = CoffeeMaker("coffee and chicory");
-maker.brew();
+// // closures here can capture the same outer variable inc.
+// fun incrementClosure() {
+//   var inc = 50;
+//   fun inner() {
+//     inc = inc +10;
+//     print inc;
+//   }
+//   return inner;
+// }
+// // var a = incrementClosure();
+// // var b = incrementClosure();
+// //a();
+// //a();  // this captures the same inc as the above
+// //b();  // this captures another inc
+// //b();  // same inc as above
+// //b();  // same inc as above
 
 
-// fields can hold functions of their own and get called correctly:
-class Oops {
-  init() {
-    fun f() {
-      print "not a method";
-    }
+// class Scone {
+//   topping(first, second) {
+//     print "scone with " + first + " and " + second;
+//   }
+// }
 
-    this.field = f;
-  }
-}
-
-var oops = Oops();
-oops.field();
+// var scone = Scone();
+// scone.topping("berries", "cream");  // prints out: scone with beries and cream
 
 
-class Doughnut {
-  cook() {
-    print "Dunk in the fryer.";
-    this.finish("sprinkles");
-  }
+// class Person {
+//   sayName() {
+//     print this.name;
+//   }
+// }
 
-  finish(ingredient) {
-    print "Finish with " + ingredient;
-  }
-}
+// var jane = Person();
+// jane.name = "Jane";
 
-class Cruller < Doughnut {
-  finish(ingredient) {
-    // No sprinkles, always icing.
-    super.finish("icing");
-  }
-}
-// base class:
-var food1 = Doughnut();
-food1.cook();
-// and the one that overwrites finish method:
-var food2 = Cruller();
-food2.cook();
-print "";
+// var method = jane.sayName;
+// method(); // prints out: Jane
+
+
+// class CoffeeMaker {
+//   init(coffee) {
+//     this.coffee = coffee;
+//   }
+
+//   brew() {
+//     print "Enjoy your cup of " + this.coffee;
+
+//     // No reusing the grounds!
+//     this.coffee = nil;
+//   }
+// }
+
+// var maker = CoffeeMaker("coffee and chicory");
+// maker.brew();
+
+
+// // fields can hold functions of their own and get called correctly:
+// class Oops {
+//   init() {
+//     fun f() {
+//       print "not a method";
+//     }
+
+//     this.field = f;
+//   }
+// }
+
+// var oops = Oops();
+// oops.field();
+
+
+// class Doughnut {
+//   cook() {
+//     print "Dunk in the fryer.";
+//     this.finish("sprinkles");
+//   }
+
+//   finish(ingredient) {
+//     print "Finish with " + ingredient;
+//   }
+// }
+
+// class Cruller < Doughnut {
+//   finish(ingredient) {
+//     // No sprinkles, always icing.
+//     super.finish("icing");
+//   }
+// }
+// // base class:
+// var food1 = Doughnut();
+// food1.cook();
+// // and the one that overwrites finish method:
+// var food2 = Cruller();
+// food2.cook();
+// print "";
 
 var someArray = [];
-var anotherArray = [1, 2, 3];
-//              0    1   2     3           4
-anotherArray = [11, 99, nil, false, "arrays_running"];
-print anotherArray;
-print anotherArray[0];
-print anotherArray[4];
-print anotherArray[8];
+var arr = [1, 2, 3];
+//     0   1    2     3           4
+fun printArr(arr) {
+  for (var i=0; i<10; i=i+1) {
+    print arr[i];
+  }
+}
 
-delete(anotherArray, 3);
-print anotherArray[3];
-
-print "______";
-print "______";
-
-var arr = [0,1,2,3];
-delete(arr, 3);
+arr = [11, 99, nil, false, "arrays_running"];
 print arr;
-print len(arr);
+print arr[0];
+print arr[1];
+print arr[2];
+print arr[3];
+print arr[4];
+//print arr[5]; // false? this should be ERROR
+//print arr[5]; // false? this should be ERROR
+
+delete(arr, 3);
+print arr[3];
+print arr[4]; // nil? this should be ERROR
+
+print "______";
+print "______";
+
+
+
+// var arr = [0,1,2,3];
+// delete(arr, 3);
+// print arr;
+// print len(arr);
 
 // current bugs:
 // [] runtime errors for NativeFunctions
@@ -192,3 +205,4 @@ print len(arr);
 // [] implement + string concatenate
 // [] implement % modulo operator
 // [] implement runtime type checking. ex. typeof("hello") == "string", typeof(123.12)=="number", typeof([1,2,3]) == "array", typeof(variableFn) == "function" ...;
+// [] implement x+=1, x-=1, x*=3, x/=10...
