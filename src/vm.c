@@ -97,7 +97,7 @@ static NativeResult arrPopNative(int argCount, Value* args) {
 
 }
 
-// deletes entry from array - "delete(someArr, 99);" deletes entry on idx=99
+// delete(array, index) - deletes entry from array - "delete(someArr, 99);" deletes entry on idx=99
 static NativeResult arrDeleteNative(int argCount, Value* args) {
     NativeResult result;
     result.didError = false;
