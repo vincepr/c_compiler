@@ -49,6 +49,12 @@ typedef enum {
     INTERPRET_RUNTIME_ERROR
 } InterpretResult;
 
+// // Native function Results- just a wrapper over Value - because we need to track errors
+struct NativeResult{
+    Value value;
+    bool didError;
+};
+
 extern VM vm;       // we expose the vm globally. (since the object-module needs that when allocating a new object (more specific it needs vm.objects <- the linked list))
 
 void initVM();

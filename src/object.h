@@ -70,8 +70,15 @@ typedef struct {
     ObjString* name;
 } ObjFunction;
 
+// // Native function Results- just a wrapper over Value - because we need to track errors
+typedef struct {
+    Value value;
+    bool didError;
+} NativeResult;
+
+
 // Native Functions - like print functionality hard coded OR binding of external (here C) OS-functions
-typedef Value (*NativeFn)(int argCount, Value* args);
+typedef NativeResult (*NativeFn)(int argCount, Value* args);
 typedef struct {
     Obj obj;
     NativeFn function;

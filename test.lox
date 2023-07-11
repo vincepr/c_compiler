@@ -195,25 +195,27 @@ print "______";
 // print arr;
 // print len(arr);
 
-var arr = [];
+var arr = [1,];
 for (var i=0; i<10; i=i+1) {
   push(arr, i);
 }
 print arr;
-for (var i=0; i<20; i=i+1) {
+for (var i=0; i<1; i=i+1) {
   print pop(arr);
 }
+print "length:";
+
+print len(arr);
 print arr;
-
-
-// current bugs:
-// [] runtime errors for NativeFunctions
-// [] deleting from array does append nil at end (though it should get overwritten if we push after)
-// [] implement pop(arr)
-// [] implement len(arr), len(string), implement indexing into strings
-// [] implement for( arr ) {} // like foreach looping over array?
+delete(arr, 9);
+print arr;
+// current todo:
+// [x] runtime errors for NativeFunctions
+// [x] deleting from array does append nil at end (though it should get overwritten if we push after)
+// [x] implement pop(arr)
+// [x] implement len(arr), len(string), implement indexing into strings
+// [x] bug: can index into out of bounds -> returns false! not runtime Error
 // [] implement + string concatenate
 // [] implement % modulo operator
 // [] implement runtime type checking. ex. typeof("hello") == "string", typeof(123.12)=="number", typeof([1,2,3]) == "array", typeof(variableFn) == "function" ...;
 // [] implement x+=1, x-=1, x*=3, x/=10...
-// [x] can index into out of bounds -> returns false! not runtime Error
