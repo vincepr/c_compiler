@@ -195,6 +195,9 @@ print "______";
 // print arr;
 // print len(arr);
 
+var arr = [];
+arr["hello"];
+
 // current bugs:
 // [] runtime errors for NativeFunctions
 // [] deleting from array does append nil at end (though it should get overwritten if we push after)

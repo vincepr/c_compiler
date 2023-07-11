@@ -51,6 +51,9 @@ web:
 	cp srcweb/*.js build_wasm/
 	cp srcweb/*.css build_wasm/
 #	emcc $(WEBFILES) -o build_wasm/compiler.html -sEXPORTED_FUNCTIONS=_compileSourceCode -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
+unit: build
+	gcc -o tests/minunit.out tests/minunit.c
+	./tests/minunit.out
 
 # to remove all artifacts/binary
 clean:
