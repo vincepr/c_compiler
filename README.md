@@ -22,8 +22,9 @@ You can toggle 3 Flags in the web version:
 
 ## Building yourself
 Just clone the repo, cd into it and if on linux (with gcc installed) you can just use my makefile: 
-- for the repl: `make run`
 - building the binary: `make build`
+- for the repl: `make run`
+- build the binary and run the test.lox file `make test`
 - building for the web-browser: `build web` (this needs emcc from emscripten installed to compile c to a `.wasm` file).
 
 ## The Lox Language

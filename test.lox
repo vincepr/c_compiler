@@ -160,3 +160,9 @@ food1.cook();
 // and the one that overwrites finish method:
 var food2 = Cruller();
 food2.cook();
+
+var someArray = [];
+var anotherArray = [1, 2, 3];
+anotherArray = [11, 99, nil, false, "hello world"];
+print anotherArray[2] // prints nil
+print anotherArray[1] - anotherArray[0] // prints 88
