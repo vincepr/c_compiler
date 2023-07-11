@@ -57,7 +57,7 @@ var x = 12.5;
 x = floor(x);     // rounding down decimals
 print x;          // -> 12
 
-print 119 % 20;   //->19 Modulo operator
+print 119 % 20;   // -> 19 Modulo operator
 
 
 `,
@@ -192,7 +192,7 @@ const ace_theme_monaco = {
         { token: 'variable', foreground: '5c6773' },
         { token: 'variable.predefined', foreground: '5c6773' },
         { token: 'constant', foreground: 'f08c36' },
-        { token: 'comment', foreground: '86b300', fontStyle: 'italic' },
+        { token: 'comment', foreground: '86b300'},
         { token: 'number', foreground: '3777bd' },
         { token: 'number.hex', foreground: '3777bd' },
         { token: 'regexp', foreground: '4dbf99' },
