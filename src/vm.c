@@ -14,6 +14,14 @@
 // instance of our VM:
 VM vm;
 
+// // Native function Results need a wrapper if they should be able to error
+static struct NativeResult{
+    Value value;
+    bool didError;
+};
+static void runtimeError(const char* format, ...);
+
+
 // define Static/Native C-Functions - returns time elapsed since the program started running in seconds.
 // - in lox its available with: 'clock()'
 static Value clockNative(int argCount, Value* args) {
@@ -53,6 +61,15 @@ static Value arrPopNative(int argCount, Value* args) {
         // TODO: handle runtime error
     }
     ObjArray* array = AS_ARRAY(args[0]);
+    int lastIdx = arrayGetLength(array) - 1;
+    if (lastIdx < 0) {
+        // TODO: handle runtime error - cant pop empty array
+        runtimeError("cant pop empty array.");
+        return NIL_VAL;
+    }
+    Value item = arrayReadFromIdx(array, lastIdx);
+    arrayDeleteFrom(array, lastIdx);
+    return item;    // return the item pop'd
 
 }
 
@@ -131,6 +148,7 @@ void initVM() {
     // init Native Functions:
     defineNative("clock", clockNative);
     defineNative("push", arrPushNative);
+    defineNative("pop", arrPopNative);
     defineNative("delete", arrDeleteNative);
     defineNative("len", lengthNative);
 }
@@ -215,6 +233,7 @@ static bool callValue(Value callee, int argCount) {
                 Value result = native(argCount, vm.stackTop - argCount);
                 vm.stackTop -= argCount + 1;
                 push(result);   // we use the result from the C-Function and stuff it back in the stack
+                vm.
                 return true;
             }
             default:
@@ -683,7 +702,7 @@ static InterpretResult run() {
                     runtimeError("Array index=%d out of range. Current len()=%d.", idx, arrayGetLength(array));
                     return INTERPRET_RUNTIME_ERROR;
                 }
-                result = arrayReadFromIdx(array, idx);      //TODO: check if this must be AS_NUMBER(idx)
+                result = arrayReadFromIdx(array, idx);
                 push(result);
                 break;
             } 
