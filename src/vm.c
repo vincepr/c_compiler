@@ -680,7 +680,7 @@ static InterpretResult run() {
                 }
                 ObjArray* array = AS_ARRAY(pop());
                 if(!arrayIsValidIndex(array, idx)) {
-                    runtimeError("Array index out of range.");
+                    runtimeError("Array index=%d out of range. Current len()=%d.", idx, arrayGetLength(array));
                     return INTERPRET_RUNTIME_ERROR;
                 }
                 result = arrayReadFromIdx(array, idx);      //TODO: check if this must be AS_NUMBER(idx)

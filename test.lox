@@ -183,7 +183,7 @@ print arr[4];
 
 delete(arr, 3);
 print arr[3];
-print arr[4]; // nil? this should be ERROR
+//print arr[4]; // nil? this should be ERROR
 
 print "______";
 print "______";
@@ -197,7 +197,6 @@ print "______";
 
 // current bugs:
 // [] runtime errors for NativeFunctions
-// [] can index into out of bounds -> returns false! not runtime Error
 // [] deleting from array does append nil at end (though it should get overwritten if we push after)
 // [] implement pop(arr)
 // [] implement len(arr), len(string), implement indexing into strings
@@ -206,3 +205,4 @@ print "______";
 // [] implement % modulo operator
 // [] implement runtime type checking. ex. typeof("hello") == "string", typeof(123.12)=="number", typeof([1,2,3]) == "array", typeof(variableFn) == "function" ...;
 // [] implement x+=1, x-=1, x*=3, x/=10...
+// [x] can index into out of bounds -> returns false! not runtime Error
