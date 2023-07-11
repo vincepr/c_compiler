@@ -244,12 +244,13 @@ uint32_t index = key->hash & (capacity -1);
 - we can used that trick in 4 places (2 in findEntry and 2 in TableFindString)
 
 # Implementing my own Functionality on top of lox
-## Lists
+## Arrays / List
 Some kind of array/list type is definitly needed. The idea is to wrap the dynamic Array we used all over the place in lox. This should provide fixed time for accessing fields.
 
 And be fairly quick to iterate over, since it should get allocated in a close block together, compared to a linked list implementation.
 
-### object.h
+
+- `object.h`
 ```
 typedef struct {
     Obj obj;

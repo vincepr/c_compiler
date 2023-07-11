@@ -168,6 +168,7 @@ int disassembleInstruction(Chunk* chunk, int offset) {
             return invokeInstruction("OP_SUPER_INVOKE", chunk, offset);
         case OP_METHOD:
             return constantInstruction("OP_METHOD", chunk, offset);
+        /* CUSTOM implementations on top of Lox */
         default:
             printf("Unknown opcode %d\n", instruction);
             return offset +1;

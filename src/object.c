@@ -150,6 +150,45 @@ static void printFunction(ObjFunction* function) {
     printf("<fn %s>", function->name->chars);    // for other functions we just print out the name
 }
 
+/* CUSTOM implementations on top of default lox */
+
+// helper for ALLOCATE_OBJ macro - allocates our dynamic list we use as array in lox
+ObjArray* newArray() {
+    ObjArray* array = ALLOCATE_OBJ(ObjArray, OBJ_ARRAY);
+    array->items = NULL;
+    array->count = 0;
+    array->capacity = 0;
+    return array;
+}
+// Lox-Arrays can take in anything considered a value (so other arrays aswell)
+// - grows if necessary. Similar to valueArray or chunk
+void appendToArray(ObjArray* array, Value value) {
+    if (array->capacity < array->count + 1) {
+        int oldCapacity = array->capacity;
+        array->capacity = GROW_CAPACITY(oldCapacity);
+        array->items = GROW_ARRAY(Value, array->items, oldCapacity, array->capacity);
+    }
+    array->items[array->count] = value;
+    array->count++;
+}
+void arrayWriteTo(ObjArray* array, int index, Value value) {
+    array->items[index] = value;
+}
+Value arrayReadFromIdx (ObjArray* array, int index) {
+    return array->items[index];
+}
+void arrayDeleteFrom(ObjArray* array, int index) {
+    for (int i = index; i < array->count -1; i++) {
+        array->items[i] = array->items[i+1];
+    }
+    array->items[array->count-1] = NIL_VAL;
+    array->count--;
+}
+bool arrayIsValidIndex(ObjArray* array, int index) {
+    return (index >= 0 || index < array->count);
+}
+
+
 // helper for printValue() - print functionality for heap allocated datastructures
 void printObject(Value value) {
     switch (OBJ_TYPE(value)) {
@@ -177,5 +216,8 @@ void printObject(Value value) {
         case OBJ_UPVALUE: // this never gets reached, just there to satisfy all cases (prints the resolved var)
             printf("upvalue");
             break;
+        case OBJ_ARRAY: {
+            printf("[ ... ]");      //TODO: printing out arrays once implemented
+        }
     }
 }
