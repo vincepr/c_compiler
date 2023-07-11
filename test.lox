@@ -220,3 +220,5 @@ print ":::::::::::::::::::::::";
 // [x] bug: can index into out of bounds -> returns false! not runtime Error
 // [x] implement % modulo operator
 // [] implement runtime type checking. ex. typeof("hello") == "string", typeof(123.12)=="number", typeof([1,2,3]) == "array", typeof(variableFn) == "function" ...;
+// [] add print println or something to print without newline
+// [] add string escaping
