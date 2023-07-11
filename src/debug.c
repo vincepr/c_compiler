@@ -169,6 +169,12 @@ int disassembleInstruction(Chunk* chunk, int offset) {
         case OP_METHOD:
             return constantInstruction("OP_METHOD", chunk, offset);
         /* CUSTOM implementations on top of Lox */
+        case OP_ARRAY_BUILD:
+            return simpleInstruction("OP_ARRAY_BUILD", offset);
+        case OP_ARRAY_READ_IDX:
+            return simpleInstruction("OP_ARRAY_READ_IDX", offset);
+        case OP_ARRAY_WRITE:
+            return simpleInstruction("OP_ARRAY_WRITE", offset);
         default:
             printf("Unknown opcode %d\n", instruction);
             return offset +1;

@@ -13,7 +13,8 @@ $(CCPATH)vm.c \
 $(CCPATH)compiler.c \
 $(CCPATH)scanner.c \
 $(CCPATH)object.c \
-$(CCPATH)table.c
+$(CCPATH)table.c \
+$(CCPATH)array.c 
 
 ## list all cfiles included in our wasm-build:
 WEBFILES= srcweb/main-web.c \
@@ -25,7 +26,8 @@ $(CCPATH)vm.c \
 $(CCPATH)compiler.c \
 $(CCPATH)scanner.c \
 $(CCPATH)object.c \
-$(CCPATH)table.c
+$(CCPATH)table.c \
+$(CCPATH)array.c 
 
 ## name of our executable we build to run
 BINARY=binary.out

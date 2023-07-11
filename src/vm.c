@@ -9,6 +9,7 @@
 #include "object.h"
 #include "memory.h"
 #include "vm.h"
+#include "array.h"
 
 // instance of our VM:
 VM vm;
@@ -591,6 +592,68 @@ static InterpretResult run() {
             case OP_METHOD:
                 defineMethod(READ_STRING());
                 break;
+            case OP_ARRAY_BUILD:{
+                // stack at start: [item1, item2 ... itemN, count]top -> at end: [array]
+                // takes operand of items and count = Nr. of values on the stack that fill the array
+                ObjArray* array = newArray();
+                uint8_t itemCount = READ_BYTE();    // count of following item-values waiting on stack
+                push(OBJ_VAL(array));               // we push our array on the stack so it doesnt get removed by GC
+                // fill our Array with items:
+                for (int i = itemCount; i>0; i--) { // items are reverse order on the stack
+                    arrayAppendAtEnd(array, peek(i));
+                }
+                pop();                              // remove array from stack that was only there for GC safety
+                // Pop all items from the stack
+                while (itemCount-- > 0) {
+                    pop();
+                }
+                push(OBJ_VAL(array));               // stack at end: [array]
+                break;
+            }     
+            case OP_ARRAY_READ_IDX: {
+                // stack at start: [array, idx]top -> at end: [value*]
+                // takes operand [array, idx] -> reads value in Array on that index.
+                Value result;
+                if (!IS_NUMBER(peek(0))) {
+                    runtimeError("Array index must be a number.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                int idx = AS_NUMBER(pop());
+                if (!IS_ARRAY(peek(0))) {
+                    runtimeError("Can only index into an array.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                ObjArray* array = AS_ARRAY(pop());
+                if(!arrayIsValidIndex(array, idx)) {
+                    runtimeError("Array index out of range.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                result = arrayReadFromIdx(array, idx);      //TODO: check if this must be AS_NUMBER(idx)
+                push(result);
+                break;
+            } 
+            case OP_ARRAY_WRITE: {
+                // stack at start: [array, idx, value]top -> at end: [array]
+                // takes operand [array, idx, value] writes value to array at index:idx
+                Value item = pop();     // the value that should get added
+                if (!IS_NUMBER(peek(0))); {
+                    runtimeError("Array index must be a number.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                int idx = AS_NUMBER(pop());
+                if (!IS_ARRAY(peek(0))) {
+                    runtimeError("Can not store value in a non-array.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                ObjArray* array = AS_ARRAY(pop());
+                if (!arrayIsValidIndex(array, idx)) {
+                    runtimeError("Invalid index to array.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                arrayWriteTo(array, idx, item);
+                push(item);
+                break;
+            }
         }
     }
 // we only need our macros in run() so we scope them explicity to only be available here:

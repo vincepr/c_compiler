@@ -59,6 +59,11 @@ typedef enum {
     OP_GET_SUPER,       // OP_GET_SUPER expects superclass on top of stack and below the receiver.
     OP_SUPER_INVOKE,    // combines OP_GET_SUPER and OP_CLASS - to speedup by doing less lookups
     OP_METHOD,          // above on stack expects function name, then Closure of the method -> connects those
+    /* CUSTOM implementations added ontop of default lox */
+    OP_ARRAY_BUILD,     // takes operand [count, item1,item2...itemN, array] count = Nr. of values on the stack that fill the array
+    OP_ARRAY_READ_IDX,  // takes operand [array, idx] -> reads value in Array on that index
+    OP_ARRAY_WRITE,     // takes operand [array, idx, value]
+
 } OpCode;
 
 // holds the instructions (dynamic-array of bytes)
