@@ -41,17 +41,17 @@ function changeOpenFile(filename) {
 document.getElementById("btnclass").addEventListener("click", () => {
     changeOpenFile("class_lox");
 });
-
 document.getElementById("btnfib").addEventListener("click", () => {
     changeOpenFile("fib_lox");
 });
-
 document.getElementById("btnclosure").addEventListener("click", () => {
     changeOpenFile("closure_lox");
 });
-
 document.getElementById("btnerror").addEventListener("click", () => {
     changeOpenFile("error_lox");
+});
+document.getElementById("btnarrays").addEventListener("click", () => {
+    changeOpenFile("arrays_lox");
 });
 
 document.getElementById("btncompile").addEventListener("click", () => {

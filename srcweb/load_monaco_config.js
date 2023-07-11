@@ -124,6 +124,47 @@ a();    // this will produce some stack-trance, with the above error
 // since this is a runttime error the code above this will execute.
 // for a runtime error try removing a ';' or forget to close a bracket.
 `,
+    arrays_lox: `// I added Arrays (more a list like dynamic array) ontop of the default Lox-Language:
+
+
+// you can initialize arrays like this:
+var arr = ["bond", "james"];
+print arr;
+// like any dynamic variable we can reasign them as we wish (GC will handle the rest):
+arr = [1, 2, "world", false, arr];
+print arr;
+
+// we can directly index into an array or assign:
+print arr[4][0];
+print arr[2];
+arr[0] = "____ ____"; 
+
+// you can use len(arr) or len("somestring") to get the length
+for (var i=0; i<len(arr); i=i+1) {
+  //print i;
+  print arr[i];
+}
+
+// then there is push(array, value)   and   pop(arary) = vale
+var arr = [];
+var i = 0;
+
+while (i<10) {
+  i = i + 1;
+  push(arr, i*100);
+}
+print arr;
+
+while (i>=0) {
+  i = i - 2;
+  print pop(arr);
+}
+print arr;
+
+// and delete(array, index) to delete at a certain index:
+delete(arr, 1);
+print arr;
+`,
 };
 
 
