@@ -26,7 +26,10 @@ typedef enum {
     TOKEN_TRUE, TOKEN_VAR, TOKEN_WHILE,
 
     TOKEN_ERROR,    // in clox the scanner produces a synthetic error token for errors like unrecognized chars or unterminated strings. (then just continues)
-    TOKEN_EOF       // we parse the '\0' EndofFile to this token or end it at the end if missing 
+    TOKEN_EOF,      // we parse the '\0' EndofFile to this token or end it at the end if missing 
+    
+    /*CUSTOM Tokens added on top of default-lox implementation*/
+    TOKEN_MODULO,
 
 } TokenType;
 

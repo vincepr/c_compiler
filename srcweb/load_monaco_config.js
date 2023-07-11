@@ -48,7 +48,19 @@ fun fib(n) {
 var start = clock();
 print fib(31);
 print "time spent running in seconds:";
-print clock() - start;`,
+print clock() - start;
+
+print "-----------";
+// some Custom functions implemented ontop of the default lox:
+
+var x = 12.5;
+x = floor(x);     // rounding down decimals
+print x;          // -> 12
+
+print 119 % 20;   //->19 Modulo operator
+
+
+`,
 
 
 

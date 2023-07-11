@@ -57,7 +57,7 @@ typedef enum {
     PREC_EQUALITY,      // == !=
     PREC_COMPARISON,    // < <= > >=
     PREC_TERM,          // + -
-    PREC_FACTOR,        // * /
+    PREC_FACTOR,        // * / %
     PREC_UNARY,         // ! -
     PREC_CALL,          // . ()
     PREC_IDX_ARRAY,
@@ -547,6 +547,8 @@ static void binary(bool _canAssign) {
         case TOKEN_MINUS:           emitByte(OP_SUBTRACT); break;
         case TOKEN_STAR:            emitByte(OP_MULTIPLY); break;
         case TOKEN_SLASH:           emitByte(OP_DIVIDE); break;
+        // CUSTOM token:
+        case TOKEN_MODULO:          emitByte(OP_MODULO); break;
         default: return;            // Unreachable
     }
 }
@@ -708,6 +710,7 @@ static void unary(bool _canAssign) {
 }
 
 /* CUSTOM implementation on top of lox */
+
 // parsing function for array initializations
 // - we just parse everything separated by ',' push those values on stack
 // - then we push the OpCode to build the array then the count 
@@ -766,6 +769,7 @@ ParseRule rules[] = {
     [TOKEN_SEMICOLON]     = {NULL,        NULL,      PREC_NONE},
     [TOKEN_SLASH]         = {NULL,        binary,    PREC_FACTOR},
     [TOKEN_STAR]          = {NULL,        binary,    PREC_FACTOR},
+    [TOKEN_MODULO]        = {NULL,        binary,    PREC_FACTOR},
     [TOKEN_BANG]          = {unary,       NULL,      PREC_NONE},
     [TOKEN_BANG_EQUAL]    = {NULL,        binary,    PREC_EQUALITY},
     [TOKEN_EQUAL]         = {NULL,        NULL,      PREC_NONE},

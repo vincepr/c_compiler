@@ -63,6 +63,7 @@ typedef enum {
     OP_ARRAY_BUILD,     // takes operand [count, item1,item2...itemN, array] count = Nr. of values on the stack that fill the array
     OP_ARRAY_READ_IDX,  // takes operand [array, idx] -> reads value in Array on that index
     OP_ARRAY_WRITE,     // takes operand [array, idx, value]
+    OP_MODULO,          // binary-operation: % Modulo (divies and takes leftovers)
 
 } OpCode;
 
