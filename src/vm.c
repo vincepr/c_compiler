@@ -39,10 +39,10 @@ static Value arrPopNative(int argCount, Value* args) {
         // TODO: handle runtime error
     }
     ObjArray* array = AS_ARRAY(args[0]);
-    
+
 }
 
-// deletes entry from array - "delete(someArr, 99);"
+// deletes entry from array - "delete(someArr, 99);" deletes entry on idx=99
 static Value arrDeleteNative(int argCount, Value* args) {
     if (argCount != 2 || !IS_ARRAY(args[0]) || !IS_NUMBER(args[1])) {
         //TODO: handle error

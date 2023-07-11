@@ -191,7 +191,7 @@ void printObject(Value value) {
         case OBJ_ARRAY: {
             printf("array: [");
             ObjArray* array = AS_ARRAY(value);
-            for (int i = 0; i < array->count -1; i++) {
+            for (int i = 0; i < array->count; i++) {
                 printValue(array->items[i]);
                 printf(", ");
             }

@@ -160,15 +160,27 @@ food1.cook();
 // and the one that overwrites finish method:
 var food2 = Cruller();
 food2.cook();
+print "";
 
 var someArray = [];
 var anotherArray = [1, 2, 3];
-anotherArray = [11, 99, nil, false, "arrays running"];
-print anotherArray[2]; // prints nil
-print anotherArray[1]; // prints nil
-var idx = 4;
-print anotherArray[idx]; // prints nil
+//              0    1   2     3           4
+anotherArray = [11, 99, nil, false, "arrays_running"];
+print anotherArray;
+print anotherArray[0];
+print anotherArray[4];
+print anotherArray[8];
 
-print anotherArray;
 delete(anotherArray, 3);
-print anotherArray;
+print anotherArray[3];
+
+// current bugs:
+// [] runtime errors for NativeFunctions
+// [] can index into out of bounds -> returns false! not runtime Error
+// [] deleting from array does append nil at end (though it should get overwritten if we push after)
+// [] implement pop(arr)
+// [] implement len(arr), len(string), implement indexing into strings
+// [] implement for( arr ) {} // like foreach looping over array?
+// [] implement + string concatenate
+// [] implement % modulo operator
+// [] implement runtime type checking. ex. typeof("hello") == "string", typeof(123.12)=="number", typeof([1,2,3]) == "array", typeof(variableFn) == "function" ...;

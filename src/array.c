@@ -13,12 +13,15 @@ void arrayAppendAtEnd(ObjArray* array, Value value) {
     array->items[array->count] = value;
     array->count++;
 }
+
 void arrayWriteTo(ObjArray* array, int index, Value value) {
     array->items[index] = value;
 }
-Value arrayReadFromIdx (ObjArray* array, int index) {
+
+Value arrayReadFromIdx(ObjArray* array, int index) {
     return array->items[index];
 }
+
 void arrayDeleteFrom(ObjArray* array, int index) {
     for (int i = index; i < array->count -1; i++) {
         array->items[i] = array->items[i+1];
@@ -26,6 +29,7 @@ void arrayDeleteFrom(ObjArray* array, int index) {
     array->items[array->count-1] = NIL_VAL;
     array->count--;
 }
+
 bool arrayIsValidIndex(ObjArray* array, int index) {
     return (index >= 0 || index < array->count);
 }
