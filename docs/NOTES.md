@@ -228,7 +228,7 @@ Idea is that we can at compile time instead emit a new special instruction that 
 Since we need to lookup our table for each invokation, functioncall etc. a lot of time is spend in `tableGet()`. And that again mainly uses `findEntry()` to lookup entries in our HashMap.
 
 especially this one line:
-```
+```c
 uint32_t index = key->hash % capacity;
 ```
 - modulo and division are about 30-50 times slower than addition, subtraction or a pointer dereferencing. So the problem is found.
@@ -238,7 +238,7 @@ uint32_t index = key->hash % capacity;
 Since we calculate a number modulo a power of 2, we can use that knowledge to instead do a decrement and a bitwise AND. (operations cpus love)
 
 so the above line would become:
-```
+```c
 uint32_t index = key->hash & (capacity -1);
 ```
 - we can used that trick in 4 places (2 in findEntry and 2 in TableFindString)
@@ -251,7 +251,7 @@ And be fairly quick to iterate over, since it should get allocated in a close bl
 
 ### Implementation in the runtime
 - `object.h and object.c`
-```
+```c
 typedef struct {
     Obj obj;
     int count;
@@ -269,7 +269,7 @@ ObjArray* newArray() {
 ```
 
 - created new files `array.c and array.h`
-```
+```c
 void arrayAppendAtEnd(ObjArray* array, Value value) {
     if (array->capacity < array->count + 1) {
         int oldCapacity = array->capacity;
@@ -300,7 +300,7 @@ bool arrayIsValidIndex(ObjArray* array, int index) {
 
 
 - `vm.c in run()`
-```
+```c
 case OP_ARRAY_BUILD:{
     // stack at start: [item1, item2 ... itemN, count]top -> at end: [array]
     // takes operand of items and count = Nr. of values on the stack that fill the array
@@ -366,6 +366,94 @@ case OP_ARRAY_WRITE: {
 ```
 
 ### Implementation in the scanner and compiler
+- implemented `TOKEN_LEFT_BRACKET and TOKEN_RIGHT_BRACKET` in the scanner
+- then added the following precedence:
+```c
+    [TOKEN_LEFT_BRACKET]  = {arrayInit,   arrayEdit, PREC_IDX_ARRAY},
+    [TOKEN_RIGHT_BRACKET] = {NULL,        NULL,      PREC_NONE},
 ```
 
+- and hook up the used functions
+```c
+// parsing function for array initializations
+// - we just parse everything separated by ',' push those values on stack
+// - then we push the OpCode to build the array then the count 
+static void arrayInit(bool canAssign) {
+    int itemCount = 0;
+    if (!check(TOKEN_RIGHT_BRACKET)) {
+        do {
+            if (check(TOKEN_RIGHT_BRACKET)){
+                break;  // hit a trailing comma
+            }
+            parsePrecedence(PREC_OR);   // parses things between ','s and push values on stack
+            if (itemCount == UINT8_COUNT) {
+                error("Cant have more than 256 items in array.");
+            }
+            itemCount ++;
+        } while (match(TOKEN_COMMA));
+    }
+    consume (TOKEN_RIGHT_BRACKET, "Expect ']' after array initialisation");
+    emitByte(OP_ARRAY_BUILD);
+    emitByte(itemCount);
+}
+
+// parsing function for array insertArr[idx] or assigning assignArr[idx] = true;
+static void arrayEdit(bool canAssign) {
+    parsePrecedence(PREC_OR);   // opening '[' already consumed so we expect the index next.
+    consume(TOKEN_RIGHT_BRACKET, "Expect ']' after index.");
+    if (canAssign & match(TOKEN_EQUAL)) {
+        expression();                   // need to push the value that we gonna insert on the stack
+        emitByte(OP_ARRAY_WRITE);       // were writing into the array ex: 'someArr[10] = true'
+    } else {
+        emitByte(OP_ARRAY_READ_IDX);    // were reading the value ex: 'someArr[10]'
+    }
+}
+```
+
+- extra functionailty, enabled with native functions: `vm.c`
+```c
+// ads push functionality to array: - "arrayPush(someArr, "insert this str"); "
+static Value arrPushNative(int argCount, Value* args) {
+    if (argCount != 2 || !IS_ARRAY(args[0])) {
+        // TODO: handle runtime error
+    }
+    ObjArray* array = AS_ARRAY(args[0]);
+    Value item = args[1];
+    arrayAppendAtEnd(array, item);
+    return NIL_VAL;
+}
+
+// deletes entry from array - "arrayDelete(someArr, 99);"
+static Value arrDeleteNative(int argCount, Value* args) {
+    if (argCount != 2 || !IS_ARRAY(args[0]) || !IS_NUMBER(args[1])) {
+        //TODO: handle error
+    }
+    ObjArray* array = AS_ARRAY(args[0]);
+    int idx = AS_NUMBER(args[1]);
+    if ( !arrayIsValidIndex(array, idx)) {
+        // TODO: handle error
+    }
+    arrayDeleteFrom(array, idx);
+    return NIL_VAL;
+}
+```
+### Hook up the GC
+- `memory.c`
+```c
+// in blackenObject():
+case OBJ_ARRAY: {
+    ObjArray* array = (ObjArray*)object;
+    for (int i=0; i<array->count; i++) {
+        markValue(array->items[i]);
+    }
+    break;
+}
+// and in freeObject():
+case OBJ_ARRAY: {
+    ObjArray* array = (ObjArray*)object;
+    for (int i=0; i<array->count; i++) {
+        markValue(array->items[i]);
+    }
+    break;
+}
 ```

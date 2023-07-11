@@ -20,6 +20,42 @@ static Value clockNative(int argCount, Value* args) {
     return NUMBER_VAL((double)clock() / CLOCKS_PER_SEC);
 }
 
+/* CUSTOM Native functions added on top of default lox implementation: */ 
+
+// ads push functionality to array: - "push(someArr, "insert this str"); "
+static Value arrPushNative(int argCount, Value* args) {
+    if (argCount != 2 || !IS_ARRAY(args[0])) {
+        // TODO: handle runtime error
+    }
+    ObjArray* array = AS_ARRAY(args[0]);
+    Value item = args[1];
+    arrayAppendAtEnd(array, item);
+    return NIL_VAL;
+}
+
+// adds pop functionality to array: "pop(someArr)"
+static Value arrPopNative(int argCount, Value* args) {
+    if (argCount != 1 || !IS_ARRAY(args[0])) {
+        // TODO: handle runtime error
+    }
+    ObjArray* array = AS_ARRAY(args[0]);
+    
+}
+
+// deletes entry from array - "delete(someArr, 99);"
+static Value arrDeleteNative(int argCount, Value* args) {
+    if (argCount != 2 || !IS_ARRAY(args[0]) || !IS_NUMBER(args[1])) {
+        //TODO: handle error
+    }
+    ObjArray* array = AS_ARRAY(args[0]);
+    int idx = AS_NUMBER(args[1]);
+    if ( !arrayIsValidIndex(array, idx)) {
+        // TODO: handle error
+    }
+    arrayDeleteFrom(array, idx);
+    return NIL_VAL;
+}
+
 // helperFunction to setup/reset the stack
 static void resetStack() {
     vm.stackTop = vm.stack;     // we just reuse the stack. So we can just point to its start
@@ -80,6 +116,8 @@ void initVM() {
     vm.initString = copyString("init", 4);  
     // init Native Functions:
     defineNative("clock", clockNative);
+    defineNative("push", arrPushNative);
+    defineNative("delete", arrDeleteNative);
 }
 
 void freeVM() {

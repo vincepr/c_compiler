@@ -60,6 +60,7 @@ typedef enum {
     PREC_FACTOR,        // * /
     PREC_UNARY,         // ! -
     PREC_CALL,          // . ()
+    PREC_IDX_ARRAY,
     PREC_PRIMARY,
 } Precedence;
 
@@ -706,6 +707,41 @@ static void unary(bool _canAssign) {
     }
 }
 
+/* CUSTOM implementation on top of lox */
+// parsing function for array initializations
+// - we just parse everything separated by ',' push those values on stack
+// - then we push the OpCode to build the array then the count 
+static void arrayInit(bool canAssign) {
+    int itemCount = 0;
+    if (!check(TOKEN_RIGHT_BRACKET)) {
+        do {
+            if (check(TOKEN_RIGHT_BRACKET)){
+                break;  // hit a trailing comma
+            }
+            parsePrecedence(PREC_OR);   // parses things between ','s and push values on stack
+            if (itemCount == UINT8_COUNT) {
+                error("Cant have more than 256 items in array.");
+            }
+            itemCount ++;
+        } while (match(TOKEN_COMMA));
+    }
+    consume (TOKEN_RIGHT_BRACKET, "Expect ']' after array initialisation");
+    emitByte(OP_ARRAY_BUILD);
+    emitByte(itemCount);
+}
+
+// parsing function for array insertArr[idx] or assigning assignArr[idx] = true;
+static void arrayEdit(bool canAssign) {
+    parsePrecedence(PREC_OR);   // opening '[' already consumed so we expect the index next.
+    consume(TOKEN_RIGHT_BRACKET, "Expect ']' after index.");
+    if (canAssign & match(TOKEN_EQUAL)) {
+        expression();                   // need to push the value that we gonna insert on the stack
+        emitByte(OP_ARRAY_WRITE);       // were writing into the array ex: 'someArr[10] = true'
+    } else {
+        emitByte(OP_ARRAY_READ_IDX);    // were reading the value ex: 'someArr[10]'
+    }
+}
+
 /*
 *
 *      Lookup table for Precedence (what operation gets executed first, what 2nd etc.)
@@ -721,6 +757,8 @@ ParseRule rules[] = {
     [TOKEN_RIGHT_PAREN]   = {NULL,        NULL,      PREC_NONE},
     [TOKEN_LEFT_BRACE]    = {NULL,        NULL,      PREC_NONE}, 
     [TOKEN_RIGHT_BRACE]   = {NULL,        NULL,      PREC_NONE},
+    [TOKEN_LEFT_BRACKET]  = {arrayInit,   arrayEdit, PREC_IDX_ARRAY},
+    [TOKEN_RIGHT_BRACKET] = {NULL,        NULL,      PREC_NONE},
     [TOKEN_COMMA]         = {NULL,        NULL,      PREC_NONE},
     [TOKEN_DOT]           = {NULL,        dot,       PREC_CALL},
     [TOKEN_MINUS]         = {unary,       binary,    PREC_TERM},
