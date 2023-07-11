@@ -20,7 +20,7 @@ You can toggle 3 Flags in the web version:
     - display all Garbage Collection, Allocation, and Freeing of Memory caused by the code-execution.
 
 
-## Building yourself
+## Building with gcc or emscripten
 Just clone the repo, cd into it and if on linux (with gcc installed) you can just use my makefile: 
 - building the binary: `make build`
 - for the repl: `make run`
@@ -29,6 +29,26 @@ Just clone the repo, cd into it and if on linux (with gcc installed) you can jus
 
 ## The Lox Language
 For the Lox Language itself you can refer to the book: https://craftinginterpreters.com/the-lox-language.html
+
+### Changes from Lox
+I decided to stay 100% lox compliant with the implementation in the book and just build on top of it.
+- added dynamic Arrays
+```js
+var arr = [123, false, ];
+arr = ["jimes", "bond" , arr];
+arr[0] = "james";
+print arr;      //-> ["james", "bond", [123, false, ]]
+
+// push, pop and delete:
+delete(arr, 0);     // delete by index
+push(arr, false);   // pushes false to top
+print pop(arr);     // prints false -- pop's top element
+```
+- added modulo (though my i decided to use no libarires, so had to implement some scrappy modulo for doubles myself)
+```js
+print floor(12.9)         // 12 - rounds down
+print 11%3                // 2 - takes modulo
+```
 
 ## Notes I took while coding along the chapters:
 https://github.com/vincepr/c_compiler/docs/NOTES.md

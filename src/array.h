@@ -2,7 +2,8 @@
 #define clox_array_h
 
 #include "common.h"
-
+#include "value.h"
+#include "object.h"
 
 void arrayAppendAtEnd(ObjArray* array, Value value);
 void arrayWriteTo(ObjArray* array, int index, Value value);

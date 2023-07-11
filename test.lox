@@ -209,13 +209,16 @@ print len(arr);
 print arr;
 delete(arr, 9);
 print arr;
+
+print ":::::::::::::::::::::::";
+
 // current todo:
 // [x] runtime errors for NativeFunctions
 // [x] deleting from array does append nil at end (though it should get overwritten if we push after)
 // [x] implement pop(arr)
 // [x] implement len(arr), len(string), implement indexing into strings
 // [x] bug: can index into out of bounds -> returns false! not runtime Error
-// [] implement + string concatenate
-// [] implement % modulo operator
+// [x] implement % modulo operator
 // [] implement runtime type checking. ex. typeof("hello") == "string", typeof(123.12)=="number", typeof([1,2,3]) == "array", typeof(variableFn) == "function" ...;
-// [] implement x+=1, x-=1, x*=3, x/=10...
+// [] add print println or something to print without newline
+// [] add string escaping

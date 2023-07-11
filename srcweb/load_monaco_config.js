@@ -48,7 +48,19 @@ fun fib(n) {
 var start = clock();
 print fib(31);
 print "time spent running in seconds:";
-print clock() - start;`,
+print clock() - start;
+
+print "-----------";
+// some Custom functions implemented ontop of the default lox:
+
+var x = 12.5;
+x = floor(x);     // rounding down decimals
+print x;          // -> 12
+
+print 119 % 20;   // -> 19 Modulo operator
+
+
+`,
 
 
 
@@ -109,7 +121,7 @@ print -1 * someValue;   // prints 90432.7
 var isTrue = 1 != 2;
 if (!isTrue) print 99 > 1;
 else {
-  print "this is the happy path;
+  print "this is the happy path!";
 }
 
 
@@ -123,6 +135,47 @@ a();    // this will produce some stack-trance, with the above error
 
 // since this is a runttime error the code above this will execute.
 // for a runtime error try removing a ';' or forget to close a bracket.
+`,
+    arrays_lox: `// I added Arrays (more a list like dynamic array) ontop of the default Lox-Language:
+
+
+// you can initialize arrays like this:
+var arr = ["bond", "james"];
+print arr;
+// like any dynamic variable we can reasign them as we wish (GC will handle the rest):
+arr = [1, 2, "world", false, arr];
+print arr;
+
+// we can directly index into an array or assign:
+print arr[4][0];
+print arr[2];
+arr[0] = "____ ____"; 
+
+// you can use len(arr) or len("somestring") to get the length
+for (var i=0; i<len(arr); i=i+1) {
+  //print i;
+  print arr[i];
+}
+
+// then there is push(array, value)   and   pop(arary) = vale
+var arr = [];
+var i = 0;
+
+while (i<10) {
+  i = i + 1;
+  push(arr, i*100);
+}
+print arr;
+
+while (i>=0) {
+  i = i - 2;
+  print pop(arr);
+}
+print arr;
+
+// and delete(array, index) to delete at a certain index:
+delete(arr, 1);
+print arr;
 `,
 };
 
@@ -139,7 +192,7 @@ const ace_theme_monaco = {
         { token: 'variable', foreground: '5c6773' },
         { token: 'variable.predefined', foreground: '5c6773' },
         { token: 'constant', foreground: 'f08c36' },
-        { token: 'comment', foreground: '86b300', fontStyle: 'italic' },
+        { token: 'comment', foreground: '86b300'},
         { token: 'number', foreground: '3777bd' },
         { token: 'number.hex', foreground: '3777bd' },
         { token: 'regexp', foreground: '4dbf99' },

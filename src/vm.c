@@ -14,8 +14,6 @@
 // instance of our VM:
 VM vm;
 
-
-
 // foward declaration:
 static void runtimeError(const char* format, ...);
 
@@ -30,6 +28,34 @@ static NativeResult clockNative(int argCount, Value* args) {
 }
 
 /* CUSTOM Native functions added on top of default lox implementation: */ 
+
+// shitty version of rounding (but i really dont want to use any extern libraries)
+// - at least it works for small numbers
+static double myfloor(double num) {
+    long long n = (long long)num;
+    double d = (double)n;
+    if (d == num || num >= 0)
+        return d;
+    else
+        return d - 1;
+}
+static NativeResult floorNative(int argCount, Value* args) {
+    NativeResult result;
+    result.didError = false;
+    if (argCount != 1 || !IS_NUMBER(args[0])) {
+        runtimeError("'floor()' can only round numbers.");
+        result.didError = true;
+        result.value = NIL_VAL;
+        return result;
+    }
+    double x = AS_NUMBER(args[0]);
+    result.value = NUMBER_VAL(myfloor(x));
+    return result;
+}
+// custom float Modulo ( does not work for negatives)
+float myFloatModulo(float a, float b){
+    return (a - b * myfloor(a / b));
+}
 
 // len(array/string) - getting length of array or string
 static NativeResult lengthNative(int argCount, Value* args) {
@@ -184,6 +210,7 @@ void initVM() {
     defineNative("pop", arrPopNative);
     defineNative("delete", arrDeleteNative);
     defineNative("len", lengthNative);
+    defineNative("floor", floorNative);
 }
 
 void freeVM() {
@@ -743,7 +770,7 @@ static InterpretResult run() {
                 // stack at start: [array, idx, value]top -> at end: [array]
                 // takes operand [array, idx, value] writes value to array at index:idx
                 Value item = pop();     // the value that should get added
-                if (!IS_NUMBER(peek(0))); {
+                if (!IS_NUMBER(peek(0))) {
                     runtimeError("Array index must be a number.");
                     return INTERPRET_RUNTIME_ERROR;
                 }
@@ -760,6 +787,17 @@ static InterpretResult run() {
                 arrayWriteTo(array, idx, item);
                 push(item);
                 break;
+            }
+            case OP_MODULO:{
+                if ( !IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1)) ) { 
+                    runtimeError("Operands must be numbers."); 
+                    return INTERPRET_RUNTIME_ERROR; 
+                } 
+                double b = AS_NUMBER(pop()); 
+                double a = AS_NUMBER(pop());
+                //double res = (int) a % (int) b; // this garbage will at least make % work for 'ints'
+                double res = myFloatModulo(a, b);   // also not perfect (negatives wrong)
+                push(NUMBER_VAL(res));          // but i really DONT want to use any libs.
             }
         }
     }
