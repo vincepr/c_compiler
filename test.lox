@@ -218,4 +218,3 @@ print arr;
 // [] implement + string concatenate
 // [] implement % modulo operator
 // [] implement runtime type checking. ex. typeof("hello") == "string", typeof(123.12)=="number", typeof([1,2,3]) == "array", typeof(variableFn) == "function" ...;
-// [] implement x+=1, x-=1, x*=3, x/=10...

@@ -743,7 +743,7 @@ static InterpretResult run() {
                 // stack at start: [array, idx, value]top -> at end: [array]
                 // takes operand [array, idx, value] writes value to array at index:idx
                 Value item = pop();     // the value that should get added
-                if (!IS_NUMBER(peek(0))); {
+                if (!IS_NUMBER(peek(0))) {
                     runtimeError("Array index must be a number.");
                     return INTERPRET_RUNTIME_ERROR;
                 }

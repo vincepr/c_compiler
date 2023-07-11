@@ -109,7 +109,7 @@ print -1 * someValue;   // prints 90432.7
 var isTrue = 1 != 2;
 if (!isTrue) print 99 > 1;
 else {
-  print "this is the happy path;
+  print "this is the happy path!";
 }
 
 
