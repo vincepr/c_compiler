@@ -720,7 +720,7 @@ static void arrayInit(bool canAssign) {
             }
             parsePrecedence(PREC_OR);   // parses things between ','s and push values on stack
             if (itemCount == UINT8_COUNT) {
-                error("Cant have more than 256 items in array.");
+                error("Cant start array with more than 256 entries.");
             }
             itemCount ++;
         } while (match(TOKEN_COMMA));

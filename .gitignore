@@ -1,6 +1,7 @@
 .vscode
 .vscode/*
 binary.out
+*.out
 *.o
 
 build_wasm/*.html

@@ -14,60 +14,110 @@
 // instance of our VM:
 VM vm;
 
+
+
+// foward declaration:
+static void runtimeError(const char* format, ...);
+
+
 // define Static/Native C-Functions - returns time elapsed since the program started running in seconds.
 // - in lox its available with: 'clock()'
-static Value clockNative(int argCount, Value* args) {
-    return NUMBER_VAL((double)clock() / CLOCKS_PER_SEC);
+static NativeResult clockNative(int argCount, Value* args) {
+    NativeResult result;
+    result.value = NUMBER_VAL((double)clock() / CLOCKS_PER_SEC);
+    result.didError = false;
+    return result;
 }
 
 /* CUSTOM Native functions added on top of default lox implementation: */ 
 
-// ads get length function to arrays (and maybe strings)
-static Value lengthNative(int argCount, Value* args) {
+// len(array/string) - getting length of array or string
+static NativeResult lengthNative(int argCount, Value* args) {
+    NativeResult result;
+    result.didError = false;
     if (argCount == 1 && IS_ARRAY(args[0])) {
         ObjArray* array = AS_ARRAY(args[0]);
         int count = arrayGetLength(array);
-        return NUMBER_VAL((double)count);
+        result.value = NUMBER_VAL((double)count);
+        return result;
     } else if (argCount == 1 && IS_STRING(args[0])) {
         // TODO: handle get string length
+        ObjString* string = AS_STRING(args[0]);
+        result.value = NUMBER_VAL((double)string->length);
+        return result;
     } else {
 
+        runtimeError("'len()' can only get length from array or string.");
+        result.didError = true;
+        result.value = NIL_VAL;
+        return result;
         // TODO: handle runtime error (can only get length from array and string)
     }
 }
 
-// ads push functionality to array: - "push(someArr, "insert this str"); "
-static Value arrPushNative(int argCount, Value* args) {
+// push(array, value) - ads push functionality to array, adds element on top
+static NativeResult arrPushNative(int argCount, Value* args) {
+    NativeResult result;
+    result.didError = false;
     if (argCount != 2 || !IS_ARRAY(args[0])) {
-        // TODO: handle runtime error
+        runtimeError("wrong arguments for: 'push(array, 123)'.");
+        result.didError = true;
+        result.value = NIL_VAL;
+        return result;
     }
     ObjArray* array = AS_ARRAY(args[0]);
     Value item = args[1];
     arrayAppendAtEnd(array, item);
-    return NIL_VAL;
+    result.value = NIL_VAL;
+    return result;
 }
 
-// adds pop functionality to array: "pop(someArr)"
-static Value arrPopNative(int argCount, Value* args) {
+// pop(array) - adds pop functionality to array, removes top and returns it
+static NativeResult arrPopNative(int argCount, Value* args) {
+    NativeResult result;
+    result.didError = false;
     if (argCount != 1 || !IS_ARRAY(args[0])) {
-        // TODO: handle runtime error
+        runtimeError("wrong arguments for: 'pop(array)'.");
+        result.didError = true;
+        result.value = NIL_VAL;
+        return result;
     }
     ObjArray* array = AS_ARRAY(args[0]);
+    int lastIdx = arrayGetLength(array) - 1;
+    if (lastIdx < 0) {
+        runtimeError("can't pop empty array.");
+        result.didError = true;
+        result.value = NIL_VAL;
+        return result;
+    }
+    Value item = arrayReadFromIdx(array, lastIdx);
+    arrayDeleteFrom(array, lastIdx);
+    result.value = item;    // return the item pop'd
+    return result;
 
 }
 
-// deletes entry from array - "delete(someArr, 99);" deletes entry on idx=99
-static Value arrDeleteNative(int argCount, Value* args) {
+// delete(array, index) - deletes entry from array - "delete(someArr, 99);" deletes entry on idx=99
+static NativeResult arrDeleteNative(int argCount, Value* args) {
+    NativeResult result;
+    result.didError = false;
     if (argCount != 2 || !IS_ARRAY(args[0]) || !IS_NUMBER(args[1])) {
-        //TODO: handle error
+        runtimeError("wrong arguments for: 'delete(array, index)'.");
+        result.didError = true;
+        result.value = NIL_VAL;
+        return result;
     }
     ObjArray* array = AS_ARRAY(args[0]);
     int idx = AS_NUMBER(args[1]);
     if ( !arrayIsValidIndex(array, idx)) {
-        // TODO: handle error
+        runtimeError("index out of bounds for: 'delete(array, index)'.");
+        result.didError = true;
+        result.value = NIL_VAL;
+        return result;
     }
     arrayDeleteFrom(array, idx);
-    return NIL_VAL;
+    result.value = NIL_VAL;
+    return result;
 }
 
 // helperFunction to setup/reset the stack
@@ -131,6 +181,7 @@ void initVM() {
     // init Native Functions:
     defineNative("clock", clockNative);
     defineNative("push", arrPushNative);
+    defineNative("pop", arrPopNative);
     defineNative("delete", arrDeleteNative);
     defineNative("len", lengthNative);
 }
@@ -212,9 +263,10 @@ static bool callValue(Value callee, int argCount) {
             case OBJ_NATIVE: {
                 // if the object being called is a native function -> invoke the C-Function right there
                 NativeFn native = AS_NATIVE(callee);
-                Value result = native(argCount, vm.stackTop - argCount);
+                NativeResult result = native(argCount, vm.stackTop - argCount);
                 vm.stackTop -= argCount + 1;
-                push(result);   // we use the result from the C-Function and stuff it back in the stack
+                push(result.value);   // we use the result from the C-Function and stuff it back in the stack
+                if (result.didError) return false;
                 return true;
             }
             default:
@@ -645,6 +697,8 @@ static InterpretResult run() {
             case OP_METHOD:
                 defineMethod(READ_STRING());
                 break;
+            
+            /* CUSTOM OpCommands implemented ontop of the default lox */
             case OP_ARRAY_BUILD:{
                 // stack at start: [item1, item2 ... itemN, count]top -> at end: [array]
                 // takes operand of items and count = Nr. of values on the stack that fill the array
@@ -678,10 +732,10 @@ static InterpretResult run() {
                 }
                 ObjArray* array = AS_ARRAY(pop());
                 if(!arrayIsValidIndex(array, idx)) {
-                    runtimeError("Array index out of range.");
+                    runtimeError("Array index=%d out of range. Current len()=%d.", idx, arrayGetLength(array));
                     return INTERPRET_RUNTIME_ERROR;
                 }
-                result = arrayReadFromIdx(array, idx);      //TODO: check if this must be AS_NUMBER(idx)
+                result = arrayReadFromIdx(array, idx);
                 push(result);
                 break;
             } 

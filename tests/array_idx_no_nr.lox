@@ -1,0 +1,2 @@
+var arr = [];
+arr["hello"]; // Array index must be a number.
