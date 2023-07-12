@@ -139,18 +139,69 @@ a();    // this will produce some stack-trance, with the above error
 
 
 
-    arrays_lox: `// 
+    arrays_lox: `// I added Arrays (more a list like dynamic array) ontop of the default Lox-Language:
+
+
+// you can initialize arrays like this:
+var arr = ["bond", "james"];
+print arr;
+// like any dynamic variable we can reasign them as we wish (GC will handle the rest):
+arr = [1, 2, "world", false, arr];
+print arr;
+
+// we can directly index into an array or assign:
+print arr[4][0];
+print arr[2];
+arr[0] = "____ ____"; 
+
+// you can use len(arr) or len("somestring") to get the length
+for (var i=0; i<len(arr); i=i+1) {
+  //print i;
+  print arr[i];
+}
+// then there is push(array, value)   and   pop(arary) = vale
+var arr = [];
+var i = 0;
+while (i<10) {
+  i = i + 1;
+  push(arr, i*100);
+}
+print arr;
+while (i>=0) {
+  i = i - 2;
+  print pop(arr);
+}
+print arr;
+// and delete(array, index) to delete at a certain index:
+delete(arr, 1);
+print arr;
+`,
+
+
+
+
+    custom_lox: `// some Custom functions implemented ontop of the default lox:
+var x = 12.5;
+x = floor(x);     // rounding down decimals
+print x;          // -> 12
+print 119 % 20;   // -> 19 Modulo operator
+`,
+
+
+
+
+    custom_lox: `// 
 //  Custom Implementations on top of default-Lox (without breaking any behavior)
 //
 
 // added String Escape
-var stringEscape = "we can escape \\ \" \n \t as expected.\n";
+var stringEscape = "we can escape \\\\ \\" \\n \\t as expected.\\n";
 print stringEscape;
 
 // added printf(), since print forces newline and only takes 1 argument
 var x = "prtinf() combines all arguments, ";
-var y = "without adding any newlines\n automatically";
-printf(x, y, "\t",true, ["even arrays", 101,], "bye\n\n");
+var y = "without adding any newlines\\n automatically";
+printf(x, y, "\\t",true, ["even arrays", 101,], "bye\\n\\n");
 
 // added Arrays themselfs, push(), pop(), delete() for arrays:
 var arr = [];
@@ -161,7 +212,7 @@ for (var i=0; i<100; i=i+1){
 for (var idx=len(arr)-1; idx>=1; idx=idx-2) {
   delete(arr, idx);
 }
-printf("array of 20x's:\n", arr, "\n\n");
+printf("array of 20x's:\\n", arr, "\\n\\n");
 
 // runtime typechecking with typeof
 print typeof("bob");            // "string
