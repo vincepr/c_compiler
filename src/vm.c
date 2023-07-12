@@ -86,7 +86,6 @@ static NativeResult printfNative(int argCount, Value* args) {
             result.didError = true;
             return result;
         }
-        
     }
     return result;
 } 

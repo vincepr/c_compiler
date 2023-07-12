@@ -51,8 +51,15 @@ int runCompiler(char* sourceCode, bool isBytecode, bool isTrace, bool isGc) {
     freeVM();
 
     // we return our status, this way the frontend could react if we hit an ERROR;
-    if (result == INTERPRET_COMPILE_ERROR) return 65;   // return/exit with 65 -> compitle error
-	if (result == INTERPRET_RUNTIME_ERROR) return 70;   // return/exit with 70 -> runtime  error
+    printf("\n");   // we have to flush any leftovers or emscripten javascript wont get them
+    if (result == INTERPRET_COMPILE_ERROR) {
+        printf("Stopped with: INTERPRET_COMPILE_ERROR!\n");
+        return 65;   // return/exit with 65 -> compitle error
+    }
+	if (result == INTERPRET_RUNTIME_ERROR) {
+        printf("Stopped with: INTERPRET_RUNTIME_ERROR!\n");
+        return 70;   // return/exit with 70 -> runtime  error
+    }
     return 0;                                           // return/exit with 0  -> success
 }
 
