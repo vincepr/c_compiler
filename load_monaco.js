@@ -60,6 +60,14 @@ document.getElementById("arrays_lox").addEventListener("click", () => {
 document.getElementById("custom_lox").addEventListener("click", () => {
     changeOpenFile("custom_lox");
 });
+document.getElementById("darkmode").addEventListener("click", ()=>{
+    let isDarkmode = document.getElementById('darkmode').checked ==true;
+    if (isDarkmode) {
+        editor._themeService.setTheme("vs-dark");
+    } else {
+        editor._themeService.setTheme("ace");
+    }
+});
 
 document.getElementById("btncompile").addEventListener("click", () => {
     // read text-sourcecode:
