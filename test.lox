@@ -212,9 +212,17 @@
 
 //print ":::::::::::::::::::::::";
 
-var str = "some\fhing \n \t\tstring\n that includes many linebreaks\" \n ";
-printf(str);
+var str = "some\fhing \n \t\tstring\n that includes many linebreaks \n ";
+//printf(str);
+var boo = true;
+print typeof(boo);
+print typeof("hello");
+print typeof(123);
+class Parent {}
+class Child < Parent {}
 
+var in = Child();
+print typeof(in);
 
 // current todo:
 // [x] runtime errors for NativeFunctions

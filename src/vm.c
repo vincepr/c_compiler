@@ -29,6 +29,40 @@ static NativeResult clockNative(int argCount, Value* args) {
 
 /* CUSTOM Native functions added on top of default lox implementation: */ 
 
+// runtime typechecking
+static NativeResult typeofNative(int argCount, Value* args) {
+    NativeResult result;
+    result.value = NIL_VAL;
+    result.didError = false;
+    if (argCount != 1){
+        runtimeError("typeof(value) expects exactly one argument.");
+        result.didError = true;
+        return result;
+    }
+    const char* ch;
+    if (IS_NUMBER(args[0])){
+        ch = "number";
+    } else if (IS_BOOL(args[0])) {
+        ch = "bool";
+    } else if (IS_STRING(args[0])){
+        ch = "string";
+    } else if (IS_NIL(args[0])) {
+        ch = "nil";
+    } else if (IS_ARRAY(args[0])) {
+        ch = "array";
+    } else if (IS_INSTANCE(args[0])) {
+        ObjInstance* inst = AS_INSTANCE(args[0]);
+        result.value = OBJ_VAL( inst->pClass->name);    // if we hit an instance we return class-name for now
+        return result;
+    } else if (IS_CLOSURE(args[0])) {
+        ch = "fun";
+    } else {
+        ch = "object";      // we just return obj for everything else
+    }
+    result.value = OBJ_VAL( copyString(ch, (int)strlen(ch)));
+    return result;
+}
+
 // dirty printf() to print multiple different values in one function (no automatic newline)
 // - a seperate OP-Code would be slightly faster/more efficient
 static NativeResult printfNative(int argCount, Value* args) {
@@ -37,8 +71,8 @@ static NativeResult printfNative(int argCount, Value* args) {
     result.didError = false;
     if (argCount < 1) {
         runtimeError("wrong use of printf(...args) - Need at least 1 argument.");
-            result.didError = true;
-            return result;
+        result.didError = true;
+        return result;
     }
 
     for (int count=0; count < argCount; count++) {
@@ -240,6 +274,7 @@ void initVM() {
     defineNative("len", lengthNative);
     defineNative("floor", floorNative);
     defineNative("printf", printfNative);
+    defineNative("typeof", typeofNative);
     
 }
 
