@@ -139,8 +139,9 @@ a();    // this will produce some stack-trance, with the above error
 
 
 
-    arrays_lox: `// I added Arrays (more a list like dynamic array) ontop of the default Lox-Language:
-
+    arrays_lox: `// 
+//I added Arrays (more a list like dynamic array) ontop of the default Lox-Language:
+//
 
 // you can initialize arrays like this:
 var arr = ["bond", "james"];
@@ -187,10 +188,12 @@ print arr;
 var stringEscape = "we can escape \\\\ \\" \\n \\t as expected.\\n";
 print stringEscape;
 
+
 // added printf(), since print forces newline and only takes 1 argument
 var x = "prtinf() combines all arguments, ";
 var y = "without adding any newlines\\n automatically";
 printf(x, y, "\\t",true, ["even arrays", 101,], "bye\\n\\n");
+
 
 // added Arrays themselfs, push(), pop(), delete() for arrays:
 var arr = [];
@@ -202,6 +205,7 @@ for (var idx=len(arr)-1; idx>=1; idx=idx-2) {
   delete(arr, idx);
 }
 printf("array of 20x's:\\n", arr, "\\n\\n");
+
 
 // runtime typechecking with typeof
 print typeof("bob");            // "string
@@ -222,6 +226,7 @@ if (typeof(blueChick)=="Chicken"){
 }
 print anotherChick.color;       // default
 print "\\n";
+
 
 // Math operations  
 print floor(12.9);              // 12 - rounds down
@@ -314,6 +319,14 @@ const makeTokensProvider = () => {
             "true",
             "var",
             "while",
+            // my custom implementations:
+            "printf",
+            "floor",
+            "typeof",
+            "clock",
+            "push",
+            "pop",
+            "delete"
         ],
 
         operators: [
@@ -331,9 +344,12 @@ const makeTokensProvider = () => {
             "<",
             "<=",
             ",",
+            "%",
         ],
 
-        symbols: /[=><!:+\-*\/,]+/,
+        symbols: /[=><!:+\-*\/,%]+/,
+        escapes: /\\(?:[abfnrtv\\"']|x[0-9A-Fa-f]{1,4}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})/,
+        digits: /\d+(_+\d+)*/,
 
         tokenizer: {
             root: [
@@ -360,6 +376,7 @@ const makeTokensProvider = () => {
         
                 // strings
                 [/"([^"\\]|\\.)*$/, "string.invalid"], // non-teminated string
+                [/"/, 'string', '@string_double'],
                 [/"/, { token: "string.quote", bracket: "@open", next: "@string" }],
             ],
     
@@ -380,6 +397,14 @@ const makeTokensProvider = () => {
                 ["\\*/", "comment", "@pop"],
                 [/[\/*]/, "comment"],
             ],
+            // we match regular expression quite precisely
+            string_double: [
+              [/[^\\"]+/, 'string'],
+              [/@escapes/, 'string.escape'],
+              [/\\./, 'string.escape.invalid'],
+              [/"/, 'string', '@pop']
+            ],
+        
         },
     };
 };

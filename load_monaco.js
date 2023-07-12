@@ -32,28 +32,32 @@ var editor = monaco.editor.create(document.getElementById('container'), editor_s
 
 
 function changeOpenFile(filename) {
+    //
+    document.getElementById(activeFile).classList.remove("fileopen");
+    document.getElementById(filename).classList.add("fileopen");
+    //
     config.allvalues[activeFile] = editor.getValue();     // persist change to 'file'-tab
     activeFile = filename;                              // set new active tab
     editor.setValue(config.allvalues[filename]);          // open clicked tab to editor
     //editor.getModel().setValue('some value')
 }
 
-document.getElementById("btnclass").addEventListener("click", () => {
+document.getElementById("class_lox").addEventListener("click", () => {
     changeOpenFile("class_lox");
 });
-document.getElementById("btnfib").addEventListener("click", () => {
+document.getElementById("fib_lox").addEventListener("click", () => {
     changeOpenFile("fib_lox");
 });
-document.getElementById("btnclosure").addEventListener("click", () => {
+document.getElementById("closure_lox").addEventListener("click", () => {
     changeOpenFile("closure_lox");
 });
-document.getElementById("btnerror").addEventListener("click", () => {
+document.getElementById("error_lox").addEventListener("click", () => {
     changeOpenFile("error_lox");
 });
-document.getElementById("btnarrays").addEventListener("click", () => {
+document.getElementById("arrays_lox").addEventListener("click", () => {
     changeOpenFile("arrays_lox");
 });
-document.getElementById("btncustom").addEventListener("click", () => {
+document.getElementById("custom_lox").addEventListener("click", () => {
     changeOpenFile("custom_lox");
 });
 
