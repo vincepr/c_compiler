@@ -58,6 +58,7 @@ label {
 
 .fileopen{
   color:#444;
+	box-shadow: inset 0 3px 4px hsla(0, 0%, 0%, 0.2);
 }
 
 .button:hover {
@@ -69,9 +70,6 @@ label {
   outline: thin dotted #444;
   outline: 5px auto -webkit-focus-ring-color;
   outline-offset: -2px;
-}
-
-.button:focus {
 }
 
 .green {
