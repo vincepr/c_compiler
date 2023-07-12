@@ -212,7 +212,7 @@
 
 //print ":::::::::::::::::::::::";
 
-var str = "some \n \t\tstring\n that includes many linebreaks\" \n ";
+var str = "some\fhing \n \t\tstring\n that includes many linebreaks\" \n ";
 printf(str);
 
 
@@ -225,4 +225,4 @@ printf(str);
 // [x] implement % modulo operator
 // [x] add printf or something to print without newline
 // [] implement runtime type checking. ex. typeof("hello") == "string", typeof(123.12)=="number", typeof([1,2,3]) == "array", typeof(variableFn) == "function" ...;
-// [] add string escaping
+// [x] add string escaping

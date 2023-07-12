@@ -53,7 +53,10 @@ print 11%3                // 2 - takes modulo
 ```js
 printf("I am Bob and my Age is: ", 22, " !")
 ```
-
+- implemented String Escaping with `\`. You can Escape `\\ \" \n \t`
+```js
+var str = "\tThis is a normal \"string\".\n"
+```
 - some notes i took while implementing custom changes: https://github.com/vincepr/c_compiler/docs/CUSTOM_IMPLEMENTATIONS.md
 ## Notes I took while coding along the chapters:
 https://github.com/vincepr/c_compiler/docs/NOTES.md
