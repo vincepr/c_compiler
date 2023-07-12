@@ -42,7 +42,12 @@ print arr;              //-> ["james", "bond", [123, false, ]]
 // push, pop and delete:
 delete(arr, 0);         // delete by index
 push(arr, false);       // pushes false to top
-print pop(arr);         // prints false -- pop's top element
+print pop(arr);         // prints false
+```
+- added `len()` returns array length or chars in a string:
+```js
+print len("one");       // 3
+print len([1,2,3,4]);   // 4
 ```
 - added modulo (though my i decided to use no libarires, so had to implement some scrappy modulo for doubles myself)
 ```js
@@ -59,11 +64,11 @@ var str = "\tThis is a normal \"string\".\n"
 ```
 - added `typeof()` for runtime typechecking for the dynamic variables in lox
 ```js
-print typeof("bob");                    // "string"    
-print typeof(12.3) == "number";         // true
+print typeof("bob");                // "string"    
+print typeof(12.3) == "number";     // true
 Class Chicken{}
 chick = Chicken();
-print typeof("Chicken") == "Chicken"    // true
+print typeof(chick) == "Chicken";   // true
 
 ```
 
