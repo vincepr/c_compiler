@@ -611,11 +611,41 @@ static void or_(bool _canAssign) {
 }
 
 // parsing function for strings
-// - the +1 and -2 trim the leading: " and closing: "
+// - the start+1 and end-2 and length-2 trim the leading: '"' and closing: '"'
 // - then wrap that string in an Object, wrap that in a Value then push that to the constant-table.
 static void string(bool _canAssign) {
-    // if we supported escaping \ or  @strings we could implement this here
-    emitConstant(OBJ_VAL(copyString(parser.previous.start + 1, parser.previous.length -2)));
+    // we support escaping with '\' so we handle that here:
+    int origLength = parser.previous.length - 2;    // -2 because we ignore opening and closing quotes:'"'
+    int escapedLength = 0;
+    char* escapedStr = ALLOCATE(char, origLength);  // will only shrink
+    // loop all chars and combine '\'+'n' -> '\n' char, adjust total length:
+    for (int i = 1; i < origLength + 1; ++i) {
+        char c = parser.previous.start[i];
+        // Loop every char and combine
+        if (i < origLength && c == '\\') {
+            char nextChar = parser.previous.start[++i];
+            switch (nextChar) {
+                case '\n':
+                    break;
+                case '\\':
+                    escapedStr[escapedLength++] = '\\'; break;
+                case '\'':
+                    escapedStr[escapedLength++] = '\''; break;
+                case '\"':
+                    escapedStr[escapedLength++] = '\"'; break;      // TODO: need to implement scanner actually scanning this!
+                case 'n':
+                    escapedStr[escapedLength++] = '\n'; break;
+                case 't':
+                    escapedStr[escapedLength++] = '\t'; break;
+                default:
+                    break;
+            }
+            continue;
+        }
+        escapedStr[escapedLength++] = c;
+    }
+    emitConstant(OBJ_VAL(copyString(escapedStr, escapedLength)));
+    FREE(char, escapedStr);  // we manually free our string we used to create the escaped string
 }
 
 // helper function for variable()
