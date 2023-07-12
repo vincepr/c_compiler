@@ -49,6 +49,10 @@ print pop(arr);     // prints false -- pop's top element
 print floor(12.9)         // 12 - rounds down
 print 11%3                // 2 - takes modulo
 ```
+- implemented `printf(..args)` that takes in any amount of values and prints them without adding newline or whitespace:
+```js
+printf("I am Bob and my Age is: ", 22, " !")
+```
 
 - some notes i took while implementing custom changes: https://github.com/vincepr/c_compiler/docs/CUSTOM_IMPLEMENTATIONS.md
 ## Notes I took while coding along the chapters:
