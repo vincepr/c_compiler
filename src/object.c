@@ -189,7 +189,7 @@ void printObject(Value value) {
             printf("upvalue");
             break;
         case OBJ_ARRAY: {
-            printf("[");
+            printf("[ ");
             ObjArray* array = AS_ARRAY(value);
             for (int i = 0; i < array->count; i++) {
                 printValue(array->items[i]);
