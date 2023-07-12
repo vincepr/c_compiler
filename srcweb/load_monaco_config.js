@@ -1,7 +1,9 @@
 
 // String that stores our 'preview'-files
 const allvalues = {
-    class_lox:  `// The Basics about classes 
+    class_lox:  `//
+// The Basics about Classes in Lox
+//
 
 class Person {
   // only methods can be declared here (no fields)
@@ -38,7 +40,9 @@ print p2.checksum;`,
 
 
 
-    fib_lox: `// calculate a fibonacci-nr and return the time it took in seconds:
+    fib_lox: `// 
+// calculate a fibonacci-nr and return the time it took in seconds:
+//
 
 fun fib(n) {
   if (n < 2) return n;
@@ -56,7 +60,9 @@ print clock() - start;
 
 
 
-    closure_lox:  `// when closures are implemented this should print out outer:
+    closure_lox:  `// 
+// Closures are working as they would in Javascript
+//
 
 var x = "global";
 fun outer() {
@@ -90,7 +96,9 @@ b();  // 130 same inc as above
 
 
 
-    error_lox: `
+    error_lox: `//
+//  Lox can Runtime-Error or Compiletime-Error
+//
 
 // // you can comment out whole lines with double slash
 // for (var i=0; i<10; i=i+1){
@@ -127,55 +135,52 @@ a();    // this will produce some stack-trance, with the above error
 // since this is a runttime error the code above this will execute.
 // for a runtime error try removing a ';' or forget to close a bracket.
 `,
-    arrays_lox: `// I added Arrays (more a list like dynamic array) ontop of the default Lox-Language:
 
 
-// you can initialize arrays like this:
-var arr = ["bond", "james"];
-print arr;
-// like any dynamic variable we can reasign them as we wish (GC will handle the rest):
-arr = [1, 2, "world", false, arr];
-print arr;
 
-// we can directly index into an array or assign:
-print arr[4][0];
-print arr[2];
-arr[0] = "____ ____"; 
 
-// you can use len(arr) or len("somestring") to get the length
-for (var i=0; i<len(arr); i=i+1) {
-  //print i;
-  print arr[i];
-}
+    arrays_lox: `// 
+//  Custom Implementations on top of default-Lox (without breaking any behavior)
+//
 
-// then there is push(array, value)   and   pop(arary) = vale
+// added String Escape
+var stringEscape = "we can escape \\ \" \n \t as expected.\n";
+print stringEscape;
+
+// added printf(), since print forces newline and only takes 1 argument
+var x = "prtinf() combines all arguments, ";
+var y = "without adding any newlines\n automatically";
+printf(x, y, "\t",true, ["even arrays", 101,], "bye\n\n");
+
+// added Arrays themselfs, push(), pop(), delete() for arrays:
 var arr = [];
-var i = 0;
-
-while (i<10) {
-  i = i + 1;
-  push(arr, i*100);
+for (var i=0; i<100; i=i+1){
+  push(arr, i*10);
 }
-print arr;
-
-while (i>=0) {
-  i = i - 2;
-  print pop(arr);
+// added len(arr); and len("some string");
+for (var idx=len(arr)-1; idx>=1; idx=idx-2) {
+  delete(arr, idx);
 }
-print arr;
+printf("array of 20x's:\n", arr, "\n\n");
 
-// and delete(array, index) to delete at a certain index:
-delete(arr, 1);
-print arr;
-`,
-    custom_lox: `// some Custom functions implemented ontop of the default lox:
+// runtime typechecking with typeof
+print typeof("bob");            // "string
+var xyz = 12.45;
+print typeof(xyz) == "number";  // true
 
-var x = 12.5;
-x = floor(x);     // rounding down decimals
-print x;          // -> 12
-
-print 119 % 20;   // -> 19 Modulo operator
-
+// Instances of Classes can typecheck for the "Classname"
+class Chicken {
+  init(color) {
+    if (typeof(color)=="string" ) this.color = color;
+    else this.color = "default";
+  }
+}
+var blueChick = Chicken("blue");
+var anotherChick = Chicken(1);
+if (typeof(blueChick)=="Chicken"){
+  print blueChick.color;        // blue
+}
+print anotherChick.color;       // default
 `,
 };
 
