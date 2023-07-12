@@ -51,7 +51,7 @@ fun fib(n) {
 
 var start = clock();
 var n = 31;
-printf("fibonnacci Nr of ", n, " is ", fib(31) );   // prints multiple arguments, no newline.
+printf("fibonnacci Nr of ", n, " is ", fib(n) );    // prints multiple arguments, no newline.
 print " ";                                          // print always adds a newline in lox.
 printf("time spent running in seconds: ");
 print clock() - start;
@@ -179,17 +179,6 @@ print arr;
 
 
 
-
-    custom_lox: `// some Custom functions implemented ontop of the default lox:
-var x = 12.5;
-x = floor(x);     // rounding down decimals
-print x;          // -> 12
-print 119 % 20;   // -> 19 Modulo operator
-`,
-
-
-
-
     custom_lox: `// 
 //  Custom Implementations on top of default-Lox (without breaking any behavior)
 //
@@ -232,6 +221,11 @@ if (typeof(blueChick)=="Chicken"){
   print blueChick.color;        // blue
 }
 print anotherChick.color;       // default
+print "\\n";
+
+// Math operations  
+print floor(12.9);              // 12 - rounds down
+print 11%3;                     // 2 - Modulo Operator
 `,
 };
 
