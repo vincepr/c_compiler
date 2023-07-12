@@ -50,5 +50,6 @@ print floor(12.9)         // 12 - rounds down
 print 11%3                // 2 - takes modulo
 ```
 
+- some notes i took while implementing custom changes: https://github.com/vincepr/c_compiler/docs/CUSTOM_IMPLEMENTATIONS.md
 ## Notes I took while coding along the chapters:
 https://github.com/vincepr/c_compiler/docs/NOTES.md
