@@ -1,5 +1,5 @@
 # lox compiler in C
-this is a compiler & bytecode VM for lox in pure C, no libraries used. 
+this is a compiler & bytecode VM inclusive Garbage Collection, written in C without libraries.
 
 This is my implementation of Robert Nystrom's Crafting Interpreters, an awesome introductory Book into the World of Lexers, Compilers and Interpreters. 
 

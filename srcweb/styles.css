@@ -56,6 +56,10 @@ label {
 	-webkit-font-smoothing: antialiased;
 }
 
+.fileopen{
+  background-color: #7b7878;
+}
+
 .button:hover {
 	opacity: 0.85;
 }
