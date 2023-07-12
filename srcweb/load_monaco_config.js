@@ -51,17 +51,6 @@ printf("fibonnacci Nr of ", n, " is ", fib(31) );   // prints multiple arguments
 print " ";                                          // print always adds a newline in lox.
 printf("time spent running in seconds: ");
 print clock() - start;
-
-print "-----------";
-// some Custom functions implemented ontop of the default lox:
-
-var x = 12.5;
-x = floor(x);     // rounding down decimals
-print x;          // -> 12
-
-print 119 % 20;   // -> 19 Modulo operator
-
-
 `,
 
 
@@ -178,6 +167,15 @@ print arr;
 // and delete(array, index) to delete at a certain index:
 delete(arr, 1);
 print arr;
+`,
+    custom_lox: `// some Custom functions implemented ontop of the default lox:
+
+var x = 12.5;
+x = floor(x);     // rounding down decimals
+print x;          // -> 12
+
+print 119 % 20;   // -> 19 Modulo operator
+
 `,
 };
 

@@ -53,6 +53,9 @@ document.getElementById("btnerror").addEventListener("click", () => {
 document.getElementById("btnarrays").addEventListener("click", () => {
     changeOpenFile("arrays_lox");
 });
+document.getElementById("btncustom").addEventListener("click", () => {
+    changeOpenFile("custom_lox");
+});
 
 document.getElementById("btncompile").addEventListener("click", () => {
     // read text-sourcecode:
