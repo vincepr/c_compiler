@@ -42,7 +42,7 @@ label {
 .button {
 	display: inline-block;
   margin: 5px 2px 5px 2px;
-  padding: 0.75rem 1rem;
+  padding: 0.75rem 0.75rem;
 	border: 0;
 	border-radius: 0.317rem;
 	background-color: #aaa;
