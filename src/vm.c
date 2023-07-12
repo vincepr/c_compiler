@@ -29,6 +29,34 @@ static NativeResult clockNative(int argCount, Value* args) {
 
 /* CUSTOM Native functions added on top of default lox implementation: */ 
 
+// dirty printf() to print multiple different values in one function (no automatic newline)
+// - a seperate OP-Code would be slightly faster/more efficient
+static NativeResult printfNative(int argCount, Value* args) {
+    NativeResult result;
+    result.value = NIL_VAL;
+    result.didError = false;
+    if (argCount < 1) {
+        runtimeError("wrong use of printf(...args) - Need at least 1 argument.");
+            result.didError = true;
+            return result;
+    }
+
+    for (int count=0; count < argCount; count++) {
+        //printf("count: %d\n", count);
+        if (IS_NUMBER(args[count]) || IS_STRING(args[count]) || IS_BOOL(args[count]) || IS_NIL(args[count]) 
+            || IS_CLASS(args[count]) || IS_INSTANCE(args[count]) ||  IS_ARRAY(args[count]) || IS_OBJ(args[count])) {
+            Value value = args[count];
+            printValue(value);
+        } else {
+            runtimeError("wrong argument in printf(...args), can't print arg: %d.", count + 1);
+            result.didError = true;
+            return result;
+        }
+        
+    }
+    return result;
+} 
+
 // shitty version of rounding (but i really dont want to use any extern libraries)
 // - at least it works for small numbers
 static double myfloor(double num) {
@@ -211,6 +239,8 @@ void initVM() {
     defineNative("delete", arrDeleteNative);
     defineNative("len", lengthNative);
     defineNative("floor", floorNative);
+    defineNative("printf", printfNative);
+    
 }
 
 void freeVM() {

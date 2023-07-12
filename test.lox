@@ -212,6 +212,12 @@ print arr;
 
 print ":::::::::::::::::::::::";
 
+fun x(x) {
+  return x;
+}
+var y = x(12);
+
+printf(99, " ", 123, " ", 34534, "\n", arr, x , y);
 // current todo:
 // [x] runtime errors for NativeFunctions
 // [x] deleting from array does append nil at end (though it should get overwritten if we push after)

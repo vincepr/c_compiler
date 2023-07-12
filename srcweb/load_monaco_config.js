@@ -46,8 +46,10 @@ fun fib(n) {
 }
 
 var start = clock();
-print fib(31);
-print "time spent running in seconds:";
+var n = 31;
+printf("fibonnacci Nr of ", n, " is ", fib(31) );   // prints multiple arguments, no newline.
+print " ";                                          // print always adds a newline in lox.
+printf("time spent running in seconds: ");
 print clock() - start;
 
 print "-----------";
