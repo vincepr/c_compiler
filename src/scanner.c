@@ -192,6 +192,9 @@ static Token numberToken() {
 static Token stringToken() {
     // keep going till we find '"' to terminate the string:
     while(peek() != '"' && !isAtEnd()) {
+        if (peek() == '\\' && peekNext() == '"'){
+            advance();
+        }
         if(peek() == '\n') scanner.line++;
         advance();
     }
