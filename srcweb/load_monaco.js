@@ -62,12 +62,22 @@ document.getElementById("custom_lox").addEventListener("click", () => {
 });
 document.getElementById("darkmode").addEventListener("click", ()=>{
     let isDarkmode = document.getElementById('darkmode').checked ==true;
+    toggleDarkmodeCss(isDarkmode);
     if (isDarkmode) {
         editor._themeService.setTheme("vs-dark");
     } else {
         editor._themeService.setTheme("ace");
     }
 });
+
+// everything primed with class 'dark1' gets class 'dark2Active' toggled etc.
+function toggleDarkmodeCss(isDark) {
+    ["dark1", "dark2", "dark3", "dark4"].forEach((dm)=>{
+        var objs = document.querySelectorAll("." + dm);
+        if (isDark) objs.forEach((el) => el.classList.add(dm + "Active"));
+        else objs.forEach((el) => el.classList.remove(dm + "Active"));
+    });
+}
 
 document.getElementById("btncompile").addEventListener("click", () => {
     // read text-sourcecode:
