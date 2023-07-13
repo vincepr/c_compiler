@@ -223,3 +223,19 @@ class Child < Parent {}
 
 var in = Child();
 print typeof(in);
+print "------------";
+
+
+var x = {"test" : 123, "fish": "kopp"};
+print x;
+var y = {};
+print y;
+
+// map functionality:
+
+// [] - checkIfExists(map, value) ? vs mymap["tocheck"] == NIL 
+// [] - foreach
+// foreach(map/array/string) {
+    // dothings
+}
+

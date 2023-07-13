@@ -170,7 +170,7 @@ ObjMap* newMap() {
 
 // helper for printObject() - printing our custom map
 static void printMap(ObjMap* map) {
-    printf("{");
+    printf("{ ");
     for (int i=0; i< map->table.capacity; i++){
         // need to check for tombstones or empty:
         if(! (map->table.entries[i].key == NULL )) {
@@ -179,7 +179,6 @@ static void printMap(ObjMap* map) {
             printValue(map->table.entries[i].value);
             printf(", ");
         }
-        printf("}");
     }
     printf("}");
 }

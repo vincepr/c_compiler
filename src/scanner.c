@@ -233,6 +233,7 @@ Token scanToken() {
         case '/': return makeToken(TOKEN_SLASH);
         case '*': return makeToken(TOKEN_STAR);
         case '%': return makeToken(TOKEN_MODULO);
+        case ':': return makeToken(TOKEN_COLON);
 
         // Map two-character TokenTypes (like '!' can be ! for NOT or != for UNEQUALS)
         case '!':
