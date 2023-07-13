@@ -156,7 +156,7 @@ ObjString* tableFindString(Table* table, const char* chars, int length, uint32_t
         index = (index + 1) & (table->capacity - 1);    // modulo with 2pow
     }
 }
-
+#include <stdio.h>
 /* CUSTOM lookup for value- like tableFindString() - takes use of string interning */
 // - if successful it writes pointer to value to value-arg
 bool tableFindValue(Table* table, const char* chars, int length, uint32_t hash, Value* value) {
@@ -170,7 +170,7 @@ bool tableFindValue(Table* table, const char* chars, int length, uint32_t hash, 
         } else if (entry->key->length == length &&
                     entry->key->hash == hash &&
                     memcmp(entry->key->chars, chars, length) == 0) {
-            value = &entry->value;    // found in map
+            *value = entry->value;      // set the value-parameter found pointer to value
             return true;
         }
         index = (index + 1) & (table->capacity - 1);    // modulo with 2pow

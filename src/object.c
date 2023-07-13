@@ -218,6 +218,7 @@ void printObject(Value value) {
                 printf(", ");
             }
             printf("]");
+            break;
         }
         case OBJ_MAP:
             printMap(AS_MAP(value));

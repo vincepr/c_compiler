@@ -227,12 +227,17 @@
 
 
 
-// var x = {"test" : 123, "fish": "kopp"};
-// x["test"] = 321;
-// print x["test"];
-
-var x = [1,2];
+var x = {"test" : 123, "fish": 99};
 print x;
+x["test"] = 321;
+print "x[test]=";
+print x["test"];
+print x;
+
+
+var y = [1,2];
+print y= [3,4,5];
+printf(y[1], x["finilsh"] , "\n");
 
 
 // [] - mymap["xyz"] = NIL -> SHOULD DELETE entry from array , should delete(mymap, 123) do the same?

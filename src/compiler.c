@@ -789,7 +789,6 @@ static void mapInit(bool canAssign) {
                 error("Expect key string next inside Map.");
             }
             consume(TOKEN_STRING, "Expect key string inside Map");
-            printf("\nstarting map init:\n");
             string(true);      //TODO: check but canAssign=false seems right
 
             consume(TOKEN_COLON, "Expect ':' between key and value of a Map.");
