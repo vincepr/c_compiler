@@ -44,25 +44,25 @@ delete(arr, 0);         // delete by index
 push(arr, false);       // pushes false to top
 print pop(arr);         // prints false
 ```
-- added `len()` returns array length or chars in a string:
+#### added `len()` returns array length or chars in a string:
 ```js
 print len("one");       // 3
 print len([1,2,3,4]);   // 4
 ```
-- added modulo (though my i decided to use no libarires, so had to implement some scrappy modulo for doubles myself)
+#### added modulo (though my i decided to use no libarires, so had to implement some scrappy modulo for doubles myself)
 ```js
 print floor(12.9)       // 12 - rounds down
 print 11%3              // 2 - takes modulo
 ```
-- implemented `printf(..args)` that takes in any amount of values and prints them without adding newline or whitespace:
+#### implemented `printf(..args)` that takes in any amount of values and prints them without adding newline or whitespace:
 ```js
 printf("I am Bob and my Age is: ", 22, " !")
 ```
-- implemented String Escaping with `\`. You can Escape `\\ \" \n \t`
+#### implemented String Escaping with `\`. You can Escape `\\ \" \n \t`
 ```js
 var str = "\tThis is a normal \"string\".\n"
 ```
-- added `typeof()` for runtime typechecking for the dynamic variables in lox
+#### added `typeof()` for runtime typechecking for the dynamic variables in lox
 ```js
 print typeof("bob");                // "string"    
 print typeof(12.3) == "number";     // true
@@ -70,7 +70,7 @@ Class Chicken{}
 chick = Chicken();
 print typeof(chick) == "Chicken";   // true
 ```
-- added dynamic Map/Dictionary
+#### added dynamic Map/Dictionary
 ```js
 var screen = {
     "length": 12.4,
@@ -83,6 +83,7 @@ screen["height"] = "big"; // adds new key-value pair
 print screen;             // -> { height : big, length : 77, }
 ```
 
-some notes i took while implementing custom changes: https://github.com/vincepr/c_compiler/docs/CUSTOM_IMPLEMENTATIONS.md
+some notes i took while implementing custom changes: [Notes while doing Custom Changes](https://github.com/vincepr/c_compiler/blob/b4a1ff81b5c3f5c4ae6313e0b5ba775d4ee93c5a/docs/CUSTOM_IMPLEMENTATIONS.md)
+
 ## Notes I took while coding along the chapters:
-https://github.com/vincepr/c_compiler/docs/NOTES.md
+[Notes while doing the book](https://github.com/vincepr/c_compiler/blob/b4a1ff81b5c3f5c4ae6313e0b5ba775d4ee93c5a/docs/NOTES.md)
