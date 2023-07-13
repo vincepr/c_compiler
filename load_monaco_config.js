@@ -100,40 +100,75 @@ b();  // 130 same inc as above
 //  Lox can Runtime-Error or Compiletime-Error
 //
 
-// // you can comment out whole lines with double slash
-// for (var i=0; i<10; i=i+1){
-//   print "for-loop:";
-//   while (i<5) {
-//     print i;
-//     i = i+1;
-//   }
-//   print i;
-// }
+// Compile Time Errors like bad parsing:
+print "H\\nE\\nL\\nL\\nO\\n\\n" = ;       // try removing the '='
 
-// lox uses dynamically typed variables:
-var someValue = true;
-someValue = 1234;
-someValue = someValue + 5000 * (-55 /3);
-print -1 * someValue;   // prints 90432.7
+// RuntimeErrors happen at Compile time, and Code till the error gets executed;
+var x = 123 + "somesting";      // try fixing this error.
 
-// and the usal comparisons and equality operators work:
-var isTrue = 1 != 2;
-if (!isTrue) print 99 > 1;
-else {
-  print "this is the happy path!";
+class Person {
+init(name) {
+  this.name = name;
+}
+whoAmI() {
+  printf( "Hello, my name is " + this.name + " ");
+}
 }
 
-
-// this should error out to show the stack-trace:
-fun a() { b(); }
-fun b() { c(); }
-fun c() {
-  c("too", "many"); // this call has too many arguments
+class Parent < Person { 
+  init(name, children) {
+    super.init(name);
+    this.children = children;
+  }
 }
-a();    // this will produce some stack-trance, with the above error
 
-// since this is a runttime error the code above this will execute.
-// for a runtime error try removing a ';' or forget to close a bracket.
+// Functions are Firstclass in Lox 
+fun fnPerson(idx) {
+  household[idx].whoAmI();
+}
+
+fun fnParent(idx) {
+  household[idx].whoAmI();
+  var children = household[idx].children;
+  printf("and my children are: ");
+  for (var i=0; i<len(children); i=i+1){
+    printf(children[i], " ");
+  }
+}
+
+fun fnCat() {
+  printf("I am the Family's Cat");
+}
+
+fun fnDog() {
+  printf("And who let the dogs out? Woof Woof.");
+}
+
+// so we can put a bunch of closures in A Map:
+var map = {
+  "Person" : fnPerson,
+  "Dog" : fnDog,
+};
+map["Cat"] = fnCat;
+map["Parent"] = fnParent;
+
+var p1 = Person("Bob");
+var p2 = Person("James");
+var p3 = Person("James");
+var p4 = Parent("Jenny", ["Bob", "James", "Finn"]);
+var household = [p1, p2, "Cat" , p4, p3, "Dog"];
+
+for (var i=0; i<len(household); i=i+1) {
+  // typechecking happens at runtime, so we can branch with if:
+  if (typeof(household[i])=="string") {
+    map[household[i]]();
+  }else {
+    // or use a map like above to branch over for example classes:
+    var fn = map[typeof(household[i])];
+    fn(i);
+  }
+  printf("\n");
+}
 `,
 
 
