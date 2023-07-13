@@ -788,7 +788,14 @@ static InterpretResult run() {
             
             /* CUSTOM OpCommands implemented ontop of the default lox */
             case OP_MAP_BUILD: {
+                // stack at start: [key1:value1, key2:value2, keyN:valueN, count]top -> at end: [map]
                 ObjMap* map = newMap();
+                uint8_t itemCount = READ_BYTE();
+                push(OBJ_VAL(map));                 // we push map so it doesnt GC'd
+                for (int i = itemCount; i>0; i--) {
+                    mapWriteKeyValue(map, peek(i), peek(i+1))
+                }
+
             }
             case OP_ARRAY_BUILD:{
                 // stack at start: [item1, item2 ... itemN, count]top -> at end: [array]
