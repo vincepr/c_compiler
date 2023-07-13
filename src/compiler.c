@@ -769,9 +769,9 @@ static void arrayEdit(bool canAssign) {
     consume(TOKEN_RIGHT_BRACKET, "Expect ']' after index.");
     if (canAssign & match(TOKEN_EQUAL)) {
         expression();                   // need to push the value that we gonna insert on the stack
-        emitByte(OP_ARRAY_WRITE);       // were writing into the array ex: 'someArr[10] = true'
+        emitByte(OP_LISTS_WRITE_IDX);       // were writing into the array ex: 'someArr[10] = true'
     } else {
-        emitByte(OP_ARRAY_READ_IDX);    // were reading the value ex: 'someArr[10]'
+        emitByte(OP_LISTS_READ_IDX);    // were reading the value ex: 'someArr[10]'
     }
 }
 

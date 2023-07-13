@@ -157,6 +157,26 @@ ObjString* tableFindString(Table* table, const char* chars, int length, uint32_t
     }
 }
 
+/* CUSTOM lookup for value- like tableFindString() - takes use of string interning */
+// - if successful it writes pointer to value to value-arg
+bool tableFindValue(Table* table, const char* chars, int length, uint32_t hash, Value* value) {
+    if (table->count == 0) return false;
+
+    uint32_t index = hash & (table->capacity - 1);      // modulo for 2pow
+    for (;;) {
+        Entry* entry = &table->entries[index];
+        if(entry->key == NULL) {
+            if (IS_NIL(entry->value)) return false;
+        } else if (entry->key->length == length &&
+                    entry->key->hash == hash &&
+                    memcmp(entry->key->chars, chars, length) == 0) {
+            value = &entry->value;    // found in map
+            return true;
+        }
+        index = (index + 1) & (table->capacity - 1);    // modulo with 2pow
+    }
+}
+
 // helper for collectGarbage() - we have to specially handle the weak-reference stringpool in our GC
 // - the string-table only uses the key (functions as a HashSet) 
 // -> so we can check if the key string object's mark is not set

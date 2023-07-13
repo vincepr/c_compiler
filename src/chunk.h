@@ -61,8 +61,8 @@ typedef enum {
     OP_METHOD,          // above on stack expects function name, then Closure of the method -> connects those
     /* CUSTOM implementations added ontop of default lox */
     OP_ARRAY_BUILD,     // takes operand [count, item1,item2...itemN, array] count = Nr. of values on the stack that fill the array
-    OP_ARRAY_READ_IDX,  // takes operand [array, idx] -> reads value in Array on that index
-    OP_ARRAY_WRITE,     // takes operand [array, idx, value]
+    OP_LISTS_READ_IDX,  // takes operand [array, idx] -> reads value in Array on that index
+    OP_LISTS_WRITE_IDX,     // takes operand [array, idx, value]
     OP_MODULO,          // binary-operation: % Modulo (divies and takes leftovers)
     OP_MAP_BUILD,       // takes operand [count, key1, val1, ...keyN, vallN, map] to initialize a Map
 

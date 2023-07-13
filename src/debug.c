@@ -172,9 +172,9 @@ int disassembleInstruction(Chunk* chunk, int offset) {
         /* CUSTOM implementations on top of Lox */
         case OP_ARRAY_BUILD:
             return simpleInstruction("OP_ARRAY_BUILD", offset);
-        case OP_ARRAY_READ_IDX:
+        case OP_LISTS_READ_IDX:
             return simpleInstruction("OP_ARRAY_READ_IDX", offset);
-        case OP_ARRAY_WRITE:
+        case OP_LISTS_WRITE_IDX:
             return simpleInstruction("OP_ARRAY_WRITE", offset);
         case OP_MODULO:
             return simpleInstruction("OP_MODULO", offset);
