@@ -233,8 +233,12 @@ print y;
 
 // map functionality:
 
-// [] - checkIfExists(map, value) ? vs mymap["tocheck"] == NIL 
-// [] - foreach
+// [] - mymap["xyz"] = NIL -> SHOULD DELETE entry from array , should delete(mymap, 123) do the same?
+// [] - mymap
+// [] - write/read for maps: mymap[1] == true; and print mymap[2]; -> mymap[notexisting] -> NIL
+// [] - write/read for strings: mystring[1] == true; and print mystring[2];
+// [] - string concat -> "123" + 123 -> "123123" https://stackoverflow.com/questions/20950878/typecast-double-to-string-concatenate-double-to-string
+// [] - foreach (map, array, string) 
 // foreach(map/array/string) {
     // dothings
 }
