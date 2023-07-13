@@ -1,10 +1,22 @@
 @import url(https://fonts.googleapis.com/css?family=Dosis:200,300,400,500,600,700,800);
+
+
+
 html, body {
   font-family: "Dosis";
   font-weight: 300;
   height: 100%;
   margin: 0;
   /* overflow: hidden;  */
+  --col1 : #191A19;
+  --col2: #1E5128;
+  --col3: #4E9F3D;
+  --col4: #D8E9A8;
+
+  --dark1: 	#3e3e42;
+  --dark2: 	#2d2d30;
+  --dark3: 	#252526;
+  --dark4: 	#1e1e1e;
 }
 
 .nav-box{
@@ -57,7 +69,8 @@ label {
 }
 
 .fileopen{
-  color:#444;
+  border: solid #191a198a;
+  background-color: var(--col3);
 	box-shadow: inset 0 3px 4px hsla(0, 0%, 0%, 0.2);
 }
 
@@ -73,7 +86,7 @@ label {
 }
 
 .green {
-	background-color: #27bd2e;
+	background-color:  var(--col3);
 }
 
 
@@ -224,9 +237,27 @@ div.emscripten_border { border: 1px solid black; }
 }
 
 .toggle:checked {
-  background-color: #4CD964;
+  background-color: var(--col3);
 }
 
 .toggle:checked:before {
   left: 32px;
+}
+
+.dark1Active{
+  background-color: var(--col2) !important;
+}
+.dark2Active{
+  background-color: var(--col3) !important;
+}
+.dark2Active .fileopen {
+  background-color: #aaa!important;
+}
+.dark3Active{
+  background-color: var(--dark3) !important;
+  color:#f1f3f5;
+}
+.dark4Active{
+  background-color: var(--dark4) !important;
+  color:#f1f3f5;
 }

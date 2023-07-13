@@ -28,6 +28,7 @@
 #define IS_NATIVE(value)        isObjType(value, OBJ_NATIVE)
 #define IS_STRING(value)        isObjType(value, OBJ_STRING)
 #define IS_ARRAY(value)         isObjType(value, OBJ_ARRAY)
+#define IS_MAP(value)           isObjType(value, OBJ_MAP)
 
 // macros take a Value (that is expected to contain a pointer to a valid ObjString)
 #define AS_BOUND_METHOD(value)  ((ObjBoundMethod*)AS_OBJ(value))
@@ -39,6 +40,7 @@
 #define AS_STRING(value)        ((ObjString*)AS_OBJ(value))             // this returns the ObjString* pointer
 #define AS_CSTRING(value)       (((ObjString*)AS_OBJ(value))->chars)    // this returns the character array itself
 #define AS_ARRAY(value)         ((ObjArray*)AS_OBJ(value))
+#define AS_MAP(value)           ((ObjMap*)AS_OBJ(value))
 
 // all supported ObjTypes our Language supports
 typedef enum {
@@ -52,6 +54,7 @@ typedef enum {
     OBJ_UPVALUE,
 
     OBJ_ARRAY,
+    OBJ_MAP,
 } ObjType;
 
 // The Obj that gets allocated on the stack:
@@ -140,6 +143,11 @@ typedef struct {
     Value* items;               // the array should take different kind of values, just like a JS-Array
 } ObjArray;
 
+typedef struct {
+    Obj obj;
+    Table table;               // we just wrap the lox-table into a object to expose it to our frontend vm
+} ObjMap;
+
 ObjBoundMethod* newBoundMethod(Value receiver, ObjClosure* method);
 ObjClass* newClass(ObjString* name);
 ObjClosure* newClosure(ObjFunction* function);
@@ -151,6 +159,7 @@ ObjString* copyString(const char* chars, int length);
 ObjUpvalue* newUpvalue(Value* slot);
 
 ObjArray* newArray();
+ObjMap* newMap();
 
 // helper for printValue() - print functionality for heap allocated datastructures
 void printObject(Value value);

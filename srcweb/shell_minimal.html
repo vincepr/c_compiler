@@ -19,7 +19,7 @@
 
     </style>
   </head>
-  <body>
+  <body class="dark3">
 
     <figure style="overflow:visible;" id="spinner"><div class="spinner"></div><center style="margin-top:0.5em"><strong>loading</strong></center>
     </figure>
@@ -27,18 +27,18 @@
       <progress value="0" max="100" id="progress" hidden=1></progress>  
     </div>
 
-    <div class="nav-box">
+    <div class="nav-box dark4">
       <nav class="nav-left">
-          <button class="button" id="class_lox">class.lox</button>
-          <button class="button" id="fib_lox">fib.lox</button>
-          <button class="button fileopen" id="closure_lox">closure.lox</button>
-          <button class="button" id="error_lox">error.lox</button>
-          <button class="button" id="arrays_lox">arrays.lox</button>
-          <button class="button" id="custom_lox">custom.lox</button>
-          <button class="button green" type="button" onClick="parent.open('https://www.github.com/vincepr/c_compiler')">on Github</button>
+          <button class="button " id="class_lox">class.lox</button>
+          <button class="button " id="fib_lox">fib.lox</button>
+          <button class="button fileopen " id="closure_lox">closure.lox</button>
+          <button class="button " id="error_lox">error.lox</button>
+          <button class="button " id="arrays_lox">arrays.lox</button>
+          <button class="button " id="custom_lox">custom.lox</button>
+          <button class="button green " type="button" onClick="parent.open('https://www.github.com/vincepr/c_compiler')">on Github</button>
       </nav>
       <nav class="nav-right">
-          <button class="button green" id="btncompile">Run ▶</button>
+          <button class="button green " id="btncompile">Run ▶</button>
           <div><label>log GC</label><input class="toggle" type="checkbox" id="gc"/></div>
           <div><label>execution</label><input class="toggle" type="checkbox" id="trace"/></div>
           <div><label>bytecode</label><input class="toggle" type="checkbox" id="bytecode" /></div>
@@ -46,12 +46,12 @@
       </nav>
     </div>
 
-    <div class="row">
+    <div class="row dark3">
         <div class="column left" id="container">
           <!-- Monaco Code Editor takes control over this div! -->
         </div>
-        <div class="column right" >
-          <textarea readonly class="emscripten" id="output" type="text" spellcheck="false" >some text</textarea>
+        <div class="column right dark3" >
+          <textarea readonly class="emscripten dark4" id="output" type="text" spellcheck="false" >some text</textarea>
         </div>
     </div>
     <div class="emscripten" id="status">Downloading...</div>

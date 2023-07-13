@@ -63,4 +63,8 @@ ObjString* tableFindString(Table* table, const char* chars, int length, uint32_t
 void tableRemoveWhite(Table* table);
 void markTable(Table* table);
 
+/*CUSTOM:*/
+bool tableFindValue(Table* table, const char* chars, int length, uint32_t hash, Value* value);
+
+
 #endif

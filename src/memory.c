@@ -97,6 +97,11 @@ static void blackenObject(Obj* object) {
             }
             break;
         }
+        case OBJ_MAP: {
+            ObjMap* map = (ObjMap*)object;
+            markTable(&map->table);     //  not sure if we have to specially mark keys, test this.
+            break;
+        }
         case OBJ_BOUND_METHOD: {
             ObjBoundMethod* bound = (ObjBoundMethod*)object;
             markValue(bound->receiver);
@@ -148,6 +153,12 @@ static void freeObject(Obj* object) {
     #endif
 
     switch (object->type) {
+        case OBJ_MAP: {
+            ObjMap* map = (ObjMap*)object;
+            freeTable(&map->table);
+            FREE(ObjMap, object);
+            break;
+        }
         case OBJ_ARRAY: {
             ObjArray* array = (ObjArray*)object;
             FREE_ARRAY(Value*, array->items, array->count);

@@ -7,5 +7,4 @@ binary.out
 build_wasm/*.html
 build_wasm/*.js
 build_wasm/*.css
-# .wasm file is only included to make it easier to develop the frontend on my vm without emscripten
-#build_wasm/*.wasm
+build_wasm/*.wasm

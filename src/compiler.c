@@ -575,7 +575,7 @@ static void dot(bool canAssign) {
     }
 }
 
-// when hitting a OP_TRUE OP_FALSE OP_NIL we just push the corresponding value on the stack
+// when hitting a OP_TRUE OP_FALSE OP_NIL we just push the corresponding value on the stackexpect
 // this is done as optimisation-strategy (no casting from C-true -> struct and back) 
 static void literal(bool _canAssign) {
     switch (parser.previous.type) {
@@ -753,7 +753,7 @@ static void arrayInit(bool canAssign) {
             }
             parsePrecedence(PREC_OR);   // parses things between ','s and push values on stack
             if (itemCount == UINT8_COUNT) {
-                error("Cant start array with more than 256 entries.");
+                error("Can't start Array with more than 256 entries.");
             }
             itemCount ++;
         } while (match(TOKEN_COMMA));
@@ -769,11 +769,42 @@ static void arrayEdit(bool canAssign) {
     consume(TOKEN_RIGHT_BRACKET, "Expect ']' after index.");
     if (canAssign & match(TOKEN_EQUAL)) {
         expression();                   // need to push the value that we gonna insert on the stack
-        emitByte(OP_ARRAY_WRITE);       // were writing into the array ex: 'someArr[10] = true'
+        emitByte(OP_LISTS_WRITE_IDX);       // were writing into the array ex: 'someArr[10] = true'
     } else {
-        emitByte(OP_ARRAY_READ_IDX);    // were reading the value ex: 'someArr[10]'
+        emitByte(OP_LISTS_READ_IDX);    // were reading the value ex: 'someArr[10]'
     }
 }
+
+
+// parsing function for Map initialisation:
+static void mapInit(bool canAssign) {
+    int pairsCount = 0; // we count 1key and 1 value pair as 1.
+    if (!check(TOKEN_RIGHT_BRACE)) {
+        do {
+            if(check(TOKEN_RIGHT_BRACE)) {
+                break; // we hit a trailing comma
+            }
+            // key
+            if (! check(TOKEN_STRING)) {
+                error("Expect key string next inside Map.");
+            }
+            consume(TOKEN_STRING, "Expect key string inside Map");
+            string(true);      //TODO: check but canAssign=false seems right
+
+            consume(TOKEN_COLON, "Expect ':' between key and value of a Map.");
+            // value:
+            parsePrecedence(PREC_OR);
+            if (pairsCount == UINT8_COUNT) {
+                error("Can't start Map with more than 256 entries.");
+            }
+            pairsCount ++;
+        } while(match(TOKEN_COMMA));
+    }
+    consume(TOKEN_RIGHT_BRACE, "Expect '}' after map initialisaton");
+    emitByte(OP_MAP_BUILD);
+    emitByte(pairsCount);
+}
+
 
 /*
 *
@@ -788,7 +819,7 @@ static void arrayEdit(bool canAssign) {
 ParseRule rules[] = {
     [TOKEN_LEFT_PAREN]    = {grouping,    call,      PREC_CALL},
     [TOKEN_RIGHT_PAREN]   = {NULL,        NULL,      PREC_NONE},
-    [TOKEN_LEFT_BRACE]    = {NULL,        NULL,      PREC_NONE}, 
+    [TOKEN_LEFT_BRACE]    = {mapInit,     NULL,      PREC_NONE},    // ={ will initialize Maps
     [TOKEN_RIGHT_BRACE]   = {NULL,        NULL,      PREC_NONE},
     [TOKEN_LEFT_BRACKET]  = {arrayInit,   arrayEdit, PREC_IDX_ARRAY},
     [TOKEN_RIGHT_BRACKET] = {NULL,        NULL,      PREC_NONE},

@@ -30,6 +30,7 @@ typedef enum {
     
     /*CUSTOM Tokens added on top of default-lox implementation*/
     TOKEN_MODULO,
+    TOKEN_COLON,    // our map needs colon ':' -> var someMap = { "key" : 123 };
 
 } TokenType;
 
