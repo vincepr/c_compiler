@@ -128,7 +128,6 @@ static NativeResult lengthNative(int argCount, Value* args) {
         result.value = NUMBER_VAL((double)count);
         return result;
     } else if (argCount == 1 && IS_STRING(args[0])) {
-        // TODO: handle get string length
         ObjString* string = AS_STRING(args[0]);
         result.value = NUMBER_VAL((double)string->length);
         return result;
@@ -138,7 +137,6 @@ static NativeResult lengthNative(int argCount, Value* args) {
         result.didError = true;
         result.value = NIL_VAL;
         return result;
-        // TODO: handle runtime error (can only get length from array and string)
     }
 }
 
@@ -628,7 +626,6 @@ static InterpretResult run() {
                 break;
             // OP_NEGATE - arithmetic negation - unary expression, like -x with x=3 -> -3:
             case OP_NEGATE: 
-                // TODO: no {} here! check if this is on purpose? does it make a difference in c?
                 if (!IS_NUMBER(peek(0))) {
                     runtimeError("Operand must be a number.");
                     return INTERPRET_RUNTIME_ERROR;

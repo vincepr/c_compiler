@@ -92,7 +92,7 @@ case OP_ARRAY_READ_IDX: {
         runtimeError("Array index out of range.");
         return INTERPRET_RUNTIME_ERROR;
     }
-    result = arrayReadFromIdx(array, idx);      //TODO: check if this must be AS_NUMBER(idx)
+    result = arrayReadFromIdx(array, idx);
     push(result);
     break;
 } 
@@ -170,7 +170,7 @@ static void arrayEdit(bool canAssign) {
 // ads push functionality to array: - "arrayPush(someArr, "insert this str"); "
 static Value arrPushNative(int argCount, Value* args) {
     if (argCount != 2 || !IS_ARRAY(args[0])) {
-        // TODO: handle runtime error
+        // TO DO: handle runtime error
     }
     ObjArray* array = AS_ARRAY(args[0]);
     Value item = args[1];
@@ -181,12 +181,12 @@ static Value arrPushNative(int argCount, Value* args) {
 // deletes entry from array - "arrayDelete(someArr, 99);"
 static Value arrDeleteNative(int argCount, Value* args) {
     if (argCount != 2 || !IS_ARRAY(args[0]) || !IS_NUMBER(args[1])) {
-        //TODO: handle error
+        //TO DO: handle error
     }
     ObjArray* array = AS_ARRAY(args[0]);
     int idx = AS_NUMBER(args[1]);
     if ( !arrayIsValidIndex(array, idx)) {
-        // TODO: handle error
+        // TO DO: handle error
     }
     arrayDeleteFrom(array, idx);
     return NIL_VAL;

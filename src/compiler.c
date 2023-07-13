@@ -632,7 +632,7 @@ static void string(bool _canAssign) {
                 case '\'':
                     escapedStr[escapedLength++] = '\''; break;
                 case '\"':
-                    escapedStr[escapedLength++] = '\"'; break;      // TODO: need to implement scanner actually scanning this!
+                    escapedStr[escapedLength++] = '\"'; break;
                 case 'n':
                     escapedStr[escapedLength++] = '\n'; break;
                 case 't':
