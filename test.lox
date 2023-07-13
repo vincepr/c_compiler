@@ -1,326 +1,69 @@
-// // just a file to dump some lox code into were testing while interpreter is build
-
-// fun doSomething() {
-//     var x = 0;
-//     while (x<10) {
-//         x = x + 1;
-//     }
-//     print x;
-// }
-// //doSomething();
-
-// fun outer() {
-//   var x = "outside";
-//   fun inner() {
-//     print x;
-//   }
-//   inner();
-// }
-// //outer(); // should print outside
-
-
-
-// // testing stack trance:
-// fun a() { b(); }
-// fun b() { c(); }
-// fun c() {
-//   c("too", "many"); // this only 'breaks' at runtime
-// }
-// // a();         // will produce a full stacktrace with the error in c()
-
-
-
-
-
-
-
-
-// // some test code for classes:
-// class Brioche {
-
-// }
-
-// print Brioche;    // the class -> prints "Brioche"
-// print Brioche();  // a instance of the class Brioche -> prints "Brioche instance"
-
-// class Pair {}
-
-// var pair = Pair();
-// pair.first = 1;
-// pair.second = 2;
-// print pair.first + pair.second; // prints 3.
-
-
-// // closures bug hunting:
-// // when closures are implemented this should print out outer:
-
-// var x = "global";
-// fun outer() {
-//   var x = "outer";
-//   fun inner() {
-//     print x;
-//   }
-//   inner();
-// }
-// outer();    // closure captured "outer" and should print that
-
-// // closures here can capture the same outer variable inc.
-// fun incrementClosure() {
-//   var inc = 50;
-//   fun inner() {
-//     inc = inc +10;
-//     print inc;
-//   }
-//   return inner;
-// }
-// // var a = incrementClosure();
-// // var b = incrementClosure();
-// //a();
-// //a();  // this captures the same inc as the above
-// //b();  // this captures another inc
-// //b();  // same inc as above
-// //b();  // same inc as above
-
-
-// class Scone {
-//   topping(first, second) {
-//     print "scone with " + first + " and " + second;
-//   }
-// }
-
-// var scone = Scone();
-// scone.topping("berries", "cream");  // prints out: scone with beries and cream
-
-
-// class Person {
-//   sayName() {
-//     print this.name;
-//   }
-// }
-
-// var jane = Person();
-// jane.name = "Jane";
-
-// var method = jane.sayName;
-// method(); // prints out: Jane
-
-
-// class CoffeeMaker {
-//   init(coffee) {
-//     this.coffee = coffee;
-//   }
-
-//   brew() {
-//     print "Enjoy your cup of " + this.coffee;
-
-//     // No reusing the grounds!
-//     this.coffee = nil;
-//   }
-// }
-
-// var maker = CoffeeMaker("coffee and chicory");
-// maker.brew();
-
-
-// // fields can hold functions of their own and get called correctly:
-// class Oops {
-//   init() {
-//     fun f() {
-//       print "not a method";
-//     }
-
-//     this.field = f;
-//   }
-// }
-
-// var oops = Oops();
-// oops.field();
-
-
-// class Doughnut {
-//   cook() {
-//     print "Dunk in the fryer.";
-//     this.finish("sprinkles");
-//   }
-
-//   finish(ingredient) {
-//     print "Finish with " + ingredient;
-//   }
-// }
-
-// class Cruller < Doughnut {
-//   finish(ingredient) {
-//     // No sprinkles, always icing.
-//     super.finish("icing");
-//   }
-// }
-// // base class:
-// var food1 = Doughnut();
-// food1.cook();
-// // and the one that overwrites finish method:
-// var food2 = Cruller();
-// food2.cook();
-// print "";
-
-// var someArray = [];
-// var arr = [1, 2, 3];
-// //     0   1    2     3           4
-// fun printArr(arr) {
-//   for (var i=0; i<10; i=i+1) {
-//     print arr[i];
-//   }
-// }
-
-// arr = [11, 99, nil, false, "arrays_running"];
-// print arr;
-// print arr[0];
-// print arr[1];
-// print arr[2];
-// print arr[3];
-// print arr[4];
-// //print arr[5]; // false? this should be ERROR
-// //print arr[5]; // false? this should be ERROR
-
-// delete(arr, 3);
-// print arr[3];
-// //print arr[4]; // nil? this should be ERROR
-
-// print "______";
-// print "______";
-
-
-
-// var arr = [0,1,2,3];
-// delete(arr, 3);
-// print arr;
-// print len(arr);
-
-// var arr = [1,];
-// for (var i=0; i<10; i=i+1) {// 
-//   push(arr, i);
-// }
-// print arr;
-// for (var i=0; i<1; i=i+1) {
-//   print pop(arr);
-// }
-// print "length:";
-
-// print len(arr);
-// print arr;
-// delete(arr, 9);
-// print arr;
-
-//print ":::::::::::::::::::::::";
-
-// var str = "some\fhing \n \t\tstring\n that includes many linebreaks \n ";
-// //printf(str);
-// var boo = true;
-// print typeof(boo);
-// print typeof("hello");
-// print typeof(123);
-// class Parent {}
-// class Child < Parent {}
-
-// var in = Child();
-// print typeof(in);
-// print "------------";
-
-
-
-
-
-
-
-
-
-
-// class Person {
-//   init(name) {
-//     this.name = name; // this is how initial fields could be set
-//   }
-//   whoAmI() {
-//     printf( "Hello, my name is " + this.name + " ");
-//   }
-// }
-
-// class Parent < Person {
-//     init(name, children) {
-//         super.init(name);
-//         this.children = children;
-//     }
-// }
-
-// // some functions:
-// fun fnPerson(idx) {
-//     household[idx].whoAmI();
-// }
-// fun fnParent(idx) {
-//     household[idx].whoAmI();
-//     var children = household[idx].children;
-//     printf("and my children are: ");
-//     for (var i=0; i<len(children); i=i+1){
-//         printf(children[i], " ");
-//     }
-// }
-// fun fnCat() {
-//     printf("I am the Family's Cat");
-// }
-// fun fnDog() {
-//     printf("And who let the dogs out? Woof Woof.");
-// }
-// // we put the functions above as closures in our map
-// var map = {
-//     "Person" : fnPerson,
-//     "Dog" : fnDog,
-// };
-// map["Cat"] = fnCat;
-// map["Parent"] = fnParent;
-
-// var p1 = Person("Bob");
-// var p2 = Person("James");
-// var p3 = Person("James");
-// var p4 = Parent("Jenny", ["Bob", "James", "Finn"]);
-// var household = [p1, p2, "Cat" , p4, p3, "Dog"];
-
-// for (var i=0; i<len(household); i=i+1) {
-//     if (typeof(household[i])=="string") {
-//         map[household[i]]();
-//     }else {
-//         var fn = map[typeof(household[i])];
-//         fn(i);
-//     }
-//     printf("\n");
-// }
-
-
-
-
-
-var screen = {
-    "length": 12.4,
-    "width" : "12 meters",
+//
+// Polymorphismus in my Extended Lox
+// you can run this file easily with (feel free to play arround):
+// make test
+//
+
+class Person {
+init(name) {
+  this.name = name;
+}
+whoAmI() {
+  printf( "Hello, my name is " + this.name + " ");
+}
+}
+
+class Parent < Person { 
+  init(name, children) {
+    super.init(name);
+    this.children = children;
+  }
+}
+
+// Functions are Firstclass in Lox 
+fun fnPerson(idx) {
+  household[idx].whoAmI();
+}
+
+fun fnParent(idx) {
+  household[idx].whoAmI();
+  var children = household[idx].children;
+  printf("and my children are: ");
+  for (var i=0; i<len(children); i=i+1){
+    printf(children[i], " ");
+  }
+}
+
+fun fnCat() {
+  printf("I am the Family's Cat");
+}
+
+fun fnDog() {
+  printf("And who let the dogs out? Woof Woof.");
+}
+
+// so we can put a bunch of closures in A Map:
+var map = {
+  "Person" : fnPerson,
+  "Dog" : fnDog,
 };
-screen["length"] = 77;    // changes length value
-print screen["size"];     // -> nil    for not found
-screen["width"] = nil;    // set value nil to delete from map
-screen["height"] = "big"; // adds new key-value pair
-print screen;             // -> { height : big, length : 77, }
+map["Cat"] = fnCat;
+map["Parent"] = fnParent;
 
+var p1 = Person("Bob");
+var p2 = Person("James");
+var p3 = Person("James");
+var p4 = Parent("Jenny", ["Bob", "James", "Finn"]);
+var household = [p1, p2, "Cat" , p4, p3, "Dog"];
 
-
-// var y = [1,2];
-// print y= [3,4,5];
-// printf(y[1], x["finilsh"] , "\n");
-
-
-
-// [] - mymap["xyz"] = NIL -> SHOULD DELETE entry from array , should delete(mymap, 123) do the same?
-// [] - mymap
-// [] - write/read for maps: mymap[1] == true; and print mymap[2]; -> mymap[notexisting] -> NIL
-// [] - write/read for strings: mystring[1] == true; and print mystring[2];
-// [] - string concat -> "123" + 123 -> "123123" https://stackoverflow.com/questions/20950878/typecast-double-to-string-concatenate-double-to-string
-// [] - foreach (map, array, string) 
-// foreach(map/array/string) {
-    // dothings
-// }
-
+for (var i=0; i<len(household); i=i+1) {
+  // typechecking happens at runtime, so we can branch with if:
+  if (typeof(household[i])=="string") {
+    map[household[i]]();
+  }else {
+    // or use a map like above to branch over for example classes:
+    var fn = map[typeof(household[i])];
+    fn(i);
+  }
+  printf("\n");
+}
