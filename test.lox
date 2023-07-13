@@ -227,17 +227,91 @@
 
 
 
-var x = {"test" : 123, "fish": 99};
-print x;
-x["test"] = 321;
-print "x[test]=";
-print x["test"];
-print x;
 
 
-var y = [1,2];
-print y= [3,4,5];
-printf(y[1], x["finilsh"] , "\n");
+
+
+
+
+
+// class Person {
+//   init(name) {
+//     this.name = name; // this is how initial fields could be set
+//   }
+//   whoAmI() {
+//     printf( "Hello, my name is " + this.name + " ");
+//   }
+// }
+
+// class Parent < Person {
+//     init(name, children) {
+//         super.init(name);
+//         this.children = children;
+//     }
+// }
+
+// // some functions:
+// fun fnPerson(idx) {
+//     household[idx].whoAmI();
+// }
+// fun fnParent(idx) {
+//     household[idx].whoAmI();
+//     var children = household[idx].children;
+//     printf("and my children are: ");
+//     for (var i=0; i<len(children); i=i+1){
+//         printf(children[i], " ");
+//     }
+// }
+// fun fnCat() {
+//     printf("I am the Family's Cat");
+// }
+// fun fnDog() {
+//     printf("And who let the dogs out? Woof Woof.");
+// }
+// // we put the functions above as closures in our map
+// var map = {
+//     "Person" : fnPerson,
+//     "Dog" : fnDog,
+// };
+// map["Cat"] = fnCat;
+// map["Parent"] = fnParent;
+
+// var p1 = Person("Bob");
+// var p2 = Person("James");
+// var p3 = Person("James");
+// var p4 = Parent("Jenny", ["Bob", "James", "Finn"]);
+// var household = [p1, p2, "Cat" , p4, p3, "Dog"];
+
+// for (var i=0; i<len(household); i=i+1) {
+//     if (typeof(household[i])=="string") {
+//         map[household[i]]();
+//     }else {
+//         var fn = map[typeof(household[i])];
+//         fn(i);
+//     }
+//     printf("\n");
+// }
+
+
+
+
+
+var screen = {
+    "length": 12.4,
+    "width" : "12 meters",
+};
+screen["length"] = 77;    // changes length value
+print screen["size"];     // -> nil    for not found
+screen["width"] = nil;    // set value nil to delete from map
+screen["height"] = "big"; // adds new key-value pair
+print screen;             // -> { height : big, length : 77, }
+
+
+
+// var y = [1,2];
+// print y= [3,4,5];
+// printf(y[1], x["finilsh"] , "\n");
+
 
 
 // [] - mymap["xyz"] = NIL -> SHOULD DELETE entry from array , should delete(mymap, 123) do the same?

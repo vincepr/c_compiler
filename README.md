@@ -69,7 +69,18 @@ print typeof(12.3) == "number";     // true
 Class Chicken{}
 chick = Chicken();
 print typeof(chick) == "Chicken";   // true
-
+```
+- added dynamic Map/Dictionary
+```js
+var screen = {
+    "length": 12.4,
+    "width" : "12 meters",
+};
+screen["length"] = 77;    // changes length value
+print screen["size"];     // -> nil    for not found
+screen["width"] = nil;    // set value nil to delete from map
+screen["height"] = "big"; // adds new key-value pair
+print screen;             // -> { height : big, length : 77, }
 ```
 
 some notes i took while implementing custom changes: https://github.com/vincepr/c_compiler/docs/CUSTOM_IMPLEMENTATIONS.md

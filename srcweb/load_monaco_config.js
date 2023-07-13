@@ -231,6 +231,17 @@ print "\\n";
 // Math operations  
 print floor(12.9);              // 12 - rounds down
 print 11%3;                     // 2 - Modulo Operator
+
+// Map/Dictionary
+var screen = {
+  "length": 12.4,
+  "width" : "12 meters",
+};
+screen["height"] = "big";
+screen["length"] = 77;
+print screen["size"];         // nil
+screen["width"] = nil;        // Delete from Map
+print screen;                 // { height : big, length : 77, }
 `,
 };
 

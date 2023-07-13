@@ -882,34 +882,36 @@ static InterpretResult run() {
                     } else {
                         tableSet(&map->table, key, value);
                     }
+                    pop();          // we kept value on for GC
                     pop();
-                    pop();
-                    pop();
-                    push(value);
+                    pop();  
+                    push(value);    // in lox assignments return the assigned value
                     break;
 
                 } else {
-                    //TODO: this seems not save!
                     /** It is a Array */
                     // stack at start: [array, idx, value]top -> at end: [array]
                     // takes operand [array, idx, value] writes value to array at index:idx
-                    Value item = pop();     // the value that should get added
-                    if (!IS_NUMBER(peek(0))) {
+                    Value item = peek(0);     // the value that should get added
+                    if (!IS_NUMBER(peek(1))) {
                         runtimeError("Array index must be a number.");
                         return INTERPRET_RUNTIME_ERROR;
                     }
-                    int idx = AS_NUMBER(pop());
-                    if (!IS_ARRAY(peek(0))) {
+                    int idx = AS_NUMBER(peek(1));
+                    if (!IS_ARRAY(peek(2))) {
                         runtimeError("Can not store value in a non-array/map.");
                         return INTERPRET_RUNTIME_ERROR;
                     }
-                    ObjArray* array = AS_ARRAY(pop());
+                    ObjArray* array = AS_ARRAY(peek(2));
                     if (!arrayIsValidIndex(array, idx)) {
                         runtimeError("Invalid index to array.");
                         return INTERPRET_RUNTIME_ERROR;
                     }
                     arrayWriteTo(array, idx, item);
-                    push(item);
+                    pop();      // we kept value on for GC
+                    pop();
+                    pop();
+                    push(item); // in lox assignments return the assigned value -> x=3=x*3=[x,x*2];
                     break;
                 }
             }
