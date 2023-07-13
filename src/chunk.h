@@ -64,6 +64,7 @@ typedef enum {
     OP_ARRAY_READ_IDX,  // takes operand [array, idx] -> reads value in Array on that index
     OP_ARRAY_WRITE,     // takes operand [array, idx, value]
     OP_MODULO,          // binary-operation: % Modulo (divies and takes leftovers)
+    OP_MAP_BUILD,       // takes operand [count, key1, val1, ...keyN, vallN, map] to initialize a Map
 
 } OpCode;
 

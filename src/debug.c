@@ -178,6 +178,8 @@ int disassembleInstruction(Chunk* chunk, int offset) {
             return simpleInstruction("OP_ARRAY_WRITE", offset);
         case OP_MODULO:
             return simpleInstruction("OP_MODULO", offset);
+        case OP_MAP_BUILD:
+            return simpleInstruction("OP_MAP_BUILD", offset);
         default:
             printf("Unknown opcode %d\n", instruction);
             return offset +1;

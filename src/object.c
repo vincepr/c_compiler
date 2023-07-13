@@ -161,6 +161,29 @@ ObjArray* newArray() {
     return array;
 }
 
+// helper for ALLOCATE_OBJ macro - allocates our dynamic map
+ObjMap* newMap() {
+    ObjMap* map = ALLOCATE_OBJ(ObjMap, OBJ_MAP);
+    initTable(&map->table);
+    return map;
+}
+
+// helper for printObject() - printing our custom map
+static void printMap(ObjMap* map) {
+    printf("{");
+    for (int i=0; i< map->table.capacity; i++){
+        // need to check for tombstones or empty:
+        if(! (map->table.entries[i].key == NULL )) {
+            printf("%s", map->table.entries[i].key->chars);
+            printf(" : ");
+            printValue(map->table.entries[i].value);
+            printf(", ");
+        }
+        printf("}");
+    }
+    printf("}");
+}
+
 // helper for printValue() - print functionality for heap allocated datastructures
 void printObject(Value value) {
     switch (OBJ_TYPE(value)) {
@@ -197,5 +220,8 @@ void printObject(Value value) {
             }
             printf("]");
         }
+        case OBJ_MAP:
+            printMap(AS_MAP(value));
+            break;
     }
 }

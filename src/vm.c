@@ -790,11 +790,22 @@ static InterpretResult run() {
             case OP_MAP_BUILD: {
                 // stack at start: [key1:value1, key2:value2, keyN:valueN, count]top -> at end: [map]
                 ObjMap* map = newMap();
-                uint8_t itemCount = READ_BYTE();
+                uint8_t pairsCount = READ_BYTE();    
                 push(OBJ_VAL(map));                 // we push map so it doesnt GC'd
-                for (int i = itemCount; i>0; i--) {
-                    mapWriteKeyValue(map, peek(i), peek(i+1))
+                for (int i = pairsCount*2; i>0; i-=2) {
+                    ObjString* key = AS_STRING( peek(i) );
+                    Value value = peek(i-1);
+                    tableSet(&map->table, key, value);
+
                 }
+                // cleanup of stack: (map then all key-value-pairs)
+                pop();
+                for(int i=0; i<pairsCount; i++){
+                    pop();
+                    pop();
+                }
+                push(OBJ_VAL(map));
+                break;
 
             }
             case OP_ARRAY_BUILD:{
