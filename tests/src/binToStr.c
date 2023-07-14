@@ -5,7 +5,9 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include "binToStr.h"
 // runs the command and pipes output into a string 
+// ! HAVE TO FREE THE STRING AFTER
 // ! (no real error-catching)
 // - int inc_sterr =0 -> (errors are in place for our purpose)
 char* runCmdToStr(char** cmd, int inc_stderr) {

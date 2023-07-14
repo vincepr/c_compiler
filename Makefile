@@ -54,7 +54,7 @@ web:
 
 # starts our unit-testing 
 unit: build
-	gcc -o tests/test.out tests/src/main.c tests/src/binToStr.c tests/src/getFiles.c
+	gcc -o tests/test.out tests/src/main.c tests/src/binToStr.c tests/src/getFiles.c tests/src/doUnitTest.c
 	./tests/test.out
 
 # to remove all artifacts/binary
