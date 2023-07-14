@@ -18,7 +18,7 @@ void getFiles() {
             char * pch = strstr(dir->d_name, ".lox");
             if (pch != NULL) {
                 printf("found files: %s\n", dir->d_name);
-                *arr[CURRENT_STR_ARRAY_SIZE] = *dir->d_name;
+                *arr[0] = *dir->d_name;
                 CURRENT_STR_ARRAY_SIZE += 1;
             }
         }
