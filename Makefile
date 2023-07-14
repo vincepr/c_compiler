@@ -51,9 +51,11 @@ web:
 	cp srcweb/*.js build_wasm/
 	cp srcweb/*.css build_wasm/
 #	emcc $(WEBFILES) -o build_wasm/compiler.html -sEXPORTED_FUNCTIONS=_compileSourceCode -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
+
+# starts our unit-testing 
 unit: build
-	gcc -o tests/minunit.out tests/minunit.c
-	./tests/minunit.out
+	gcc -o tests/test.out tests/src/main.c tests/src/binToStr.c tests/src/getFiles.c
+	./tests/test.out
 
 # to remove all artifacts/binary
 clean:

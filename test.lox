@@ -67,3 +67,5 @@ for (var i=0; i<len(household); i=i+1) {
   }
   printf("\n");
 }
+
+p1 = "string" + 123;
