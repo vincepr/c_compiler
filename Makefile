@@ -42,8 +42,13 @@ run: build
 	./binary.out
 #	./binary.out test.lox
 
-test: build
+# first build then run the binary on the test.lox file
+file: build
 	./binary.out test.lox
+
+# starts our unit-testing 
+test: build
+	python3 ./tests/main.py ./binary.out ./tests/
 
 # build the wasm-build:
 web: 
@@ -52,10 +57,6 @@ web:
 	cp srcweb/*.css build_wasm/
 #	emcc $(WEBFILES) -o build_wasm/compiler.html -sEXPORTED_FUNCTIONS=_compileSourceCode -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
 
-# starts our unit-testing 
-unit: build
-	gcc -o tests/test.out tests/src/main.c tests/src/binToStr.c tests/src/getFiles.c tests/src/doUnitTest.c
-	./tests/test.out
 
 # to remove all artifacts/binary
 clean:
