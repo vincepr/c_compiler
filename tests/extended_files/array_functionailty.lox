@@ -1,0 +1,8 @@
+var arr = [];
+print arr;   // expect: [ ]
+arr = [1,2, [false, "hello"]];
+print arr;   // expect: [ 1, 2, [ false, hello, ], ]
+print arr[0];   // expect: 1
+print arr[2][1]; // expect: hello
+arr[2] = 99;
+print arr[2];   // expect: 99
