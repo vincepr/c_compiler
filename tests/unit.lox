@@ -1,2 +1,3 @@
 var arr = [];
-arr["hello"]; // expect: Array index must be a number.
+arr["hello"]; // Array index must be a number.
+// [line 2] in script
