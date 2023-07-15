@@ -1,0 +1,3 @@
+class Foo {}
+Foo.bar; // expect runtime error: Only instances have properties.
+// [line 2] in script

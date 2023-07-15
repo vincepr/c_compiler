@@ -1,0 +1,2 @@
+class Foo < Foo {}
+// [line 1] Error at 'Foo': A class can't inherit from itself.

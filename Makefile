@@ -37,18 +37,17 @@ BINARY=binary.out
 build:
 	gcc -o $(BINARY) $(CCFILES)
 
-# first build then run the binary
+# quickly run in repl-mode
 run: build
 	./binary.out
-#	./binary.out test.lox
 
-# first build then run the binary on the test.lox file
-file: build
-	./binary.out test.lox
+# quickly run the start.lox file
+start: build
+	./binary.out start.lox
 
-# starts our unit-testing 
+# starts our unit-testing suite
 test: build
-	python3 ./tests/main.py ./binary.out ./tests/
+	python3 ./tests/tester.py ./binary.out ./tests/
 
 # build the wasm-build:
 web: 

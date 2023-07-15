@@ -1,0 +1,2 @@
+unknown = "what"; // expect runtime error: Undefined variable 'unknown'.
+// [line 1] in script

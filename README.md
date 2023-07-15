@@ -24,8 +24,9 @@ You can toggle 3 Flags in the web version:
 Just clone the repo, cd into it and if on linux (with gcc installed) you can just use my makefile: 
 - building the binary: `make build`
 - for the repl: `make run`
-- build the binary and run the test.lox file `make test`
-- building for the web-browser: `build web` (this needs emcc from emscripten installed to compile c to a `.wasm` file).
+- build the binary and run the test.lox file `make start`
+- run the unit-testing suite: `make test`
+- building for the web-browser: `build web` (this needs emcc from emscripten installed to compile c to a `.wasm` file). Afterwards just host the `./build_wasm` folder with something like life-server.
 
 ## The Lox Language
 For the Lox Language itself you can refer to the book: https://craftinginterpreters.com/the-lox-language.html

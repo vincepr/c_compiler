@@ -1,0 +1,4 @@
+{
+  print notDefined;  // expect runtime error: Undefined variable 'notDefined'.
+}
+// [line 2] in script

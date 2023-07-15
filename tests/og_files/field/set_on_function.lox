@@ -1,0 +1,5 @@
+fun foo() {}
+
+foo.bar = "value"; // expect runtime error: Only instances have fields.
+
+// [line 3] in script

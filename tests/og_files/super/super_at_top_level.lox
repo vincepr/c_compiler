@@ -1,0 +1,5 @@
+super.foo("bar");
+super.foo; 
+
+// [line 1] Error at 'super': Can't use 'super' outside of a class.
+// [line 2] Error at 'super': Can't use 'super' outside of a class.

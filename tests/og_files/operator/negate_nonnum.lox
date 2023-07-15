@@ -1,0 +1,2 @@
+-"s"; // expect runtime error: Operand must be a number.
+// [line 1] in script
