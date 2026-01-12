@@ -1,0 +1,100 @@
+[gd_scene load_steps=2 format=3 uid="uid://p1thfdgp4wht"]
+
+[ext_resource type="Script" uid="uid://cg7gibjk784wl" path="res://addons/graphtastic/dialog_player/toolmode/popup_ineditor.gd" id="1"]
+
+[node name="WindowDialog" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1")
+
+[node name="Control" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="VBox" type="VBoxContainer" parent="Control"]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Control/VBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Control/VBox/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Label" type="Label" parent="Control/VBox/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+mouse_filter = 1
+text = "GTP.variables ="
+
+[node name="TextEditVariables" type="TextEdit" parent="Control/VBox/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+text = "{
+\"health\": 100,
+\"playername\": \"paul\",
+}"
+
+[node name="Label2" type="Label" parent="Control/VBox/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+text = "input starting chapterID ="
+
+[node name="chapterID" type="SpinBox" parent="Control/VBox/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+min_value = 1.0
+max_value = 9999.0
+value = 1.0
+
+[node name="VBoxContainer2" type="VBoxContainer" parent="Control/VBox/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Label" type="Label" parent="Control/VBox/HBoxContainer/VBoxContainer2"]
+layout_mode = 2
+mouse_filter = 1
+text = "GTP.pictures ="
+
+[node name="TextEditPictures" type="TextEdit" parent="Control/VBox/HBoxContainer/VBoxContainer2"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+text = "{
+\"angry\": \"res://resources/pictures/em_angry.png\",
+\"laugh\": \"res://resources/pictures/em_laugh.png\",
+}"
+
+[node name="Label2" type="Label" parent="Control/VBox/HBoxContainer/VBoxContainer2"]
+layout_mode = 2
+text = "input starting nodeID ="
+
+[node name="nodeID" type="SpinBox" parent="Control/VBox/HBoxContainer/VBoxContainer2"]
+layout_mode = 2
+min_value = 1.0
+max_value = 9999.0
+value = 1.0
+
+[node name="Button" type="Button" parent="Control/VBox"]
+layout_mode = 2
+text = "start playing"
+
+[node name="Control" type="Control" parent="Control/VBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+size_flags_stretch_ratio = 0.3

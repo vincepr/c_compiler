@@ -1,0 +1,44 @@
+nID	slots	name	dialogtext	speaker	pictures	off_x	off_y	choices	connects
+chapter1	<- chaptername	1	<- chapterID
+1	3	start	"Hey there , ""insert playername here"" how are you doing?
+<if>playername==""default""{Just kiddin, you didnt even bother to change the name before starting... u lazy peon,
+back to the menu with you!}</if><if>playername!=""default""{Just kiddin, hey #(playername)#, what's up how are you doing today?}</if> 	"	Me	"[""res://demo_project/resources/pictures_faces/cha1_blink.png"",""res://demo_project/resources/pictures_bg/city_bg.jpg"",""""]"	-40	-120	"[[""back to the menu!"",""playername==\""default\""""],[""u look ugly, please change your face!"",""playername!=\""default\""""],[""lets get this started."",""playername!=\""default\""""]]"	"[[0,""2"",0],[1,""3"",0],[2,""4"",0]]"
+2	1	default name	"were skipping this texbox, so this text wont get displayed.
+BUT if commands still get run, like so: <change>playername=""lazy peon""</change>
+<skip>"		"["""","""",""""]"	260	-60	"[["""",""""]]"	[]
+3	1	u ugly	"Well i was kinda lazy and the only other sprite-set i have setup is this...
+How about you just shut your left eye real hard and only look to the right side or something?
+Would that satisfy a rude person like you?"	Me the developer	"[""res://demo_project/resources/pictures_faces/cha1_mad.png"","""",""res://demo_project/resources/pictures_faces/em_surprised.png""]"	260	80	"[["""",""""]]"	"[[0,""5"",0]]"
+4	2		"So lets give a quick rundown on what this player can do i guess?
+or do you just wanna go back to the main menu and have a quick look at what the editor looks like?
+[b]be warned though[/b] you won't be able to save/load or quickplay your dialog in the editor, 
+that stuff only works in the godot main window for now."	Me the developer	"[""res://demo_project/resources/pictures_faces/cha1_neutral.png"","""",""""]"	140	260	"[[""a quick rundown"",""""],[""take me outa here"",""""]]"	"[[0,""7"",0],[1,""10"",0]]"
+5	1	angry anime girl	"Wait whaaaaat?
+Am i just here for some eye candy? I don't think i get payed enought for that!
+I'm outa here...."	angry Anime-Girl	"[""res://demo_project/resources/pictures_faces/cha1_energetig.png"","""",""res://demo_project/resources/pictures_faces/em_talk_loud.png""]"	440	80	"[["""",""""]]"	"[[0,""6"",0]]"
+6	1	back to the main path	"Well now i am kinda out of options, so no more choices for you, were just going forward.
+I guess i'll change the background, just because i can, i'll even not use the direct path but a variable in GTP.pictures just because i can."		"[""res://demo_project/resources/pictures_faces/cha1_blink.png"",""bg2"",""""]"	640	80	"[["""",""""]]"	"[[0,""4"",0]]"
+7	6	choices	"So a small warning, [i]this is a very early version[/i], [color=Red]so things might change later down the road.[/color]
+What would you like to know about?"	Me the developer	"[""res://demo_project/resources/pictures_faces/cha1_energetig.png"","""",""""]"	360	300	"[[""graphs?"",""""],[""text?"",""""],[""nodes?"",""""],[""variables pictures"",""""],[""signals"",""""],[""bye"",""""]]"	"[[0,""8"",0],[1,""9"",0],[2,""11"",0],[3,""12"",0],[5,""10"",0],[4,""13"",0]]"
+8	1	graph	"In the graph-editor you can arrange the nodes in a way for the ingame textbox to parse trough.
+Roughly speaking we give it a start point and it will look for outgoing connections at the right side, check if If-Statments for those connections are true and then either display Choices as a textfilled buttons if there are any, or otherwise just jump to the first empty or true ifstatement without choice text it can find."		"["""","""",""""]"	540	260	"[["""",""""]]"	"[[0,""7"",0]]"
+9	1	text	"each graph has some text atributed to it.
+We can do all the bb-code stuff by default, but i added some more ingame stuff.
+we can display variables like this: #(playername)#
+also we can change variables, send signals or hide certain parts of the text behind if statments and change chapter.
+"		"["""","""",""""]"	700	280	"[["""",""""]]"	"[[0,""7"",0]]"
+10	1	end	<skip>		"["""","""",""""]"	120	560	"[["""",""""]]"	[]
+11	1	nodes	"once the plugin is active, you will not only have the new editor view,
+but also have access to 4 prebuilt nodes you can add like you would any default godot node.
+A textbox to display the dialog, here we also choose the startpoint for the dialog.
+A picture node with for now 3 different channels. I used one for background and 2 for characters in this example.
+A speaker label, that can display the speaker if you want to use that function.
+And the neccesary VBoxContainer that automatically fills in the buttons for the Choices the player can make. To change the look of the buttons themes is where it's at."		"["""","""",""""]"	540	360	"[["""",""""]]"	"[[0,""7"",0]]"
+12	1	variables	"to easily use pictures and variables i chose to use a singleton GTD. It's only use is basically to hold 2 dictionaries.
+GTD.variables={""healt"": 100, ""playername"": ""The developer""}
+GTD.pictures={""mad"": ""res://demo_project/resources/pictures_faces/cha1_mad.png""}
+You can fill those before you start the dialog with relevant information, so the dialog player gets access to it.
+Also it definitly makes filling face-pictures for each window less mind numbing, 
+if you can use the same abreviations for each character and only change the GTP.pictures before."		"["""","""",""""]"	700	380	"[["""",""""]]"	"[[0,""7"",0]]"
+13	1		"For one you can make custom signals in the dialogtext, to extend whatever functionality you would want.
+GTD acts as a transmitter/reciver so you can always connect to that one, other than that you can also just click of one of the nodes in the normal 2d-editor and check what signals each node sends out next to  the inspector tab, connect them directly like that."		"["""","""",""""]"	540	460	"[["""",""""]]"	[]

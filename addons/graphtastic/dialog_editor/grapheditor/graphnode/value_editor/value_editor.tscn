@@ -1,0 +1,236 @@
+[gd_scene load_steps=11 format=3 uid="uid://beql8htu3f5ig"]
+
+[ext_resource type="Script" uid="uid://cl2a8l66p8uc3" path="res://addons/graphtastic/dialog_editor/grapheditor/graphnode/value_editor/value_editor.gd" id="1"]
+
+[sub_resource type="Shortcut" id="2"]
+
+[sub_resource type="Shortcut" id="4"]
+
+[sub_resource type="Shortcut" id="6"]
+
+[sub_resource type="Shortcut" id="8"]
+
+[sub_resource type="Shortcut" id="10"]
+
+[sub_resource type="Shortcut" id="12"]
+
+[sub_resource type="Shortcut" id="14"]
+
+[sub_resource type="Shortcut" id="16"]
+
+[sub_resource type="Shortcut" id="18"]
+
+[node name="ValueEdit" type="Container"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1")
+
+[node name="ScrollContainer" type="ScrollContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="VBoxContainerTop" type="VBoxContainer" parent="ScrollContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HBoxSpeaker2" type="HBoxContainer" parent="ScrollContainer/VBoxContainer/VBoxContainerTop"]
+layout_mode = 2
+alignment = 1
+
+[node name="Label" type="Label" parent="ScrollContainer/VBoxContainer/VBoxContainerTop/HBoxSpeaker2"]
+layout_mode = 2
+mouse_filter = 1
+text = "left-picture"
+horizontal_alignment = 2
+
+[node name="LEFT_PIC" type="LineEdit" parent="ScrollContainer/VBoxContainer/VBoxContainerTop/HBoxSpeaker2"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "#"
+expand_to_text_length = true
+
+[node name="Label2" type="Label" parent="ScrollContainer/VBoxContainer/VBoxContainerTop/HBoxSpeaker2"]
+layout_mode = 2
+mouse_filter = 1
+text = "right-picture"
+horizontal_alignment = 2
+
+[node name="RIGHT_PIC" type="LineEdit" parent="ScrollContainer/VBoxContainer/VBoxContainerTop/HBoxSpeaker2"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "#"
+
+[node name="HBoxSpeaker" type="HBoxContainer" parent="ScrollContainer/VBoxContainer/VBoxContainerTop"]
+layout_mode = 2
+alignment = 1
+
+[node name="Label" type="Label" parent="ScrollContainer/VBoxContainer/VBoxContainerTop/HBoxSpeaker"]
+layout_mode = 2
+text = "speaker:"
+horizontal_alignment = 2
+
+[node name="SPEAKER" type="LineEdit" parent="ScrollContainer/VBoxContainer/VBoxContainerTop/HBoxSpeaker"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "#"
+expand_to_text_length = true
+
+[node name="Label2" type="Label" parent="ScrollContainer/VBoxContainer/VBoxContainerTop/HBoxSpeaker"]
+layout_mode = 2
+mouse_filter = 1
+text = "center-picture"
+horizontal_alignment = 2
+
+[node name="CENTER_PIC" type="LineEdit" parent="ScrollContainer/VBoxContainer/VBoxContainerTop/HBoxSpeaker"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "#"
+
+[node name="HBoxName" type="HBoxContainer" parent="ScrollContainer/VBoxContainer/VBoxContainerTop"]
+layout_mode = 2
+alignment = 1
+
+[node name="NID" type="Label" parent="ScrollContainer/VBoxContainer/VBoxContainerTop/HBoxName"]
+layout_mode = 2
+text = "node-Name;"
+horizontal_alignment = 1
+
+[node name="NODENAME" type="LineEdit" parent="ScrollContainer/VBoxContainer/VBoxContainerTop/HBoxName"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "#"
+expand_to_text_length = true
+
+[node name="HSplitContainer" type="HSplitContainer" parent="ScrollContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+split_offset = 3
+
+[node name="DIALOGTXT" type="TextEdit" parent="ScrollContainer/VBoxContainer/HSplitContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="ScrollContainer/VBoxContainer/HSplitContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ButtonInsertVar" type="Button" parent="ScrollContainer/VBoxContainer/HSplitContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+focus_mode = 0
+shortcut = SubResource("2")
+text = "insert var"
+
+[node name="ButtonChangeVar" type="Button" parent="ScrollContainer/VBoxContainer/HSplitContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+focus_mode = 0
+shortcut = SubResource("4")
+text = "change var"
+
+[node name="ButtonSignal" type="Button" parent="ScrollContainer/VBoxContainer/HSplitContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+focus_mode = 0
+shortcut = SubResource("6")
+text = "signal"
+
+[node name="ButtonIf" type="Button" parent="ScrollContainer/VBoxContainer/HSplitContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+focus_mode = 0
+shortcut = SubResource("8")
+text = "if-condi"
+
+[node name="ButtonChangeChapter" type="Button" parent="ScrollContainer/VBoxContainer/HSplitContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+focus_mode = 0
+shortcut = SubResource("10")
+text = "toChapter"
+
+[node name="ButtonBB_Bold" type="Button" parent="ScrollContainer/VBoxContainer/HSplitContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+focus_mode = 0
+shortcut = SubResource("12")
+text = "bb_bold"
+
+[node name="ButtonBB_Italics" type="Button" parent="ScrollContainer/VBoxContainer/HSplitContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+focus_mode = 0
+shortcut = SubResource("14")
+text = "bb_italics"
+
+[node name="ButtonBB_color" type="Button" parent="ScrollContainer/VBoxContainer/HSplitContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+focus_mode = 0
+shortcut = SubResource("16")
+text = "bb_color"
+
+[node name="ButtonBB_img" type="Button" parent="ScrollContainer/VBoxContainer/HSplitContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+focus_mode = 0
+shortcut = SubResource("18")
+text = "bb_img"
+
+[node name="ButtonHoverOver" type="Button" parent="ScrollContainer/VBoxContainer/HSplitContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+focus_mode = 0
+disabled = true
+text = "hovertxt"
+
+[node name="ButtonStart" type="Button" parent="ScrollContainer/VBoxContainer/HSplitContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+focus_mode = 0
+text = "skip"
+
+[node name="VBoxChoices" type="VBoxContainer" parent="ScrollContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HBox" type="HBoxContainer" parent="ScrollContainer/VBoxContainer/VBoxChoices"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="ScrollContainer/VBoxContainer/VBoxChoices/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+text = "Choices:"
+
+[node name="Label2" type="Label" parent="ScrollContainer/VBoxContainer/VBoxChoices/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+text = "If Statements:"
+
+[node name="Label3" type="Label" parent="ScrollContainer/VBoxContainer/VBoxChoices/HBox"]
+layout_mode = 2
+text = "Slot:"
