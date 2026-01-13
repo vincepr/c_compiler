@@ -15,8 +15,8 @@ var story_helper =story_file_helpergd.new()
 
 #this data should never get changed on runtime:
 var empty_chapter_template 					#= {"chapterID": 1, "chaptername": "unnamed", "poolstrings": []}
-var headerinfo_chapter: PoolStringArray 	#= ["<- chaptername", "<- chapterID"]
-var headerinfo: PoolStringArray 			#= ["nID", "slots", "name", "dialogtext", "speaker", "facepice", "off_x", "off_y", "choices", "connects"]
+var headerinfo_chapter: PackedStringArray 	#= ["<- chaptername", "<- chapterID"]
+var headerinfo: PackedStringArray 			#= ["nID", "slots", "name", "dialogtext", "speaker", "facepice", "off_x", "off_y", "choices", "connects"]
 
 
 
@@ -95,11 +95,10 @@ func _on_FileDialog_file_selected(filepath):
 
 func save_as_tsv(file_path:String):
 	load_current_chapter_from_graphedit()
-	var save = File.new()
-	save.open(file_path, File.WRITE)
+	var save = FileAccess.open(file_path, FileAccess.WRITE)
 	save.store_csv_line(headerinfo, "	")
 	for chapter in chapterdata:
-		var info: PoolStringArray = [chapter["chaptername"], 
+		var info: PackedStringArray = [chapter["chaptername"], 
 		headerinfo_chapter[0], String(chapter["chapterID"]), headerinfo_chapter[1], ]
 		save.store_csv_line(info, "	")
 		for poolstring in chapter["poolstrings"]:

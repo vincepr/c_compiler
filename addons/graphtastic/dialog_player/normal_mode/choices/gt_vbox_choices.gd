@@ -20,7 +20,7 @@ func _ready():
 			child.queue_free()
 	var _err
 	_err= GTD.connect("GT_set_choices", self ,"_on_GT_set_choices")
-	_err= connect("GT_choice_made", GTD, "_on_GT_choice_made")
+	_err= GTD.connect("GT_choice_made", GTD, "_on_GT_choice_made")
 
 
 

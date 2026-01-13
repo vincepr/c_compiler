@@ -1,0 +1,31 @@
+[gd_scene format=3 uid="uid://clxw3xh2rh800"]
+
+[node name="GraphEdit" type="GraphEdit"]
+offset_right = 1124.0
+offset_bottom = 671.0
+scroll_offset = Vector2(-40, -40)
+
+[node name="GraphFrame" type="GraphFrame" parent="."]
+layout_mode = 0
+offset_left = 40.0
+offset_top = 40.0
+offset_right = 49.0
+offset_bottom = 103.0
+mouse_filter = 1
+
+[node name="GraphElement" type="GraphElement" parent="."]
+layout_mode = 0
+offset_left = 183.0
+offset_top = 175.0
+offset_right = 294.5
+offset_bottom = 265.50003
+position_offset = Vector2(143, 135)
+
+[node name="GraphNode" type="GraphNode" parent="."]
+layout_mode = 0
+offset_left = 203.0
+offset_top = 152.0
+offset_right = 212.0
+offset_bottom = 207.0
+mouse_filter = 1
+position_offset = Vector2(163, 112)
